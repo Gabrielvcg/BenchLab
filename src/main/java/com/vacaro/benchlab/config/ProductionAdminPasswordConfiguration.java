@@ -29,11 +29,11 @@ public class ProductionAdminPasswordConfiguration {
     ) {
         return args ->
             transactionTemplate.executeWithoutResult(status ->
-                rotateAdminPassword(environment, userRepository, passwordEncoder, cacheManager)
+                enforceProductionUsers(environment, userRepository, passwordEncoder, cacheManager)
             );
     }
 
-    void rotateAdminPassword(
+    void enforceProductionUsers(
         Environment environment,
         UserRepository userRepository,
         PasswordEncoder passwordEncoder,
@@ -54,11 +54,21 @@ public class ProductionAdminPasswordConfiguration {
                     admin.setPassword(passwordEncoder.encode(adminPassword));
                     admin.setActivated(true);
                     userRepository.save(admin);
-                    evictUserCaches(cacheManager);
-                    LOG.info("Contraseña del usuario administrador actualizada desde configuración segura de producción");
+                    LOG.info("Contrasena del usuario administrador actualizada desde configuracion segura de produccion");
                 },
-                () -> LOG.warn("No se encontró el usuario administrador para actualizar su contraseña en producción")
+                () -> LOG.warn("No se encontro el usuario administrador para actualizar su contrasena en produccion")
             );
+
+        userRepository
+            .findOneByLogin("user")
+            .ifPresent(user -> {
+                user.getAuthorities().clear();
+                userRepository.save(user);
+                userRepository.delete(user);
+                LOG.warn("Usuario por defecto 'user' eliminado en arranque de produccion");
+            });
+
+        evictUserCaches(cacheManager);
     }
 
     private static void evictUserCaches(CacheManager cacheManager) {

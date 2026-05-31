@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.7
+
+- Removed the seeded default `user` account during production startup to prevent `user/user` access in prod environments.
+- Kept production admin password rotation enforced through `BENCHLAB_SECURITY_ADMIN_PASSWORD` and refreshed user caches after updates.
+
 ## 0.0.6
 
 - Fixed dashboard refresh selection so the chart stays on the current or latest benchmark algorithm instead of falling back to the first sorted algorithm.
