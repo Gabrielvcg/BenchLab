@@ -23,6 +23,8 @@ jobs:
     name: SonarCloud Analysis
     runs-on: ubuntu-latest
     environment: prod
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -48,7 +50,6 @@ jobs:
       - name: Run tests and SonarCloud analysis
         if: env.SONAR_TOKEN != ''
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION || 'gabrielvcg' }}
           SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY || format('{0}_{1}', github.repository_owner, github.event.repository.name) }}
