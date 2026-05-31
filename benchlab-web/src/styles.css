@@ -395,6 +395,20 @@ h2 {
   gap: 14px;
 }
 
+.chart-language-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 0;
+}
+
+.pair-note {
+  margin: 12px 0 0;
+  color: #5a6b64;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
 .pair-points {
   margin-top: 8px;
   display: grid;

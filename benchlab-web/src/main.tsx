@@ -584,14 +584,42 @@ function App() {
 }
 
 function ComplexityChart({ complexity }: { complexity: ComplexityResponse | null }) {
+  const orderedSeries = [...(complexity?.series ?? [])].sort((left, right) => left.language.localeCompare(right.language));
   const allPoints = complexity?.series.flatMap((series) => series.points) ?? [];
+  const [selectedChartLanguages, setSelectedChartLanguages] = React.useState<string[]>(orderedSeries.map(series => series.language));
+  const closestPairs = React.useMemo(() => {
+    const candidates: Array<{ left: ComplexitySeries; right: ComplexitySeries; score: number }> = [];
+    for (let i = 0; i < orderedSeries.length; i += 1) {
+      for (let j = i + 1; j < orderedSeries.length; j += 1) {
+        const left = orderedSeries[i];
+        const right = orderedSeries[j];
+        const rightBySize = new Map(right.points.map(point => [point.datasetSize, point.avg]));
+        const overlap = left.points
+          .filter(point => rightBySize.has(point.datasetSize))
+          .map(point => {
+            const rightAvg = rightBySize.get(point.datasetSize) ?? point.avg;
+            return Math.abs(point.avg - rightAvg) / Math.max(point.avg, rightAvg, 1);
+          });
+        if (overlap.length === 0) {
+          continue;
+        }
+        const score = overlap.reduce((total, value) => total + value, 0) / overlap.length;
+        candidates.push({ left, right, score });
+      }
+    }
+    return candidates.sort((a, b) => a.score - b.score).slice(0, 4).map(item => [item.left, item.right] as ComplexitySeries[]);
+  }, [orderedSeries]);
+  const customSeries = orderedSeries.filter(series => selectedChartLanguages.includes(series.language));
+
+  React.useEffect(() => {
+    setSelectedChartLanguages(current => {
+      const available = orderedSeries.map(series => series.language);
+      const filtered = current.filter(language => available.includes(language));
+      return filtered.length > 0 ? filtered : available;
+    });
+  }, [orderedSeries]);
   if (!complexity || allPoints.length === 0) {
     return <section className="empty-chart">No benchmark points yet. Run a selected algorithm or launch runs from the API.</section>;
-  }
-  const orderedSeries = [...complexity.series].sort((left, right) => left.language.localeCompare(right.language));
-  const languagePairs: Array<ComplexitySeries[]> = [];
-  for (let index = 0; index < orderedSeries.length; index += 2) {
-    languagePairs.push(orderedSeries.slice(index, index + 2));
   }
   const languageStats = orderedSeries.map((series) => {
     const points = [...series.points].sort((left, right) => left.datasetSize - right.datasetSize);
@@ -672,6 +700,42 @@ function ComplexityChart({ complexity }: { complexity: ComplexityResponse | null
       </div>
     </section>
     <section className="chart-surface">
+      <h2>Custom comparison</h2>
+      <div className="chart-language-controls">
+        <button type="button" className="sort-chip" onClick={() => setSelectedChartLanguages(orderedSeries.map(series => series.language))}>
+          Select all
+        </button>
+        <button type="button" className="sort-chip" onClick={() => setSelectedChartLanguages([])}>
+          Clear
+        </button>
+      </div>
+      <div className="chart-language-controls">
+        {orderedSeries.map(series => {
+          const selected = selectedChartLanguages.includes(series.language);
+          return (
+            <button
+              key={`toggle-${series.language}`}
+              type="button"
+              className="sort-chip"
+              aria-pressed={selected}
+              onClick={() =>
+                setSelectedChartLanguages(current =>
+                  current.includes(series.language) ? current.filter(item => item !== series.language) : [...current, series.language],
+                )
+              }
+            >
+              {series.language}
+            </button>
+          );
+        })}
+      </div>
+      {customSeries.length === 0 ? (
+        <p className="pair-note">Select at least one language to render the chart.</p>
+      ) : (
+        <PairChartCard pair={customSeries} title="Selected languages" />
+      )}
+    </section>
+    <section className="chart-surface">
       <h2>Global comparison (log scale)</h2>
       <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Complexity chart log scale">
         <line x1={padding.left} y1={padding.top} x2={padding.left} y2={height - padding.bottom} className="axis" />
@@ -715,8 +779,8 @@ function ComplexityChart({ complexity }: { complexity: ComplexityResponse | null
       </div>
     </section>
     <section className="pair-grid">
-      {languagePairs.map((pair) => (
-        <PairChartCard key={pair.map(item => item.language).join('-')} pair={pair} />
+      {closestPairs.map((pair, index) => (
+        <PairChartCard key={pair.map(item => item.language).join('-')} pair={pair} title={`Closest matchup #${index + 1}`} />
       ))}
     </section>
     <section className="table-surface">
@@ -754,7 +818,7 @@ function ComplexityChart({ complexity }: { complexity: ComplexityResponse | null
   );
 }
 
-function PairChartCard({ pair }: { pair: ComplexitySeries[] }) {
+function PairChartCard({ pair, title }: { pair: ComplexitySeries[]; title?: string }) {
   const allPoints = pair.flatMap(series => series.points);
   if (allPoints.length === 0) return null;
 
@@ -774,7 +838,7 @@ function PairChartCard({ pair }: { pair: ComplexitySeries[] }) {
 
   return (
     <section className="chart-surface chart-surface-compact">
-      <h2>{pair.length === 2 ? `${pair[0].language} vs ${pair[1].language}` : pair[0].language}</h2>
+      <h2>{title ?? (pair.length === 2 ? `${pair[0].language} vs ${pair[1].language}` : pair[0].language)}</h2>
       <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Pair comparison chart">
         <line x1={padding.left} y1={padding.top} x2={padding.left} y2={height - padding.bottom} className="axis" />
         <line x1={padding.left} y1={height - padding.bottom} x2={width - padding.right} y2={height - padding.bottom} className="axis" />
