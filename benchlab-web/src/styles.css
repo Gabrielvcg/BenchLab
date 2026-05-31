@@ -249,6 +249,32 @@ textarea {
   line-height: 1.35;
 }
 
+.language-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.language-option {
+  border: 1px solid #bac8c1;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #edf4f0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #28403a;
+}
+
+.language-option input {
+  width: 16px;
+  height: 16px;
+  min-height: auto;
+  padding: 0;
+}
+
 .sizes-textarea {
   min-height: 124px;
   padding: 10px 12px;

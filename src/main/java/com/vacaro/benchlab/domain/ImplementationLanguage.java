@@ -7,4 +7,6 @@ public enum ImplementationLanguage {
     PYTHON,
     JAVA,
     GO,
+    RUST,
+    ASSEMBLY,
 }

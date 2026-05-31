@@ -49,7 +49,7 @@ type AuthResponse = {
   id_token: string;
 };
 
-type ImplementationLanguage = 'PYTHON' | 'JAVA' | 'C' | 'GO' | 'RUBY';
+type ImplementationLanguage = 'PYTHON' | 'JAVA' | 'C' | 'GO' | 'RUBY' | 'RUST' | 'ASSEMBLY';
 
 type AlgorithmTemplate = {
   key: string;
@@ -57,7 +57,7 @@ type AlgorithmTemplate = {
   category: string;
   complexityDeclared: string;
   datasetSizes: number[];
-  sources: Record<ImplementationLanguage, string>;
+  sources: Partial<Record<ImplementationLanguage, string>>;
 };
 
 const BENCHMARK_SUITE: AlgorithmTemplate[] = [
@@ -75,6 +75,8 @@ const BENCHMARK_SUITE: AlgorithmTemplate[] = [
       C: '#include <stdio.h>\n#include <stdlib.h>\nint main(){ long n = atol(getenv("BENCHLAB_DATASET_SIZE")); long a = n % 97; long b = (n * 3) % 101; printf("%ld\\n", (a + b) % 997); return 0; }',
       GO: 'package main\n\nimport (\n\t"fmt"\n\t"os"\n\t"strconv"\n)\n\nfunc main() {\n\tn, _ := strconv.ParseInt(os.Getenv("BENCHLAB_DATASET_SIZE"), 10, 64)\n\ta := n % 97\n\tb := (n * 3) % 101\n\tfmt.Println((a + b) % 997)\n}',
       RUBY: "n = ENV.fetch('BENCHLAB_DATASET_SIZE', '1000').to_i\na = n % 97\nb = (n * 3) % 101\nputs((a + b) % 997)",
+      RUST:
+        'use std::env;\nfn main() {\n    let n: i64 = env::var("BENCHLAB_DATASET_SIZE").unwrap_or_else(|_| "1000".into()).parse().unwrap_or(1000);\n    let a = n % 97;\n    let b = (n * 3) % 101;\n    println!("{}", (a + b) % 997);\n}',
     },
   },
   {
@@ -91,6 +93,8 @@ const BENCHMARK_SUITE: AlgorithmTemplate[] = [
       C: '#include <stdio.h>\n#include <stdlib.h>\nint main(){ long n = atol(getenv("BENCHLAB_DATASET_SIZE")); long steps = 0; while(n > 1){ n /= 2; steps++; } printf("%ld\\n", steps); return 0; }',
       GO: 'package main\n\nimport (\n\t"fmt"\n\t"os"\n\t"strconv"\n)\n\nfunc main() {\n\tn, _ := strconv.ParseInt(os.Getenv("BENCHLAB_DATASET_SIZE"), 10, 64)\n\tvar steps int64\n\tfor n > 1 {\n\t\tn /= 2\n\t\tsteps++\n\t}\n\tfmt.Println(steps)\n}',
       RUBY: "n = ENV.fetch('BENCHLAB_DATASET_SIZE', '1000').to_i\nsteps = 0\nwhile n > 1\n  n /= 2\n  steps += 1\nend\nputs steps",
+      RUST:
+        'use std::env;\nfn main() {\n    let mut n: i64 = env::var("BENCHLAB_DATASET_SIZE").unwrap_or_else(|_| "1000".into()).parse().unwrap_or(1000);\n    let mut steps: i64 = 0;\n    while n > 1 { n /= 2; steps += 1; }\n    println!("{}", steps);\n}',
     },
   },
   {
@@ -107,6 +111,8 @@ const BENCHMARK_SUITE: AlgorithmTemplate[] = [
       C: '#include <stdio.h>\n#include <stdlib.h>\nint main(){ long n = atol(getenv("BENCHLAB_DATASET_SIZE")); long s = 0; for(long i=0;i<n;i++){ s += i % 97; } printf("%ld\\n", s); return 0; }',
       GO: 'package main\n\nimport (\n\t"fmt"\n\t"os"\n\t"strconv"\n)\n\nfunc main() {\n\tn, _ := strconv.ParseInt(os.Getenv("BENCHLAB_DATASET_SIZE"), 10, 64)\n\tvar s int64\n\tfor i := int64(0); i < n; i++ {\n\t\ts += i % 97\n\t}\n\tfmt.Println(s)\n}',
       RUBY: "n = ENV.fetch('BENCHLAB_DATASET_SIZE', '1000').to_i\ns = 0\n(0...n).each do |i|\n  s += i % 97\nend\nputs s",
+      RUST:
+        'use std::env;\nfn main() {\n    let n: i64 = env::var("BENCHLAB_DATASET_SIZE").unwrap_or_else(|_| "1000".into()).parse().unwrap_or(1000);\n    let mut s: i64 = 0;\n    for i in 0..n { s += i % 97; }\n    println!("{}", s);\n}',
     },
   },
   {
@@ -123,6 +129,8 @@ const BENCHMARK_SUITE: AlgorithmTemplate[] = [
       C: '#include <stdio.h>\n#include <stdlib.h>\nint main(){ long n = atol(getenv("BENCHLAB_DATASET_SIZE")); long s = 0; for(long i=1;i<=n;i++){ long x=i; while(x>1){ x/=2; s += x & 1; } } printf("%ld\\n", s); return 0; }',
       GO: 'package main\n\nimport (\n\t"fmt"\n\t"os"\n\t"strconv"\n)\n\nfunc main() {\n\tn, _ := strconv.ParseInt(os.Getenv("BENCHLAB_DATASET_SIZE"), 10, 64)\n\tvar s int64\n\tfor i := int64(1); i <= n; i++ {\n\t\tx := i\n\t\tfor x > 1 {\n\t\t\tx /= 2\n\t\t\ts += x & 1\n\t\t}\n\t}\n\tfmt.Println(s)\n}',
       RUBY: "n = ENV.fetch('BENCHLAB_DATASET_SIZE', '1000').to_i\ns = 0\n(1..n).each do |i|\n  x = i\n  while x > 1\n    x /= 2\n    s += (x & 1)\n  end\nend\nputs s",
+      RUST:
+        'use std::env;\nfn main() {\n    let n: i64 = env::var("BENCHLAB_DATASET_SIZE").unwrap_or_else(|_| "1000".into()).parse().unwrap_or(1000);\n    let mut s: i64 = 0;\n    for i in 1..=n {\n        let mut x = i;\n        while x > 1 { x /= 2; s += x & 1; }\n    }\n    println!("{}", s);\n}',
     },
   },
   {
@@ -139,6 +147,8 @@ const BENCHMARK_SUITE: AlgorithmTemplate[] = [
       C: '#include <stdint.h>\n#include <stdio.h>\n#include <stdlib.h>\nint main(){ int n = atoi(getenv("BENCHLAB_DATASET_SIZE")); uint32_t seed = (uint32_t)strtoul(getenv("BENCHLAB_DATASET_SEED"), NULL, 10); uint32_t acc = seed | 1u; for(int i=0;i<n;i++){ uint32_t x = seed + (uint32_t)i * 1103515245u + 12345u; for(int j=0;j<n;j++){ x = x * 1664525u + 1013904223u + (uint32_t)j; acc ^= (x + (uint32_t)i + (uint32_t)j) & 1u; } } printf("%u\\n", acc); return 0; }',
       GO: 'package main\n\nimport (\n\t"fmt"\n\t"os"\n\t"strconv"\n)\n\nfunc main() {\n\tn, _ := strconv.Atoi(os.Getenv("BENCHLAB_DATASET_SIZE"))\n\tseed64, _ := strconv.ParseUint(os.Getenv("BENCHLAB_DATASET_SEED"), 10, 32)\n\tseed := uint32(seed64)\n\tacc := seed | 1\n\tfor i := 0; i < n; i++ {\n\t\tx := seed + uint32(i)*1103515245 + 12345\n\t\tfor j := 0; j < n; j++ {\n\t\t\tx = x*1664525 + 1013904223 + uint32(j)\n\t\t\tacc ^= (x + uint32(i) + uint32(j)) & 1\n\t\t}\n\t}\n\tfmt.Println(acc)\n}',
       RUBY: "n = ENV.fetch('BENCHLAB_DATASET_SIZE', '1000').to_i\nseed = ENV.fetch('BENCHLAB_DATASET_SEED', '42').to_i & 0xffffffff\nacc = seed | 1\n(0...n).each do |i|\n  x = (seed + i * 1103515245 + 12345) & 0xffffffff\n  (0...n).each do |j|\n    x = (x * 1664525 + 1013904223 + j) & 0xffffffff\n    acc ^= (x + i + j) & 1\n  end\nend\nputs acc",
+      RUST:
+        'use std::env;\nfn main() {\n    let n: u32 = env::var("BENCHLAB_DATASET_SIZE").unwrap_or_else(|_| "1000".into()).parse().unwrap_or(1000);\n    let seed: u32 = env::var("BENCHLAB_DATASET_SEED").unwrap_or_else(|_| "42".into()).parse().unwrap_or(42);\n    let mut acc: u32 = seed | 1;\n    for i in 0..n {\n        let mut x = seed.wrapping_add(i.wrapping_mul(1103515245)).wrapping_add(12345);\n        for j in 0..n {\n            x = x.wrapping_mul(1664525).wrapping_add(1013904223).wrapping_add(j);\n            acc ^= (x.wrapping_add(i).wrapping_add(j)) & 1;\n        }\n    }\n    println!("{}", acc);\n}',
     },
   },
 ];
@@ -149,8 +159,12 @@ const languageColors: Record<string, string> = {
   PYTHON: '#3166b1',
   GO: '#008f9c',
   RUBY: '#9b1d48',
+  RUST: '#b6652d',
+  ASSEMBLY: '#4b5563',
   CPP: '#6c5ce7',
 };
+
+const AVAILABLE_LANGUAGES: ImplementationLanguage[] = ['PYTHON', 'JAVA', 'C', 'GO', 'RUBY', 'RUST', 'ASSEMBLY'];
 
 function shuffleInPlace<T>(items: T[]): void {
   for (let i = items.length - 1; i > 0; i -= 1) {
@@ -192,6 +206,7 @@ function App() {
   const [problemSizesInput, setProblemSizesInput] = React.useState(
     (BENCHMARK_SUITE[2]?.datasetSizes ?? BENCHMARK_SUITE[0].datasetSizes).join('\n'),
   );
+  const [selectedLanguages, setSelectedLanguages] = React.useState<ImplementationLanguage[]>(AVAILABLE_LANGUAGES);
   const [runIterations, setRunIterations] = React.useState('5');
   const [warmupIterations, setWarmupIterations] = React.useState('1');
   const [runTimeoutMs, setRunTimeoutMs] = React.useState('60000');
@@ -202,6 +217,10 @@ function App() {
     () => BENCHMARK_SUITE.find((item) => item.key === selectedTemplateKey) ?? BENCHMARK_SUITE[0],
     [selectedTemplateKey],
   );
+  const templateLanguages = React.useMemo(
+    () => AVAILABLE_LANGUAGES.filter(language => Boolean(selectedTemplate.sources[language])),
+    [selectedTemplate],
+  );
 
   React.useEffect(() => {
     selectedAlgorithmIdRef.current = selectedAlgorithmId;
@@ -210,6 +229,13 @@ function App() {
   React.useEffect(() => {
     setProblemSizesInput(selectedTemplate.datasetSizes.join('\n'));
   }, [selectedTemplate]);
+
+  React.useEffect(() => {
+    setSelectedLanguages(current => {
+      const filtered = current.filter(language => templateLanguages.includes(language));
+      return filtered.length > 0 ? filtered : [...templateLanguages];
+    });
+  }, [templateLanguages]);
 
   async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
     const response = await fetch(path, {
@@ -281,6 +307,9 @@ function App() {
       if (uniqueSizes.length === 0) {
         throw new Error('Sizes must contain at least one positive integer');
       }
+      if (selectedLanguages.length === 0) {
+        throw new Error('Select at least one language to run');
+      }
       const normalizedIterations = sanitizeIntegerInput(runIterations, 1, 1);
       const normalizedWarmups = sanitizeIntegerInput(warmupIterations, 0, 0);
       const normalizedTimeoutMs = sanitizeIntegerInput(runTimeoutMs, 1000, 1000);
@@ -313,7 +342,9 @@ function App() {
       }
 
       const implementations = await Promise.all(
-        (Object.entries(selectedTemplate.sources) as Array<[ImplementationLanguage, string]>).map(([language, sourceCode]) =>
+        (Object.entries(selectedTemplate.sources) as Array<[ImplementationLanguage, string]>)
+          .filter(([language]) => selectedLanguages.includes(language))
+          .map(([language, sourceCode]) =>
           api<{ id: number }>('/api/implementations', {
             method: 'POST',
             body: JSON.stringify({
@@ -435,6 +466,26 @@ function App() {
               ))}
             </select>
           </label>
+          <div className="control-label">
+            <span className="field-title">Languages to run</span>
+            <span className="field-help">Choose one or more languages for this run. Assembly support is available through custom/API code.</span>
+            <div className="language-grid">
+              {templateLanguages.map(language => (
+                <label key={language} className="language-option">
+                  <input
+                    type="checkbox"
+                    checked={selectedLanguages.includes(language)}
+                    onChange={() =>
+                      setSelectedLanguages(current =>
+                        current.includes(language) ? current.filter(item => item !== language) : [...current, language],
+                      )
+                    }
+                  />
+                  <span>{language}</span>
+                </label>
+              ))}
+            </div>
+          </div>
           <div className="control-label">
             <span className="field-title">Problem sizes</span>
             <span className="field-help">Enter multiple values separated by new lines, commas, spaces, or semicolons.</span>
@@ -562,6 +613,12 @@ function ComplexityChart({ complexity }: { complexity: ComplexityResponse | null
     return padding.left + ((value - minX) / (maxX - minX)) * plotWidth;
   };
   const yScale = (value: number) => height - padding.bottom - (value / maxY) * (height - padding.top - padding.bottom);
+  const yScaleLog = (value: number) => {
+    const min = 1;
+    const logMax = Math.log10(Math.max(maxY, min));
+    const safeValue = Math.max(value, min);
+    return height - padding.bottom - (Math.log10(safeValue) / Math.max(logMax, 1)) * (height - padding.top - padding.bottom);
+  };
 
   const ticks = Array.from(new Set(allPoints.map((point) => point.datasetSize))).sort((a, b) => a - b);
 
@@ -610,26 +667,52 @@ function ComplexityChart({ complexity }: { complexity: ComplexityResponse | null
         ))}
       </div>
     </section>
+    <section className="chart-surface">
+      <h2>Global comparison (log scale)</h2>
+      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Complexity chart log scale">
+        <line x1={padding.left} y1={padding.top} x2={padding.left} y2={height - padding.bottom} className="axis" />
+        <line x1={padding.left} y1={height - padding.bottom} x2={width - padding.right} y2={height - padding.bottom} className="axis" />
+        {[1, 10, 100, 1000, 10000, 100000].filter(step => step <= maxY).map((step) => {
+          const y = yScaleLog(step);
+          return (
+            <g key={step}>
+              <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} className="grid" />
+              <text x={padding.left - 12} y={y + 4} textAnchor="end" className="tick">
+                {step}
+              </text>
+            </g>
+          );
+        })}
+        {ticks.map((tick) => (
+          <text key={`log-${tick}`} x={xScale(tick)} y={height - 22} textAnchor="middle" className="tick">
+            {tick.toLocaleString()}
+          </text>
+        ))}
+        {orderedSeries.map((series) => {
+          const line = series.points.map((point) => `${xScale(point.datasetSize)},${yScaleLog(point.avg)}`).join(' ');
+          const color = languageColors[series.language] ?? '#475569';
+          return (
+            <g key={`log-${series.language}`}>
+              <polyline points={line} fill="none" stroke={color} strokeWidth="4" strokeLinejoin="round" strokeLinecap="round" />
+              {series.points.map((point) => (
+                <circle key={`log-${series.language}-${point.datasetId}`} cx={xScale(point.datasetSize)} cy={yScaleLog(point.avg)} r="5" fill={color} />
+              ))}
+            </g>
+          );
+        })}
+      </svg>
+      <div className="legend">
+        {orderedSeries.map((series) => (
+          <span key={`log-legend-${series.language}`}>
+            <i style={{ background: languageColors[series.language] ?? '#475569' }} />
+            {series.language}
+          </span>
+        ))}
+      </div>
+    </section>
     <section className="pair-grid">
       {languagePairs.map((pair) => (
-        <section key={pair.map(item => item.language).join('-')} className="chart-surface chart-surface-compact">
-          <h2>{pair.length === 2 ? `${pair[0].language} vs ${pair[1].language}` : pair[0].language}</h2>
-          <div className="legend">
-            {pair.map((series) => (
-              <span key={series.language}>
-                <i style={{ background: languageColors[series.language] ?? '#475569' }} />
-                {series.language}
-              </span>
-            ))}
-          </div>
-          <div className="pair-points">
-            {pair.map((series) => (
-              <p key={`${series.language}-summary`}>
-                <strong>{series.language}</strong>: {series.points.map(point => `${point.datasetSize}:${Math.round(point.avg)}ms`).join(' | ')}
-              </p>
-            ))}
-          </div>
-        </section>
+        <PairChartCard key={pair.map(item => item.language).join('-')} pair={pair} />
       ))}
     </section>
     <section className="table-surface">
@@ -664,6 +747,60 @@ function ComplexityChart({ complexity }: { complexity: ComplexityResponse | null
       </div>
     </section>
     </>
+  );
+}
+
+function PairChartCard({ pair }: { pair: ComplexitySeries[] }) {
+  const allPoints = pair.flatMap(series => series.points);
+  if (allPoints.length === 0) return null;
+
+  const width = 600;
+  const height = 220;
+  const padding = { top: 18, right: 18, bottom: 40, left: 48 };
+  const minX = Math.min(...allPoints.map(point => point.datasetSize));
+  const maxX = Math.max(...allPoints.map(point => point.datasetSize));
+  const maxY = Math.max(...allPoints.map(point => point.avg), 1);
+  const plotWidth = width - padding.left - padding.right;
+  const xScale = (value: number) => {
+    if (minX === maxX) return padding.left + plotWidth / 2;
+    return padding.left + ((value - minX) / (maxX - minX)) * plotWidth;
+  };
+  const yScale = (value: number) => height - padding.bottom - (value / maxY) * (height - padding.top - padding.bottom);
+  const ticks = Array.from(new Set(allPoints.map(point => point.datasetSize))).sort((a, b) => a - b);
+
+  return (
+    <section className="chart-surface chart-surface-compact">
+      <h2>{pair.length === 2 ? `${pair[0].language} vs ${pair[1].language}` : pair[0].language}</h2>
+      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Pair comparison chart">
+        <line x1={padding.left} y1={padding.top} x2={padding.left} y2={height - padding.bottom} className="axis" />
+        <line x1={padding.left} y1={height - padding.bottom} x2={width - padding.right} y2={height - padding.bottom} className="axis" />
+        {ticks.map((tick) => (
+          <text key={`pair-${tick}`} x={xScale(tick)} y={height - 12} textAnchor="middle" className="tick">
+            {tick.toLocaleString()}
+          </text>
+        ))}
+        {pair.map(series => {
+          const line = series.points.map(point => `${xScale(point.datasetSize)},${yScale(point.avg)}`).join(' ');
+          const color = languageColors[series.language] ?? '#475569';
+          return (
+            <g key={`pair-line-${series.language}`}>
+              <polyline points={line} fill="none" stroke={color} strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
+              {series.points.map(point => (
+                <circle key={`pair-${series.language}-${point.datasetId}`} cx={xScale(point.datasetSize)} cy={yScale(point.avg)} r="4" fill={color} />
+              ))}
+            </g>
+          );
+        })}
+      </svg>
+      <div className="legend">
+        {pair.map((series) => (
+          <span key={`pair-legend-${series.language}`}>
+            <i style={{ background: languageColors[series.language] ?? '#475569' }} />
+            {series.language}
+          </span>
+        ))}
+      </div>
+    </section>
   );
 }
 

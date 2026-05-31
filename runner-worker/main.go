@@ -270,6 +270,22 @@ func prepareRunnerSpec(language, sourceCode, tempDir string) (dockerRunnerSpec, 
 		compileCmd := []string{"sh", "-c", "GOCACHE=/tmp/go-build go build -trimpath -o benchlab-app main.go"}
 		runCmd := []string{"/workspace/benchlab-app"}
 		return dockerRunnerSpec{image: "golang:1.22-alpine", compileCommand: compileCmd, runCommand: runCmd}, nil
+	case "RUST":
+		err := os.WriteFile(filepath.Join(tempDir, "main.rs"), []byte(sourceCode), 0o600)
+		if err != nil {
+			return dockerRunnerSpec{}, fmt.Errorf("no se pudo escribir archivo rust: %w", err)
+		}
+		compileCmd := []string{"sh", "-lc", "rustc -C opt-level=3 -o benchlab-app main.rs"}
+		runCmd := []string{"/workspace/benchlab-app"}
+		return dockerRunnerSpec{image: "rust:1.79-alpine", compileCommand: compileCmd, runCommand: runCmd}, nil
+	case "ASSEMBLY":
+		err := os.WriteFile(filepath.Join(tempDir, "main.s"), []byte(sourceCode), 0o600)
+		if err != nil {
+			return dockerRunnerSpec{}, fmt.Errorf("no se pudo escribir archivo assembly: %w", err)
+		}
+		compileCmd := []string{"sh", "-lc", "gcc -x assembler -o benchlab-app main.s"}
+		runCmd := []string{"/workspace/benchlab-app"}
+		return dockerRunnerSpec{image: "gcc:14", compileCommand: compileCmd, runCommand: runCmd}, nil
 	case "RUBY":
 		err := os.WriteFile(filepath.Join(tempDir, "main.rb"), []byte(sourceCode), 0o600)
 		if err != nil {

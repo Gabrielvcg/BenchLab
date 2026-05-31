@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.8
+
+- Added `RUST` as a first-class benchmark language in the dashboard suite and runner worker.
+- Added backend language enum support for `RUST` and `ASSEMBLY`, plus worker execution support for assembly source compilation and execution.
+- Updated run language selection to show only languages available for the selected benchmark template.
+
 ## 0.0.7
 
 - Removed the seeded default `user` account during production startup to prevent `user/user` access in prod environments.
