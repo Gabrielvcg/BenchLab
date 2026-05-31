@@ -36,6 +36,7 @@ type RunRequestedEvent struct {
 	MemoryMb         int     `json:"memoryMb"`
 	CpuLimit         float64 `json:"cpuLimit"`
 	Iterations       int     `json:"iterations"`
+	WarmupIterations int     `json:"warmupIterations"`
 	TraceID          string  `json:"traceId"`
 }
 
@@ -120,6 +121,9 @@ func executeRun(event RunRequestedEvent) RunResultCallbackRequest {
 	if event.Iterations <= 0 {
 		event.Iterations = 5
 	}
+	if event.WarmupIterations < 0 {
+		event.WarmupIterations = 0
+	}
 
 	tempDir, err := os.MkdirTemp("", "benchlab-run-*")
 	if err != nil {
@@ -157,24 +161,26 @@ func executeRun(event RunRequestedEvent) RunResultCallbackRequest {
 		}
 	}
 
-	warmupResult := runDockerCommand(event, runnerSpec, tempDir, runnerSpec.runCommand, false)
-	if warmupResult.err != nil {
-		status, exitCode, failureReason, timedOut := classifyRunError(warmupResult.err, warmupResult.contextErr, "RUNTIME_ERROR")
-		return RunResultCallbackRequest{
-			Status:              status,
-			RunnerHost:          host,
-			FailureReason:       failureReason,
-			CpuTimeMs:           0,
-			WallTimeMs:          0,
-			PeakMemoryMb:        float64(event.MemoryMb),
-			ExitCode:            exitCode,
-			TimedOut:            timedOut,
-			CompileMs:           compileMs,
-			StdoutTruncated:     truncate(warmupResult.stdout, outputLimit),
-			StderrTruncated:     truncate(warmupResult.stderr, outputLimit),
-			OutputSizeBytes:     int64(len(warmupResult.stdout) + len(warmupResult.stderr)),
-			ArtifactChecksum:    sha256Of(warmupResult.stdout + warmupResult.stderr),
-			TechnicalLogSummary: fmt.Sprintf("language=%s datasetVersion=%s warmup failed", event.Language, event.DatasetVersion),
+	for i := 0; i < event.WarmupIterations; i++ {
+		warmupResult := runDockerCommand(event, runnerSpec, tempDir, runnerSpec.runCommand, false)
+		if warmupResult.err != nil {
+			status, exitCode, failureReason, timedOut := classifyRunError(warmupResult.err, warmupResult.contextErr, "RUNTIME_ERROR")
+			return RunResultCallbackRequest{
+				Status:              status,
+				RunnerHost:          host,
+				FailureReason:       failureReason,
+				CpuTimeMs:           0,
+				WallTimeMs:          0,
+				PeakMemoryMb:        float64(event.MemoryMb),
+				ExitCode:            exitCode,
+				TimedOut:            timedOut,
+				CompileMs:           compileMs,
+				StdoutTruncated:     truncate(warmupResult.stdout, outputLimit),
+				StderrTruncated:     truncate(warmupResult.stderr, outputLimit),
+				OutputSizeBytes:     int64(len(warmupResult.stdout) + len(warmupResult.stderr)),
+				ArtifactChecksum:    sha256Of(warmupResult.stdout + warmupResult.stderr),
+				TechnicalLogSummary: fmt.Sprintf("language=%s datasetVersion=%s warmup failed at iteration=%d", event.Language, event.DatasetVersion, i+1),
+			}
 		}
 	}
 
@@ -203,20 +209,26 @@ func executeRun(event RunRequestedEvent) RunResultCallbackRequest {
 	avgElapsed := totalElapsed / int64(event.Iterations)
 	checksum := sha256Of(lastOutStr + lastErrStr)
 	return RunResultCallbackRequest{
-		Status:              status,
-		RunnerHost:          host,
-		FailureReason:       failureReason,
-		CpuTimeMs:           avgElapsed,
-		WallTimeMs:          avgElapsed,
-		PeakMemoryMb:        float64(event.MemoryMb),
-		ExitCode:            exitCode,
-		TimedOut:            timedOut,
-		CompileMs:           compileMs,
-		StdoutTruncated:     lastOutStr,
-		StderrTruncated:     lastErrStr,
-		OutputSizeBytes:     totalOutputBytes,
-		ArtifactChecksum:    checksum,
-		TechnicalLogSummary: fmt.Sprintf("language=%s datasetVersion=%s warmup=1 iterations=%d", event.Language, event.DatasetVersion, event.Iterations),
+		Status:           status,
+		RunnerHost:       host,
+		FailureReason:    failureReason,
+		CpuTimeMs:        avgElapsed,
+		WallTimeMs:       avgElapsed,
+		PeakMemoryMb:     float64(event.MemoryMb),
+		ExitCode:         exitCode,
+		TimedOut:         timedOut,
+		CompileMs:        compileMs,
+		StdoutTruncated:  lastOutStr,
+		StderrTruncated:  lastErrStr,
+		OutputSizeBytes:  totalOutputBytes,
+		ArtifactChecksum: checksum,
+		TechnicalLogSummary: fmt.Sprintf(
+			"language=%s datasetVersion=%s warmup=%d iterations=%d",
+			event.Language,
+			event.DatasetVersion,
+			event.WarmupIterations,
+			event.Iterations,
+		),
 	}
 }
 

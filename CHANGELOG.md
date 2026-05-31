@@ -9,6 +9,8 @@
 - Fixed login panel brand and sign-in button alignment.
 - Separated runner compilation time from measured execution time and added an unmeasured warm-up execution per benchmark job.
 - Added Go and Ruby runner support and included both languages in the dashboard demo benchmark.
+- Replaced the single demo seed with a usable multi-algorithm benchmark suite (`O(1)`, `O(log n)`, `O(n)`, `O(n log n)`, `O(n^2)`) selectable from the dashboard panel.
+- Added configurable benchmark controls in the panel to run one selected algorithm with custom sizes, measured iterations, warm-up iterations, and timeout.
 
 ## 0.0.5
 

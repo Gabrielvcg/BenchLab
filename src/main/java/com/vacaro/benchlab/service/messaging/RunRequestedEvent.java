@@ -15,5 +15,6 @@ public record RunRequestedEvent(
     Integer memoryMb,
     Double cpuLimit,
     Integer iterations,
+    Integer warmupIterations,
     String traceId
 ) {}

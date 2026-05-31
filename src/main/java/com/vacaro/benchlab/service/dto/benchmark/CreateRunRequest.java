@@ -6,5 +6,6 @@ public record CreateRunRequest(
     Integer timeoutMs,
     Integer memoryMb,
     Double cpuLimit,
-    Integer iterations
+    Integer iterations,
+    Integer warmupIterations
 ) {}

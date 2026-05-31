@@ -6,7 +6,7 @@ Consumes benchmark jobs from RabbitMQ and reports run results back to `benchmark
 
 - Compiled languages are compiled once per job before measured execution.
 - `compileMs` reports compile time for compiled languages.
-- `wallTimeMs` and `cpuTimeMs` report the average measured execution time after one unmeasured warm-up execution.
+- `wallTimeMs` and `cpuTimeMs` report the average measured execution time after configurable unmeasured warm-up executions.
 - Each measured execution still runs in a fresh isolated Docker container.
 
 ## Run

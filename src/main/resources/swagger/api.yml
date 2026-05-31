@@ -272,6 +272,8 @@ components:
           format: double
         iterations:
           type: integer
+        warmupIterations:
+          type: integer
     RunMetricResponse:
       type: object
       properties:

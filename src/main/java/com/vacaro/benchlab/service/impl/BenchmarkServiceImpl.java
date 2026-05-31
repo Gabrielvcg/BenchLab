@@ -169,6 +169,7 @@ public class BenchmarkServiceImpl implements BenchmarkService {
                 request.memoryMb() == null ? 256 : request.memoryMb(),
                 request.cpuLimit() == null ? 1.0 : request.cpuLimit(),
                 request.iterations() == null ? 5 : request.iterations(),
+                request.warmupIterations() == null ? 1 : request.warmupIterations(),
                 saved.getTraceId()
             )
         );
