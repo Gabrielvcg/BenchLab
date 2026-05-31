@@ -1,6 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { Activity, BarChart3, CirclePlay, LogOut, RefreshCw, ShieldCheck } from 'lucide-react';
+import { Activity, BarChart3, CirclePlay, LogOut, Plus, RefreshCw, ShieldCheck, Trash2 } from 'lucide-react';
 import './styles.css';
 
 type Algorithm = {
@@ -133,12 +133,12 @@ const BENCHMARK_SUITE: AlgorithmTemplate[] = [
     datasetSizes: [2000, 4000, 6000, 8000],
     sources: {
       PYTHON:
-        "import os\nn=int(os.getenv('BENCHLAB_DATASET_SIZE','1000'))\ns=0\nfor i in range(n):\n    for j in range(n):\n        s += (i + j) & 1\nprint(s)",
+        "import os\nn=int(os.getenv('BENCHLAB_DATASET_SIZE','1000'))\nseed=int(os.getenv('BENCHLAB_DATASET_SEED','42')) & 0xffffffff\nacc=seed | 1\nfor i in range(n):\n    x=(seed + i * 1103515245 + 12345) & 0xffffffff\n    for j in range(n):\n        x=(x * 1664525 + 1013904223 + j) & 0xffffffff\n        acc ^= (x + i + j) & 1\nprint(acc)",
       JAVA:
-        'public class Main { public static void main(String[] args) { int n = Integer.parseInt(System.getenv().getOrDefault("BENCHLAB_DATASET_SIZE", "1000")); long s = 0; for (int i = 0; i < n; i++) { for (int j = 0; j < n; j++) { s += (i + j) & 1; } } System.out.println(s); } }',
-      C: '#include <stdio.h>\n#include <stdlib.h>\nint main(){ int n = atoi(getenv("BENCHLAB_DATASET_SIZE")); long s = 0; for(int i=0;i<n;i++){ for(int j=0;j<n;j++){ s += (i + j) & 1; } } printf("%ld\\n", s); return 0; }',
-      GO: 'package main\n\nimport (\n\t"fmt"\n\t"os"\n\t"strconv"\n)\n\nfunc main() {\n\tn, _ := strconv.Atoi(os.Getenv("BENCHLAB_DATASET_SIZE"))\n\tvar s int64\n\tfor i := 0; i < n; i++ {\n\t\tfor j := 0; j < n; j++ {\n\t\t\ts += int64((i + j) & 1)\n\t\t}\n\t}\n\tfmt.Println(s)\n}',
-      RUBY: "n = ENV.fetch('BENCHLAB_DATASET_SIZE', '1000').to_i\ns = 0\n(0...n).each do |i|\n  (0...n).each do |j|\n    s += (i + j) & 1\n  end\nend\nputs s",
+        'public class Main { public static void main(String[] args) { int n = Integer.parseInt(System.getenv().getOrDefault("BENCHLAB_DATASET_SIZE", "1000")); long seed = Long.parseLong(System.getenv().getOrDefault("BENCHLAB_DATASET_SEED", "42")) & 0xffffffffL; long acc = seed | 1L; for (int i = 0; i < n; i++) { long x = (seed + (long) i * 1103515245L + 12345L) & 0xffffffffL; for (int j = 0; j < n; j++) { x = (x * 1664525L + 1013904223L + j) & 0xffffffffL; acc ^= (x + i + j) & 1L; } } System.out.println(acc); } }',
+      C: '#include <stdint.h>\n#include <stdio.h>\n#include <stdlib.h>\nint main(){ int n = atoi(getenv("BENCHLAB_DATASET_SIZE")); uint32_t seed = (uint32_t)strtoul(getenv("BENCHLAB_DATASET_SEED"), NULL, 10); uint32_t acc = seed | 1u; for(int i=0;i<n;i++){ uint32_t x = seed + (uint32_t)i * 1103515245u + 12345u; for(int j=0;j<n;j++){ x = x * 1664525u + 1013904223u + (uint32_t)j; acc ^= (x + (uint32_t)i + (uint32_t)j) & 1u; } } printf("%u\\n", acc); return 0; }',
+      GO: 'package main\n\nimport (\n\t"fmt"\n\t"os"\n\t"strconv"\n)\n\nfunc main() {\n\tn, _ := strconv.Atoi(os.Getenv("BENCHLAB_DATASET_SIZE"))\n\tseed64, _ := strconv.ParseUint(os.Getenv("BENCHLAB_DATASET_SEED"), 10, 32)\n\tseed := uint32(seed64)\n\tacc := seed | 1\n\tfor i := 0; i < n; i++ {\n\t\tx := seed + uint32(i)*1103515245 + 12345\n\t\tfor j := 0; j < n; j++ {\n\t\t\tx = x*1664525 + 1013904223 + uint32(j)\n\t\t\tacc ^= (x + uint32(i) + uint32(j)) & 1\n\t\t}\n\t}\n\tfmt.Println(acc)\n}',
+      RUBY: "n = ENV.fetch('BENCHLAB_DATASET_SIZE', '1000').to_i\nseed = ENV.fetch('BENCHLAB_DATASET_SEED', '42').to_i & 0xffffffff\nacc = seed | 1\n(0...n).each do |i|\n  x = (seed + i * 1103515245 + 12345) & 0xffffffff\n  (0...n).each do |j|\n    x = (x * 1664525 + 1013904223 + j) & 0xffffffff\n    acc ^= (x + i + j) & 1\n  end\nend\nputs acc",
     },
   },
 ];
@@ -152,6 +152,13 @@ const languageColors: Record<string, string> = {
   CPP: '#6c5ce7',
 };
 
+function shuffleInPlace<T>(items: T[]): void {
+  for (let i = items.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [items[i], items[j]] = [items[j], items[i]];
+  }
+}
+
 function App() {
   const [token, setToken] = React.useState(() => localStorage.getItem('benchlab.token') ?? '');
   const [login, setLogin] = React.useState('');
@@ -163,7 +170,7 @@ function App() {
   const [message, setMessage] = React.useState('Ready');
   const [busy, setBusy] = React.useState(false);
   const [selectedTemplateKey, setSelectedTemplateKey] = React.useState(BENCHMARK_SUITE[2]?.key ?? BENCHMARK_SUITE[0].key);
-  const [suiteSizesInput, setSuiteSizesInput] = React.useState((BENCHMARK_SUITE[2]?.datasetSizes ?? BENCHMARK_SUITE[0].datasetSizes).join(','));
+  const [problemSizes, setProblemSizes] = React.useState<number[]>(BENCHMARK_SUITE[2]?.datasetSizes ?? BENCHMARK_SUITE[0].datasetSizes);
   const [runIterations, setRunIterations] = React.useState(5);
   const [warmupIterations, setWarmupIterations] = React.useState(1);
   const [runTimeoutMs, setRunTimeoutMs] = React.useState(60000);
@@ -180,7 +187,7 @@ function App() {
   }, [selectedAlgorithmId]);
 
   React.useEffect(() => {
-    setSuiteSizesInput(selectedTemplate.datasetSizes.join(','));
+    setProblemSizes(selectedTemplate.datasetSizes);
   }, [selectedTemplate]);
 
   async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -249,11 +256,7 @@ function App() {
     setBusy(true);
     setMessage(`Seeding algorithm ${selectedTemplate.name}`);
     try {
-      const parsedSizes = suiteSizesInput
-        .split(',')
-        .map((item) => Number(item.trim()))
-        .filter((value) => Number.isFinite(value) && value > 0);
-      const uniqueSizes = Array.from(new Set(parsedSizes));
+      const uniqueSizes = Array.from(new Set(problemSizes.map((value) => Math.round(value)).filter((value) => Number.isFinite(value) && value > 0)));
       if (uniqueSizes.length === 0) {
         throw new Error('Sizes must contain at least one positive integer');
       }
@@ -300,21 +303,24 @@ function App() {
         ),
       );
 
-      for (const implementation of implementations) {
-        for (const dataset of datasets) {
-          await api('/api/runs', {
-            method: 'POST',
-            body: JSON.stringify({
-              implementationId: implementation.id,
-              datasetId: dataset.id,
-              timeoutMs: runTimeoutMs,
-              memoryMb: 256,
-              cpuLimit: 1,
-              iterations: runIterations,
-              warmupIterations,
-            }),
-          });
-        }
+      const runQueue = implementations.flatMap(implementation =>
+        datasets.map(dataset => ({
+          implementationId: implementation.id,
+          datasetId: dataset.id,
+          timeoutMs: runTimeoutMs,
+          memoryMb: 256,
+          cpuLimit: 1,
+          iterations: runIterations,
+          warmupIterations,
+        })),
+      );
+      shuffleInPlace(runQueue);
+
+      for (const runRequest of runQueue) {
+        await api('/api/runs', {
+          method: 'POST',
+          body: JSON.stringify(runRequest),
+        });
       }
 
       setMessage('Runs queued. Refreshing while worker processes runs');
@@ -374,55 +380,111 @@ function App() {
           <Activity size={28} />
           <span>BenchLab</span>
         </div>
-        <select
-          value={selectedAlgorithmId ?? ''}
-          onChange={(event) => refresh(Number(event.target.value))}
-          aria-label="Algorithm"
-        >
-          {algorithms.map((algorithm) => (
-            <option key={algorithm.id} value={algorithm.id}>
-              {algorithm.name}
-            </option>
-          ))}
-        </select>
-        <select value={selectedTemplateKey} onChange={(event) => setSelectedTemplateKey(event.target.value)} aria-label="Algorithm template">
-          {BENCHMARK_SUITE.map((template) => (
-            <option key={template.key} value={template.key}>
-              {template.name} ({template.complexityDeclared})
-            </option>
-          ))}
-        </select>
-        <input
-          value={suiteSizesInput}
-          onChange={(event) => setSuiteSizesInput(event.target.value)}
-          placeholder="sizes: 1000,5000,10000"
-          aria-label="Problem sizes"
-        />
-        <input
-          type="number"
-          min={1}
-          value={runIterations}
-          onChange={(event) => setRunIterations(Math.max(1, Number(event.target.value) || 1))}
-          placeholder="iterations"
-          aria-label="Measured iterations"
-        />
-        <input
-          type="number"
-          min={0}
-          value={warmupIterations}
-          onChange={(event) => setWarmupIterations(Math.max(0, Number(event.target.value) || 0))}
-          placeholder="warmup"
-          aria-label="Warmup iterations"
-        />
-        <input
-          type="number"
-          min={1000}
-          step={1000}
-          value={runTimeoutMs}
-          onChange={(event) => setRunTimeoutMs(Math.max(1000, Number(event.target.value) || 1000))}
-          placeholder="timeout ms"
-          aria-label="Timeout milliseconds"
-        />
+        <section className="control-panel">
+          <h2 className="control-title">Run Configuration</h2>
+          <label className="control-label">
+            <span className="field-title">Chart algorithm</span>
+            <span className="field-help">Algorithm used to display the complexity chart.</span>
+            <select
+              value={selectedAlgorithmId ?? ''}
+              onChange={(event) => refresh(Number(event.target.value))}
+              aria-label="Algorithm"
+            >
+              {algorithms.map((algorithm) => (
+                <option key={algorithm.id} value={algorithm.id}>
+                  {algorithm.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="control-label">
+            <span className="field-title">Algorithm to run</span>
+            <span className="field-help">Template that will be executed when you run a new benchmark.</span>
+            <select value={selectedTemplateKey} onChange={(event) => setSelectedTemplateKey(event.target.value)} aria-label="Algorithm template">
+              {BENCHMARK_SUITE.map((template) => (
+                <option key={template.key} value={template.key}>
+                  {template.name} ({template.complexityDeclared})
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="control-label">
+            <span className="field-title">Problem sizes</span>
+            <span className="field-help">Each row is a separate input size. Add, edit, or remove values individually.</span>
+            <div className="sizes-list">
+              {problemSizes.map((size, index) => (
+                <div key={`${index}-${size}`} className="size-row">
+                  <span className="size-tag">N{index + 1}</span>
+                  <input
+                    type="number"
+                    min={1}
+                    step={1}
+                    value={size}
+                    onChange={(event) => {
+                      const next = [...problemSizes];
+                      next[index] = Math.max(1, Number(event.target.value) || 1);
+                      setProblemSizes(next);
+                    }}
+                    aria-label={`Problem size ${index + 1}`}
+                  />
+                  <button
+                    type="button"
+                    className="icon-button"
+                    onClick={() => setProblemSizes(problemSizes.filter((_, i) => i !== index))}
+                    aria-label={`Remove size ${index + 1}`}
+                    disabled={problemSizes.length <= 1}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="size-actions">
+              <button type="button" className="inline-button" onClick={() => setProblemSizes([...problemSizes, problemSizes[problemSizes.length - 1] ?? 1000])}>
+                <Plus size={16} />
+                <span>Add size</span>
+              </button>
+              <button type="button" className="inline-button secondary" onClick={() => setProblemSizes(selectedTemplate.datasetSizes)}>
+                <RefreshCw size={16} />
+                <span>Use defaults</span>
+              </button>
+            </div>
+          </div>
+          <label className="control-label">
+            <span className="field-title">Measured iterations</span>
+            <span className="field-help">How many times each input size is measured and averaged.</span>
+            <input
+              type="number"
+              min={1}
+              value={runIterations}
+              onChange={(event) => setRunIterations(Math.max(1, Number(event.target.value) || 1))}
+              aria-label="Measured iterations"
+            />
+          </label>
+          <label className="control-label">
+            <span className="field-title">Warmup iterations</span>
+            <span className="field-help">Runs before measuring to stabilize performance.</span>
+            <input
+              type="number"
+              min={0}
+              value={warmupIterations}
+              onChange={(event) => setWarmupIterations(Math.max(0, Number(event.target.value) || 0))}
+              aria-label="Warmup iterations"
+            />
+          </label>
+          <label className="control-label">
+            <span className="field-title">Timeout (ms)</span>
+            <span className="field-help">Maximum time allowed for one benchmark run.</span>
+            <input
+              type="number"
+              min={1000}
+              step={1000}
+              value={runTimeoutMs}
+              onChange={(event) => setRunTimeoutMs(Math.max(1000, Number(event.target.value) || 1000))}
+              aria-label="Timeout milliseconds"
+            />
+          </label>
+        </section>
         <button onClick={runSelectedTemplate} disabled={busy}>
           <CirclePlay size={18} />
           <span>Run selected</span>

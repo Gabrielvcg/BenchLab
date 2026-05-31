@@ -180,6 +180,97 @@ select {
   text-overflow: ellipsis;
 }
 
+.control-panel {
+  display: grid;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid #d5ddd8;
+  border-radius: 8px;
+  background: #f2f7f3;
+}
+
+.control-title {
+  margin: 0;
+  font-size: 0.92rem;
+  text-transform: uppercase;
+  color: #51625c;
+}
+
+.control-label {
+  display: grid;
+  gap: 6px;
+  color: #42534d;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.field-title {
+  color: #223630;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.field-help {
+  color: #5f7068;
+  font-size: 0.74rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.sizes-list {
+  display: grid;
+  gap: 8px;
+}
+
+.size-row {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 40px;
+  gap: 8px;
+  align-items: center;
+}
+
+.size-tag {
+  min-height: 42px;
+  border: 1px solid #bac8c1;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: #edf4f0;
+  color: #3f524b;
+  font-weight: 800;
+}
+
+.icon-button {
+  width: 40px;
+  min-height: 42px;
+  padding: 0;
+  justify-content: center;
+  background: #5f736c;
+}
+
+.icon-button:disabled {
+  opacity: 0.45;
+}
+
+.size-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.inline-button {
+  min-height: 40px;
+  grid-template-columns: 16px minmax(0, 1fr);
+  justify-content: initial;
+  justify-items: start;
+  text-align: left;
+}
+
+.inline-button.secondary {
+  background: #1f4b43;
+}
+
 .status-text {
   color: #596962;
   line-height: 1.45;
