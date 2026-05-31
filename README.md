@@ -55,7 +55,7 @@ Production also requires `BENCHLAB_SECURITY_ADMIN_PASSWORD`; the API uses it to 
 
 ## Worker Runtime Notes
 
-- Current execution languages in worker: `PYTHON`, `JAVA`, `C`.
+- Current execution languages in worker: `PYTHON`, `JAVA`, `C`, `GO`, `RUBY`.
 - Execution is isolated with Docker flags: `--network none`, `--read-only`, `--tmpfs /tmp`, memory and CPU limits.
 - Base runner image definitions are available under `/runner-images`.
 - Each benchmark run supports `iterations` (default `5`) for more stable average timings.

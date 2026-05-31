@@ -250,6 +250,20 @@ func prepareRunnerSpec(language, sourceCode, tempDir string) (dockerRunnerSpec, 
 		compileCmd := []string{"sh", "-lc", "mkdir -p classes && javac -d classes Main.java"}
 		runCmd := []string{"java", "-cp", "/workspace/classes", "Main"}
 		return dockerRunnerSpec{image: "eclipse-temurin:21-jdk", compileCommand: compileCmd, runCommand: runCmd}, nil
+	case "GO":
+		err := os.WriteFile(filepath.Join(tempDir, "main.go"), []byte(sourceCode), 0o600)
+		if err != nil {
+			return dockerRunnerSpec{}, fmt.Errorf("no se pudo escribir archivo go: %w", err)
+		}
+		compileCmd := []string{"sh", "-c", "GOCACHE=/tmp/go-build go build -trimpath -o benchlab-app main.go"}
+		runCmd := []string{"/workspace/benchlab-app"}
+		return dockerRunnerSpec{image: "golang:1.22-alpine", compileCommand: compileCmd, runCommand: runCmd}, nil
+	case "RUBY":
+		err := os.WriteFile(filepath.Join(tempDir, "main.rb"), []byte(sourceCode), 0o600)
+		if err != nil {
+			return dockerRunnerSpec{}, fmt.Errorf("no se pudo escribir archivo ruby: %w", err)
+		}
+		return dockerRunnerSpec{image: "ruby:3.3-alpine", runCommand: []string{"ruby", "/workspace/main.rb"}}, nil
 	case "C":
 		err := os.WriteFile(filepath.Join(tempDir, "main.c"), []byte(sourceCode), 0o600)
 		if err != nil {

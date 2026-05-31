@@ -8,6 +8,7 @@
 - Increased demo benchmark input sizes so algorithm work is more visible than container startup overhead.
 - Fixed login panel brand and sign-in button alignment.
 - Separated runner compilation time from measured execution time and added an unmeasured warm-up execution per benchmark job.
+- Added Go and Ruby runner support and included both languages in the dashboard demo benchmark.
 
 ## 0.0.5
 

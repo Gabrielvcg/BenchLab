@@ -29,4 +29,4 @@
 
 ## Next Step
 
-Replace simulated worker execution with isolated Docker-per-run execution for Python, Java, and C as phase-1 languages.
+Replace simulated worker execution with isolated Docker-per-run execution for Python, Java, C, Go, and Ruby as phase-1 languages.

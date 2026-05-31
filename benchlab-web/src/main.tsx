@@ -204,6 +204,28 @@ function App() {
             runtimeConfig: '',
           }),
         }),
+        api<{ id: number }>('/api/implementations', {
+          method: 'POST',
+          body: JSON.stringify({
+            algorithmId: algorithm.id,
+            language: 'GO',
+            sourceCode:
+              'package main\n\nimport (\n\t"fmt"\n\t"os"\n\t"strconv"\n)\n\nfunc main() {\n\tn, _ := strconv.ParseInt(os.Getenv("BENCHLAB_DATASET_SIZE"), 10, 64)\n\tvar s int64\n\tfor i := int64(0); i < n; i++ {\n\t\ts += i % 97\n\t}\n\tfmt.Println(s)\n}',
+            compileConfig: '',
+            runtimeConfig: '',
+          }),
+        }),
+        api<{ id: number }>('/api/implementations', {
+          method: 'POST',
+          body: JSON.stringify({
+            algorithmId: algorithm.id,
+            language: 'RUBY',
+            sourceCode:
+              "n = ENV.fetch('BENCHLAB_DATASET_SIZE', '1000').to_i\ns = 0\n(0...n).each do |i|\n  s += i % 97\nend\nputs s",
+            compileConfig: '',
+            runtimeConfig: '',
+          }),
+        }),
       ]);
 
       for (const implementation of implementations) {
