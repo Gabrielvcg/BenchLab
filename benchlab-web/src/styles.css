@@ -138,7 +138,7 @@ select {
 .dashboard {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 248px minmax(0, 1fr);
+  grid-template-columns: minmax(300px, 340px) minmax(0, 1fr);
 }
 
 .sidebar {
@@ -254,7 +254,7 @@ select {
 
 .size-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 8px;
   margin-top: 2px;
 }
@@ -265,6 +265,11 @@ select {
   justify-content: initial;
   justify-items: start;
   text-align: left;
+}
+
+.size-actions .inline-button span {
+  overflow: visible;
+  text-overflow: clip;
 }
 
 .inline-button.secondary {
@@ -395,6 +400,31 @@ svg {
   padding: 18px;
 }
 
+.sort-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.sort-chip {
+  width: auto;
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid #bac8c1;
+  background: #edf4f0;
+  color: #274039;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.sort-chip[aria-pressed='true'] {
+  background: #1f4b43;
+  border-color: #1f4b43;
+  color: #f3f8f5;
+}
+
 .table-scroll {
   overflow-x: auto;
   margin-top: 14px;
@@ -451,7 +481,7 @@ th {
   color: #775219;
 }
 
-@media (max-width: 860px) {
+@media (max-width: 1180px) {
   .dashboard {
     grid-template-columns: 1fr;
   }
@@ -461,6 +491,12 @@ th {
     min-height: auto;
     border-right: 0;
     border-bottom: 1px solid #d5ddd8;
+  }
+}
+
+@media (max-width: 860px) {
+  .sidebar {
+    padding: 18px 14px;
   }
 
   header {

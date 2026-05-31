@@ -593,9 +593,62 @@ function ComplexityChart({ complexity }: { complexity: ComplexityResponse | null
 }
 
 function RunTable({ runs }: { runs: RunSummary[] }) {
+  const [sortBy, setSortBy] = React.useState<'id' | 'status' | 'algorithmName' | 'language' | 'datasetSize' | 'wallTimeMs'>('id');
+  const [sortDirection, setSortDirection] = React.useState<'asc' | 'desc'>('desc');
+
+  const sortedRuns = React.useMemo(() => {
+    const direction = sortDirection === 'asc' ? 1 : -1;
+    const sorted = [...runs];
+    sorted.sort((left, right) => {
+      const numberCompare = (a: number | null | undefined, b: number | null | undefined) => (a ?? -1) - (b ?? -1);
+
+      if (sortBy === 'id') return numberCompare(left.id, right.id) * direction;
+      if (sortBy === 'datasetSize') return numberCompare(left.datasetSize, right.datasetSize) * direction;
+      if (sortBy === 'wallTimeMs') return numberCompare(left.wallTimeMs, right.wallTimeMs) * direction;
+      if (sortBy === 'status') return left.status.localeCompare(right.status) * direction;
+      if (sortBy === 'algorithmName') return left.algorithmName.localeCompare(right.algorithmName) * direction;
+      return left.language.localeCompare(right.language) * direction;
+    });
+    return sorted;
+  }, [runs, sortBy, sortDirection]);
+
+  function updateSort(nextSortBy: 'id' | 'status' | 'algorithmName' | 'language' | 'datasetSize' | 'wallTimeMs') {
+    if (sortBy === nextSortBy) {
+      setSortDirection(current => (current === 'asc' ? 'desc' : 'asc'));
+      return;
+    }
+    setSortBy(nextSortBy);
+    setSortDirection('asc');
+  }
+
   return (
     <section className="table-surface">
       <h2>Recent runs</h2>
+      <div className="sort-controls" role="group" aria-label="Sort runs table">
+        <button type="button" className="sort-chip" onClick={() => updateSort('id')} aria-pressed={sortBy === 'id'}>
+          ID {sortBy === 'id' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+        </button>
+        <button type="button" className="sort-chip" onClick={() => updateSort('status')} aria-pressed={sortBy === 'status'}>
+          Status {sortBy === 'status' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+        </button>
+        <button
+          type="button"
+          className="sort-chip"
+          onClick={() => updateSort('algorithmName')}
+          aria-pressed={sortBy === 'algorithmName'}
+        >
+          Algorithm {sortBy === 'algorithmName' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+        </button>
+        <button type="button" className="sort-chip" onClick={() => updateSort('language')} aria-pressed={sortBy === 'language'}>
+          Language {sortBy === 'language' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+        </button>
+        <button type="button" className="sort-chip" onClick={() => updateSort('datasetSize')} aria-pressed={sortBy === 'datasetSize'}>
+          Size {sortBy === 'datasetSize' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+        </button>
+        <button type="button" className="sort-chip" onClick={() => updateSort('wallTimeMs')} aria-pressed={sortBy === 'wallTimeMs'}>
+          Wall ms {sortBy === 'wallTimeMs' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+        </button>
+      </div>
       <div className="table-scroll">
         <table>
           <thead>
@@ -609,7 +662,7 @@ function RunTable({ runs }: { runs: RunSummary[] }) {
             </tr>
           </thead>
           <tbody>
-            {runs.map((run) => (
+            {sortedRuns.map((run) => (
               <tr key={run.id}>
                 <td>{run.id}</td>
                 <td>
