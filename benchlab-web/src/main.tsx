@@ -153,7 +153,7 @@ function App() {
         }),
       });
 
-      const sizes = [10000, 50000, 100000, 250000];
+      const sizes = [1000000, 5000000, 10000000, 25000000];
       const datasets = [];
       for (const size of sizes) {
         datasets.push(
@@ -213,7 +213,7 @@ function App() {
             body: JSON.stringify({
               implementationId: implementation.id,
               datasetId: dataset.id,
-              timeoutMs: 15000,
+              timeoutMs: 60000,
               memoryMb: 256,
               cpuLimit: 1,
               iterations: 5,
@@ -244,7 +244,7 @@ function App() {
     return (
       <main className="login-shell">
         <form className="login-panel" onSubmit={signIn}>
-          <div className="brand-row">
+          <div className="brand-row login-brand">
             <ShieldCheck size={28} />
             <span>BenchLab</span>
           </div>

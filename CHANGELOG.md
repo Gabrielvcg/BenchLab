@@ -5,6 +5,8 @@
 - Fixed dashboard refresh selection so the chart stays on the current or latest benchmark algorithm instead of falling back to the first sorted algorithm.
 - Tightened sidebar button and selector layout to prevent clipped labels in the production dashboard.
 - Centered single-point chart data so sparse benchmark series remain visible.
+- Increased demo benchmark input sizes so algorithm work is more visible than container startup overhead.
+- Fixed login panel brand and sign-in button alignment.
 
 ## 0.0.5
 
