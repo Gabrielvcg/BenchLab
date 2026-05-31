@@ -159,6 +159,14 @@ function shuffleInPlace<T>(items: T[]): void {
   }
 }
 
+function sanitizeIntegerInput(rawValue: string, min: number, fallback: number): number {
+  const parsed = Number.parseInt(rawValue.replace(/[^\d-]/g, ''), 10);
+  if (!Number.isFinite(parsed)) {
+    return fallback;
+  }
+  return Math.max(min, parsed);
+}
+
 function App() {
   const [token, setToken] = React.useState(() => localStorage.getItem('benchlab.token') ?? '');
   const [login, setLogin] = React.useState('');
@@ -170,10 +178,12 @@ function App() {
   const [message, setMessage] = React.useState('Ready');
   const [busy, setBusy] = React.useState(false);
   const [selectedTemplateKey, setSelectedTemplateKey] = React.useState(BENCHMARK_SUITE[2]?.key ?? BENCHMARK_SUITE[0].key);
-  const [problemSizes, setProblemSizes] = React.useState<number[]>(BENCHMARK_SUITE[2]?.datasetSizes ?? BENCHMARK_SUITE[0].datasetSizes);
-  const [runIterations, setRunIterations] = React.useState(5);
-  const [warmupIterations, setWarmupIterations] = React.useState(1);
-  const [runTimeoutMs, setRunTimeoutMs] = React.useState(60000);
+  const [problemSizes, setProblemSizes] = React.useState<string[]>(
+    (BENCHMARK_SUITE[2]?.datasetSizes ?? BENCHMARK_SUITE[0].datasetSizes).map(value => String(value)),
+  );
+  const [runIterations, setRunIterations] = React.useState('5');
+  const [warmupIterations, setWarmupIterations] = React.useState('1');
+  const [runTimeoutMs, setRunTimeoutMs] = React.useState('60000');
   const selectedAlgorithmIdRef = React.useRef<number | null>(selectedAlgorithmId);
 
   const authHeaders = React.useMemo(() => ({ Authorization: `Bearer ${token}` }), [token]);
@@ -187,7 +197,7 @@ function App() {
   }, [selectedAlgorithmId]);
 
   React.useEffect(() => {
-    setProblemSizes(selectedTemplate.datasetSizes);
+    setProblemSizes(selectedTemplate.datasetSizes.map(value => String(value)));
   }, [selectedTemplate]);
 
   async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -256,10 +266,14 @@ function App() {
     setBusy(true);
     setMessage(`Seeding algorithm ${selectedTemplate.name}`);
     try {
-      const uniqueSizes = Array.from(new Set(problemSizes.map((value) => Math.round(value)).filter((value) => Number.isFinite(value) && value > 0)));
+      const normalizedSizes = problemSizes.map(value => sanitizeIntegerInput(value, 1, 1));
+      const uniqueSizes = Array.from(new Set(normalizedSizes));
       if (uniqueSizes.length === 0) {
         throw new Error('Sizes must contain at least one positive integer');
       }
+      const normalizedIterations = sanitizeIntegerInput(runIterations, 1, 1);
+      const normalizedWarmups = sanitizeIntegerInput(warmupIterations, 0, 0);
+      const normalizedTimeoutMs = sanitizeIntegerInput(runTimeoutMs, 1000, 1000);
 
       const suffix = new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 12);
       const algorithm = await api<Algorithm>('/api/algorithms', {
@@ -307,11 +321,11 @@ function App() {
         datasets.map(dataset => ({
           implementationId: implementation.id,
           datasetId: dataset.id,
-          timeoutMs: runTimeoutMs,
+          timeoutMs: normalizedTimeoutMs,
           memoryMb: 256,
           cpuLimit: 1,
-          iterations: runIterations,
-          warmupIterations,
+          iterations: normalizedIterations,
+          warmupIterations: normalizedWarmups,
         })),
       );
       shuffleInPlace(runQueue);
@@ -416,13 +430,17 @@ function App() {
                 <div key={`${index}-${size}`} className="size-row">
                   <span className="size-tag">N{index + 1}</span>
                   <input
-                    type="number"
-                    min={1}
-                    step={1}
+                    type="text"
+                    inputMode="numeric"
                     value={size}
                     onChange={(event) => {
                       const next = [...problemSizes];
-                      next[index] = Math.max(1, Number(event.target.value) || 1);
+                      next[index] = event.target.value;
+                      setProblemSizes(next);
+                    }}
+                    onBlur={() => {
+                      const next = [...problemSizes];
+                      next[index] = String(sanitizeIntegerInput(next[index], 1, 1));
                       setProblemSizes(next);
                     }}
                     aria-label={`Problem size ${index + 1}`}
@@ -440,11 +458,11 @@ function App() {
               ))}
             </div>
             <div className="size-actions">
-              <button type="button" className="inline-button" onClick={() => setProblemSizes([...problemSizes, problemSizes[problemSizes.length - 1] ?? 1000])}>
+              <button type="button" className="inline-button" onClick={() => setProblemSizes([...problemSizes, problemSizes[problemSizes.length - 1] ?? '1000'])}>
                 <Plus size={16} />
                 <span>Add size</span>
               </button>
-              <button type="button" className="inline-button secondary" onClick={() => setProblemSizes(selectedTemplate.datasetSizes)}>
+              <button type="button" className="inline-button secondary" onClick={() => setProblemSizes(selectedTemplate.datasetSizes.map(value => String(value)))}>
                 <RefreshCw size={16} />
                 <span>Use defaults</span>
               </button>
@@ -454,10 +472,11 @@ function App() {
             <span className="field-title">Measured iterations</span>
             <span className="field-help">How many times each input size is measured and averaged.</span>
             <input
-              type="number"
-              min={1}
+              type="text"
+              inputMode="numeric"
               value={runIterations}
-              onChange={(event) => setRunIterations(Math.max(1, Number(event.target.value) || 1))}
+              onChange={(event) => setRunIterations(event.target.value)}
+              onBlur={() => setRunIterations(String(sanitizeIntegerInput(runIterations, 1, 1)))}
               aria-label="Measured iterations"
             />
           </label>
@@ -465,10 +484,11 @@ function App() {
             <span className="field-title">Warmup iterations</span>
             <span className="field-help">Runs before measuring to stabilize performance.</span>
             <input
-              type="number"
-              min={0}
+              type="text"
+              inputMode="numeric"
               value={warmupIterations}
-              onChange={(event) => setWarmupIterations(Math.max(0, Number(event.target.value) || 0))}
+              onChange={(event) => setWarmupIterations(event.target.value)}
+              onBlur={() => setWarmupIterations(String(sanitizeIntegerInput(warmupIterations, 0, 0)))}
               aria-label="Warmup iterations"
             />
           </label>
@@ -476,11 +496,11 @@ function App() {
             <span className="field-title">Timeout (ms)</span>
             <span className="field-help">Maximum time allowed for one benchmark run.</span>
             <input
-              type="number"
-              min={1000}
-              step={1000}
+              type="text"
+              inputMode="numeric"
               value={runTimeoutMs}
-              onChange={(event) => setRunTimeoutMs(Math.max(1000, Number(event.target.value) || 1000))}
+              onChange={(event) => setRunTimeoutMs(event.target.value)}
+              onBlur={() => setRunTimeoutMs(String(sanitizeIntegerInput(runTimeoutMs, 1000, 1000)))}
               aria-label="Timeout milliseconds"
             />
           </label>
