@@ -85,21 +85,42 @@ select {
 }
 
 .login-panel {
-  width: min(430px, 100%);
+  width: min(560px, 100%);
   display: grid;
-  gap: 18px;
-  padding: 30px;
+  gap: 16px;
+  padding: 34px;
   border: 1px solid #cbd5cf;
-  border-radius: 8px;
+  border-radius: 14px;
   background: rgba(247, 250, 247, 0.94);
   box-shadow: 0 24px 80px rgba(18, 32, 29, 0.18);
 }
 
 .login-brand {
-  justify-content: center;
-  gap: 12px;
-  margin-bottom: 4px;
-  text-align: center;
+  justify-content: start;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+.login-brand svg {
+  margin-top: 2px;
+}
+
+.login-brand div {
+  display: grid;
+  gap: 4px;
+}
+
+.login-brand span {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.login-brand p {
+  margin: 0;
+  color: #5a6a63;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.35;
 }
 
 .login-panel label {
@@ -124,6 +145,13 @@ select {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.login-message {
+  margin: 6px 0 0;
+  min-height: 20px;
+  color: #35524a;
+  font-weight: 700;
 }
 
 .brand-row {

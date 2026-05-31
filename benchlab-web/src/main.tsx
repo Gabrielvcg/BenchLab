@@ -361,7 +361,10 @@ function App() {
         <form className="login-panel" onSubmit={signIn}>
           <div className="brand-row login-brand">
             <ShieldCheck size={28} />
-            <span>BenchLab</span>
+            <div>
+              <span>BenchLab</span>
+              <p>Secure access to the benchmark dashboard</p>
+            </div>
           </div>
           <label>
             User
@@ -381,7 +384,7 @@ function App() {
             <CirclePlay size={18} />
             <span>Sign in</span>
           </button>
-          <p>{message}</p>
+          {message !== 'Ready' ? <p className="login-message">{message}</p> : null}
         </form>
       </main>
     );
