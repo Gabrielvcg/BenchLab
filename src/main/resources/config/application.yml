@@ -226,3 +226,18 @@ jhipster:
 # ===================================================================
 
 # application:
+
+spring:
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: benchlab
+    password: benchlab
+
+benchlab:
+  queue:
+    exchange: benchlab.run.exchange
+    run-requested-routing-key: benchlab.run.requested
+    run-requested-queue: benchlab.run.requested.q
+  worker:
+    callback-token: ${BENCHLAB_WORKER_TOKEN:benchlab-internal-token}

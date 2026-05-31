@@ -1,0 +1,48 @@
+package com.vacaro.benchlab.web.api;
+
+import com.vacaro.benchlab.service.BenchmarkService;
+import com.vacaro.benchlab.service.api.dto.BenchmarkCompareResponse;
+import com.vacaro.benchlab.service.api.dto.BenchmarkCompareRow;
+import com.vacaro.benchlab.service.api.dto.BenchmarkTimeseriesPoint;
+import com.vacaro.benchlab.service.api.dto.BenchmarkTimeseriesResponse;
+import java.util.stream.Collectors;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+
+@Component
+public class BenchmarksApiDelegateHandler implements BenchmarksApiDelegate {
+
+    private final BenchmarkService benchmarkService;
+
+    public BenchmarksApiDelegateHandler(BenchmarkService benchmarkService) {
+        this.benchmarkService = benchmarkService;
+    }
+
+    @Override
+    public ResponseEntity<BenchmarkCompareResponse> compareBenchmarks(Long algorithmId, Long datasetId) {
+        var response = benchmarkService.compare(algorithmId, datasetId);
+        var apiResponse = new BenchmarkCompareResponse().algorithmId(response.algorithmId()).datasetId(response.datasetId());
+        apiResponse.setRows(
+            response
+                .rows()
+                .stream()
+                .map(row -> new BenchmarkCompareRow().language(row.language()).avg(row.avg()).stddev(row.stddev()).p50(row.p50()).p95(row.p95()).validSamples(row.validSamples()))
+                .collect(Collectors.toList())
+        );
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @Override
+    public ResponseEntity<BenchmarkTimeseriesResponse> benchmarkTimeseries(Long algorithmId, String language) {
+        var response = benchmarkService.timeseries(algorithmId, language);
+        var apiResponse = new BenchmarkTimeseriesResponse().algorithmId(response.algorithmId()).language(response.language());
+        apiResponse.setPoints(
+            response
+                .points()
+                .stream()
+                .map(point -> new BenchmarkTimeseriesPoint().finishedAt(point.finishedAt()).wallTimeMs(point.wallTimeMs()))
+                .collect(Collectors.toList())
+        );
+        return ResponseEntity.ok(apiResponse);
+    }
+}

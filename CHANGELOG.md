@@ -1,0 +1,18 @@
+# Changelog
+
+## 0.0.3
+
+- Added GitHub Actions CI/CD for test/Sonar, GHCR image publishing, and VPS deployment.
+- Added runtime-only VPS deployment artifacts under `/deploy` for API, worker, PostgreSQL, Redis, and RabbitMQ.
+- Added Docker image build support for `runner-worker`.
+- Documented required GitHub environment variables and deployment secrets for production.
+
+## 0.0.2
+
+- Added core benchmark domain model (`algorithm`, `dataset`, `implementation`, `benchmark_run`, `run_metric`, `run_artifact`) with Liquibase migration.
+- Added benchmark API endpoints for implementation upload, run creation/status, comparison, and timeseries.
+- Added RabbitMQ integration for asynchronous run dispatch from API.
+- Added `runner-worker` Go service to consume jobs and report run results.
+- Implemented real Docker-based worker execution for Python, Java, and C with CPU/memory/timeout constraints and no-network policy.
+- Added shared internal callback token (`X-Worker-Token`) between API and worker for result ingestion.
+- Added architecture and operations docs under `/docs`.

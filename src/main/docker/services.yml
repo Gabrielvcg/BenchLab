@@ -9,3 +9,7 @@ services:
     extends:
       file: ./redis.yml
       service: redis
+  rabbitmq:
+    extends:
+      file: ./rabbitmq.yml
+      service: rabbitmq

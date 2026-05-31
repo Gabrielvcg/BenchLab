@@ -1,197 +1,65 @@
 # benchLab
 
-This application was generated using JHipster 8.11.0, you can find documentation and help at [https://www.jhipster.tech/documentation-archive/v8.11.0](https://www.jhipster.tech/documentation-archive/v8.11.0).
+Benchmark platform API for comparing algorithm implementations across programming languages.
 
-## Project Structure
+## Current Architecture (MVP)
 
-Node is required for generation and recommended for development. `package.json` is always generated for a better development experience with prettier, commit hooks, scripts and so on.
+- `benchmark-api` (this repository): JHipster monolith for auth, catalog, run orchestration, and benchmark queries.
+- `runner-worker` (`/runner-worker`): Go worker consuming jobs from RabbitMQ and reporting results.
+- Persistence: PostgreSQL for transactional data and run artifacts (truncated output + metadata).
+- Queue: RabbitMQ for asynchronous run dispatch.
 
-In the project root, JHipster generates configuration files for tools like git, prettier, eslint, husky, and others that are well known and you can find references in the web.
+See architecture details at [`/docs/architecture/overview.md`](docs/architecture/overview.md).
+VPS runbook: [`/docs/operations/vps-runbook.md`](docs/operations/vps-runbook.md).
+Deployment artifacts for GitHub Actions + VPS live under [`/deploy`](deploy).
 
-`/src/*` structure follows default Java structure.
+## Quick Start
 
-- `.yo-rc.json` - Yeoman configuration file
-  JHipster configuration is stored in this file at `generator-jhipster` key. You may find `generator-jhipster-*` for specific blueprints configuration.
-- `.yo-resolve` (optional) - Yeoman conflict resolver
-  Allows to use a specific action when conflicts are found skipping prompts for files that matches a pattern. Each line should match `[pattern] [action]` with pattern been a [Minimatch](https://github.com/isaacs/minimatch#minimatch) pattern and action been one of skip (default if omitted) or force. Lines starting with `#` are considered comments and are ignored.
-- `.jhipster/*.json` - JHipster entity configuration files
-- `/src/main/docker` - Docker configurations for the application and services that the application depends on
-
-## Development
-
-To start your application in the dev profile, run:
-
-```
-./mvnw
-```
-
-For further instructions on how to develop with JHipster, have a look at [Using JHipster in development][].
-
-### Doing API-First development using openapi-generator-cli
-
-[OpenAPI-Generator]() is configured for this application. You can generate API code from the `src/main/resources/swagger/api.yml` definition file by running:
+1. Start dependencies:
 
 ```bash
-./mvnw generate-sources
-```
-
-Then implements the generated delegate classes with `@Service` classes.
-
-To edit the `api.yml` definition file, you can use a tool such as [Swagger-Editor](). Start a local instance of the swagger-editor using docker by running: `docker compose -f src/main/docker/swagger-editor.yml up -d`. The editor will then be reachable at [http://localhost:7742](http://localhost:7742).
-
-Refer to [Doing API-First development][] for more details.
-
-## Building for production
-
-### Packaging as jar
-
-To build the final jar and optimize the benchLab application for production, run:
-
-```
-./mvnw -Pprod clean verify
-```
-
-To ensure everything worked, run:
-
-```
-java -jar target/*.jar
-```
-
-Refer to [Using JHipster in production][] for more details.
-
-### Packaging as war
-
-To package your application as a war in order to deploy it to an application server, run:
-
-```
-./mvnw -Pprod,war clean verify
-```
-
-### JHipster Control Center
-
-JHipster Control Center can help you manage and control your application(s). You can start a local control center server (accessible on http://localhost:7419) with:
-
-```
-docker compose -f src/main/docker/jhipster-control-center.yml up
-```
-
-## Testing
-
-### Spring Boot tests
-
-To launch your application's tests, run:
-
-```
-./mvnw verify
-```
-
-### Gatling
-
-Performance tests are run by [Gatling][] and written in Scala. They're located in [src/test/java/gatling/simulations](src/test/java/gatling/simulations).
-
-You can execute all Gatling tests with
-
-```
-./mvnw gatling:test
-```
-
-## Others
-
-### Code quality using Sonar
-
-Sonar is used to analyse code quality. You can start a local Sonar server (accessible on http://localhost:9001) with:
-
-```
-docker compose -f src/main/docker/sonar.yml up -d
-```
-
-Note: we have turned off forced authentication redirect for UI in [src/main/docker/sonar.yml](src/main/docker/sonar.yml) for out of the box experience while trying out SonarQube, for real use cases turn it back on.
-
-You can run a Sonar analysis with using the [sonar-scanner](https://docs.sonarqube.org/display/SCAN/Analyzing+with+SonarQube+Scanner) or by using the maven plugin.
-
-Then, run a Sonar analysis:
-
-```
-./mvnw -Pprod clean verify sonar:sonar -Dsonar.login=admin -Dsonar.password=admin
-```
-
-If you need to re-run the Sonar phase, please be sure to specify at least the `initialize` phase since Sonar properties are loaded from the sonar-project.properties file.
-
-```
-./mvnw initialize sonar:sonar -Dsonar.login=admin -Dsonar.password=admin
-```
-
-Additionally, Instead of passing `sonar.password` and `sonar.login` as CLI arguments, these parameters can be configured from [sonar-project.properties](sonar-project.properties) as shown below:
-
-```
-sonar.login=admin
-sonar.password=admin
-```
-
-For more information, refer to the [Code quality page][].
-
-### Docker Compose support
-
-JHipster generates a number of Docker Compose configuration files in the [src/main/docker/](src/main/docker/) folder to launch required third party services.
-
-For example, to start required services in Docker containers, run:
-
-```
 docker compose -f src/main/docker/services.yml up -d
 ```
 
-To stop and remove the containers, run:
+2. Run API:
 
-```
-docker compose -f src/main/docker/services.yml down
-```
-
-[Spring Docker Compose Integration](https://docs.spring.io/spring-boot/reference/features/dev-services.html) is enabled by default. It's possible to disable it in application.yml:
-
-```yaml
-spring:
-  ...
-  docker:
-    compose:
-      enabled: false
+```bash
+./mvnw
 ```
 
-You can also fully dockerize your application and all the services that it depends on.
-To achieve this, first build a Docker image of your app by running:
+3. Run worker:
 
-```sh
-npm run java:docker
+```bash
+cd runner-worker
+go mod tidy
+go run .
 ```
 
-Or build a arm64 Docker image when using an arm64 processor os like MacOS with M1 processor family running:
+4. Ensure worker and API share the same internal token:
 
-```sh
-npm run java:docker:arm64
+```bash
+export BENCHLAB_WORKER_TOKEN=benchlab-internal-token
 ```
 
-Then run:
+## Main API Endpoints
 
-```sh
-docker compose -f src/main/docker/app.yml up -d
-```
+- `POST /api/implementations`
+- `POST /api/runs`
+- `GET /api/runs/{id}`
+- `GET /api/benchmarks/compare?algorithmId=&datasetId=`
+- `GET /api/benchmarks/timeseries?algorithmId=&language=`
 
-For more information refer to [Using Docker and Docker-Compose][], this page also contains information on the Docker Compose sub-generator (`jhipster docker-compose`), which is able to generate Docker configurations for one or several JHipster applications.
+## Worker Runtime Notes
 
-## Continuous Integration (optional)
+- Current execution languages in worker: `PYTHON`, `JAVA`, `C`.
+- Execution is isolated with Docker flags: `--network none`, `--read-only`, `--tmpfs /tmp`, memory and CPU limits.
+- Base runner image definitions are available under `/runner-images`.
+- Each benchmark run supports `iterations` (default `5`) for more stable average timings.
 
-To configure CI for your project, run the ci-cd sub-generator (`jhipster ci-cd`), this will let you generate configuration files for a number of Continuous Integration systems. Consult the [Setting up Continuous Integration][] page for more information.
+OpenAPI source: `src/main/resources/swagger/api.yml`
 
-[JHipster Homepage and latest documentation]: https://www.jhipster.tech
-[JHipster 8.11.0 archive]: https://www.jhipster.tech/documentation-archive/v8.11.0
-[Using JHipster in development]: https://www.jhipster.tech/documentation-archive/v8.11.0/development/
-[Using Docker and Docker-Compose]: https://www.jhipster.tech/documentation-archive/v8.11.0/docker-compose
-[Using JHipster in production]: https://www.jhipster.tech/documentation-archive/v8.11.0/production/
-[Running tests page]: https://www.jhipster.tech/documentation-archive/v8.11.0/running-tests/
-[Code quality page]: https://www.jhipster.tech/documentation-archive/v8.11.0/code-quality/
-[Setting up Continuous Integration]: https://www.jhipster.tech/documentation-archive/v8.11.0/setting-up-ci/
-[Node.js]: https://nodejs.org/
-[NPM]: https://www.npmjs.com/
-[OpenAPI-Generator]: https://openapi-generator.tech
-[Swagger-Editor]: https://editor.swagger.io
-[Doing API-First development]: https://www.jhipster.tech/documentation-archive/v8.11.0/doing-api-first-development/
-[Gatling]: https://gatling.io/
+## Documentation
+
+- [`/docs/architecture/overview.md`](docs/architecture/overview.md)
+- [`/docs/operations/local-run.md`](docs/operations/local-run.md)
+- [`/docs/operations/vps-runbook.md`](docs/operations/vps-runbook.md)

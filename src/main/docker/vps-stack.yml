@@ -1,0 +1,76 @@
+name: benchlab-vps
+services:
+  postgresql:
+    image: postgres:17.4
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=benchLab
+      - POSTGRES_USER=benchLab
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - ./volumes/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:8.0.0
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    restart: unless-stopped
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-benchlab}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', '-q', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    image: benchlab-api:latest
+    restart: unless-stopped
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgresql:5432/benchLab
+      - SPRING_DATASOURCE_USERNAME=benchLab
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - SPRING_LIQUIBASE_URL=jdbc:postgresql://postgresql:5432/benchLab
+      - SPRING_LIQUIBASE_USER=benchLab
+      - SPRING_LIQUIBASE_PASSWORD=${POSTGRES_PASSWORD}
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-benchlab}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - BENCHLAB_WORKER_TOKEN=${BENCHLAB_WORKER_TOKEN}
+      - JHIPSTER_CACHE_REDIS_SERVER=redis://redis:6379
+    ports:
+      - 8080:8080
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8080/management/health']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  worker:
+    image: benchlab-worker:latest
+    restart: unless-stopped
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    environment:
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER:-benchlab}:${RABBITMQ_PASSWORD}@rabbitmq:5672/
+      - RUN_REQUESTED_QUEUE=benchlab.run.requested.q
+      - BENCHLAB_API_BASE_URL=http://api:8080
+      - BENCHLAB_WORKER_TOKEN=${BENCHLAB_WORKER_TOKEN}

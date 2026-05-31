@@ -116,7 +116,10 @@ Desktop.ini
 # Directories
 ######################
 /bin/
-/deploy/
+/deploy/.env
+/deploy/.env.*
+!/deploy/.env.example
+/runner-worker/runner-worker.exe
 
 ######################
 # Logs
