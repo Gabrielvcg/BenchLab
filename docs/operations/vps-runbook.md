@@ -44,6 +44,7 @@ WORKER_TEMP_PATH=/opt/benchlab/worker-tmp
 Required secrets:
 
 ```text
+BENCHLAB_ADMIN_PASSWORD
 BENCHLAB_WORKER_TOKEN
 GHCR_READ_TOKEN
 JHIPSTER_SECURITY_AUTHENTICATION_JWT_BASE64_SECRET
@@ -55,6 +56,8 @@ VPS_SSH_KEY
 ```
 
 `SPRING_DATASOURCE_PASSWORD` can match `POSTGRES_PASSWORD`.
+
+`BENCHLAB_ADMIN_PASSWORD` is required in production. On startup the API rotates the seeded JHipster `admin` user's password to this value and refuses to start if the value is missing or still set to `admin`.
 
 ## 3) Runtime environment
 
@@ -68,6 +71,7 @@ POSTGRES_PASSWORD=change-me
 RABBITMQ_USER=benchlab
 RABBITMQ_PASSWORD=change-me
 BENCHLAB_WORKER_TOKEN=change-me
+BENCHLAB_SECURITY_ADMIN_PASSWORD=change-me
 ```
 
 Use [`/deploy/.env.example`](../../deploy/.env.example) as the complete reference. Do not commit a real `.env`.

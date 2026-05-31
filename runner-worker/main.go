@@ -147,7 +147,7 @@ func executeRun(event RunRequestedEvent) RunResultCallbackRequest {
 
 		args := []string{
 			"run", "--rm", "--network", "none", "--read-only",
-			"--tmpfs", "/tmp:rw,noexec,nosuid,size=64m",
+			"--tmpfs", "/tmp:rw,nosuid,size=64m",
 			"--memory", fmt.Sprintf("%dm", event.MemoryMb),
 			"--cpus", fmt.Sprintf("%.2f", event.CpuLimit),
 			"-e", fmt.Sprintf("BENCHLAB_DATASET_SIZE=%d", event.DatasetSize),
@@ -228,14 +228,14 @@ func prepareRunnerSpec(language, sourceCode, tempDir string) (dockerRunnerSpec, 
 		if err != nil {
 			return dockerRunnerSpec{}, fmt.Errorf("no se pudo escribir archivo java: %w", err)
 		}
-		cmd := []string{"sh", "-lc", "javac Main.java && java Main"}
+		cmd := []string{"sh", "-lc", "javac -d /tmp Main.java && java -cp /tmp Main"}
 		return dockerRunnerSpec{image: "eclipse-temurin:21-jdk", command: cmd}, nil
 	case "C":
 		err := os.WriteFile(filepath.Join(tempDir, "main.c"), []byte(sourceCode), 0o600)
 		if err != nil {
 			return dockerRunnerSpec{}, fmt.Errorf("no se pudo escribir archivo c: %w", err)
 		}
-		cmd := []string{"sh", "-lc", "gcc main.c -O2 -o app && ./app"}
+		cmd := []string{"sh", "-lc", "gcc main.c -O2 -o /tmp/app && /tmp/app"}
 		return dockerRunnerSpec{image: "gcc:14", command: cmd}, nil
 	default:
 		return dockerRunnerSpec{}, fmt.Errorf("lenguaje no soportado en fase actual: %s", language)

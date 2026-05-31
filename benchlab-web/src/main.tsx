@@ -60,8 +60,8 @@ const languageColors: Record<string, string> = {
 
 function App() {
   const [token, setToken] = React.useState(() => localStorage.getItem('benchlab.token') ?? '');
-  const [login, setLogin] = React.useState('admin');
-  const [password, setPassword] = React.useState('admin');
+  const [login, setLogin] = React.useState('');
+  const [password, setPassword] = React.useState('');
   const [algorithms, setAlgorithms] = React.useState<Algorithm[]>([]);
   const [selectedAlgorithmId, setSelectedAlgorithmId] = React.useState<number | null>(null);
   const [complexity, setComplexity] = React.useState<ComplexityResponse | null>(null);
@@ -242,15 +242,21 @@ function App() {
           </div>
           <label>
             User
-            <input value={login} onChange={(event) => setLogin(event.target.value)} autoComplete="username" />
+            <input value={login} onChange={(event) => setLogin(event.target.value)} autoComplete="username" placeholder="User" />
           </label>
           <label>
             Password
-            <input value={password} onChange={(event) => setPassword(event.target.value)} type="password" autoComplete="current-password" />
+            <input
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              type="password"
+              autoComplete="current-password"
+              placeholder="Password"
+            />
           </label>
           <button type="submit" disabled={busy}>
             <CirclePlay size={18} />
-            Sign in
+            <span>Sign in</span>
           </button>
           <p>{message}</p>
         </form>
@@ -278,11 +284,11 @@ function App() {
         </select>
         <button onClick={runDemo} disabled={busy}>
           <CirclePlay size={18} />
-          Run demo
+          <span>Run demo</span>
         </button>
         <button onClick={() => refresh()} disabled={busy}>
           <RefreshCw size={18} />
-          Refresh
+          <span>Refresh</span>
         </button>
         <button
           onClick={() => {
@@ -291,7 +297,7 @@ function App() {
           }}
         >
           <LogOut size={18} />
-          Sign out
+          <span>Sign out</span>
         </button>
         <p className="status-text">{message}</p>
       </aside>

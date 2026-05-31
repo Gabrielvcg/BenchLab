@@ -7,6 +7,7 @@
   color: #18211f;
   background: #e7ece7;
   font-family: "Aptos", "Segoe UI", sans-serif;
+  font-size: 16px;
   font-synthesis: none;
   text-rendering: geometricPrecision;
 }
@@ -32,16 +33,31 @@ select {
 }
 
 button {
-  min-height: 42px;
+  width: 100%;
+  min-height: 44px;
   border: 0;
   border-radius: 6px;
+  padding: 0 16px;
   color: #f7faf7;
   background: #143a34;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
   cursor: pointer;
+  font-size: 0.96rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+button svg {
+  flex: 0 0 auto;
+}
+
+button span {
+  display: inline-block;
+  min-width: 0;
 }
 
 button:disabled {
@@ -58,6 +74,7 @@ select {
   color: #18211f;
   min-height: 42px;
   padding: 0 12px;
+  font-size: 0.96rem;
 }
 
 .login-shell {
@@ -68,10 +85,10 @@ select {
 }
 
 .login-panel {
-  width: min(420px, 100%);
+  width: min(430px, 100%);
   display: grid;
   gap: 18px;
-  padding: 28px;
+  padding: 30px;
   border: 1px solid #cbd5cf;
   border-radius: 8px;
   background: rgba(247, 250, 247, 0.94);
@@ -90,19 +107,19 @@ select {
   align-items: center;
   gap: 10px;
   font-weight: 800;
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   color: #102520;
 }
 
 .dashboard {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
+  grid-template-columns: 248px minmax(0, 1fr);
 }
 
 .sidebar {
   min-height: 100vh;
-  padding: 24px;
+  padding: 22px 20px;
   background: #f8faf8;
   border-right: 1px solid #d5ddd8;
   display: flex;
@@ -113,7 +130,21 @@ select {
 }
 
 .sidebar .brand-row {
-  margin-bottom: 18px;
+  margin-bottom: 16px;
+}
+
+.sidebar button {
+  justify-content: flex-start;
+  min-height: 46px;
+}
+
+.sidebar button span {
+  flex: 1;
+  text-align: left;
+}
+
+.sidebar select {
+  height: 44px;
 }
 
 .status-text {
@@ -123,7 +154,7 @@ select {
 }
 
 .workspace {
-  padding: 28px;
+  padding: 28px 30px;
   display: grid;
   gap: 22px;
   align-content: start;
@@ -152,9 +183,9 @@ h2 {
 }
 
 h1 {
-  font-size: clamp(2rem, 4vw, 4.4rem);
-  line-height: 0.95;
-  max-width: 820px;
+  font-size: clamp(2.2rem, 3.3vw, 4rem);
+  line-height: 1;
+  max-width: 760px;
 }
 
 h2 {
@@ -170,6 +201,7 @@ h2 {
   padding: 10px 14px;
   background: #f8faf8;
   white-space: nowrap;
+  font-size: 0.96rem;
 }
 
 .chart-surface,
@@ -191,7 +223,7 @@ h2 {
 }
 
 .chart-surface {
-  padding: 18px;
+  padding: 16px;
 }
 
 svg {

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.5
+
+- Required a production-only admin password secret and rotated the seeded JHipster admin password at startup.
+- Removed default login credentials from the web dashboard.
+- Fixed dashboard button sizing and tightened the production testing layout.
+- Fixed Java and C demo execution by compiling runner artifacts into the controlled container temp area.
+
 ## 0.0.4
 
 - Added `benchlab-web` dashboard for production testing and benchmark visualization.

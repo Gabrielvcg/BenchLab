@@ -42,6 +42,8 @@ go run .
 export BENCHLAB_WORKER_TOKEN=benchlab-internal-token
 ```
 
+Production also requires `BENCHLAB_SECURITY_ADMIN_PASSWORD`; the API uses it to rotate the seeded JHipster `admin` password at startup.
+
 ## Main API Endpoints
 
 - `POST /api/implementations`
