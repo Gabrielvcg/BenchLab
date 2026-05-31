@@ -66,7 +66,8 @@ button:disabled {
 }
 
 input,
-select {
+select,
+textarea {
   width: 100%;
   border: 1px solid #aebbb4;
   border-radius: 6px;
@@ -96,13 +97,15 @@ select {
 }
 
 .login-brand {
-  justify-content: start;
-  gap: 14px;
+  justify-content: center;
+  gap: 10px;
   margin-bottom: 8px;
+  flex-direction: column;
+  text-align: center;
 }
 
 .login-brand svg {
-  margin-top: 2px;
+  margin-top: 0;
 }
 
 .login-brand div {
@@ -128,6 +131,7 @@ select {
   gap: 8px;
   color: #52615b;
   font-size: 0.88rem;
+  text-align: center;
 }
 
 .login-panel button {
@@ -245,39 +249,11 @@ select {
   line-height: 1.35;
 }
 
-.sizes-list {
-  display: grid;
-  gap: 8px;
-}
-
-.size-row {
-  display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) 40px;
-  gap: 8px;
-  align-items: center;
-}
-
-.size-tag {
-  min-height: 42px;
-  border: 1px solid #bac8c1;
-  border-radius: 8px;
-  display: grid;
-  place-items: center;
-  background: #edf4f0;
-  color: #3f524b;
-  font-weight: 800;
-}
-
-.icon-button {
-  width: 40px;
-  min-height: 42px;
-  padding: 0;
-  justify-content: center;
-  background: #5f736c;
-}
-
-.icon-button:disabled {
-  opacity: 0.45;
+.sizes-textarea {
+  min-height: 124px;
+  padding: 10px 12px;
+  resize: vertical;
+  line-height: 1.4;
 }
 
 .size-actions {

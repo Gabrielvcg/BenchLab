@@ -1,6 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { Activity, BarChart3, CirclePlay, LogOut, Plus, RefreshCw, ShieldCheck, Trash2 } from 'lucide-react';
+import { Activity, BarChart3, CirclePlay, LogOut, RefreshCw, ShieldCheck } from 'lucide-react';
 import './styles.css';
 
 type Algorithm = {
@@ -167,6 +167,17 @@ function sanitizeIntegerInput(rawValue: string, min: number, fallback: number): 
   return Math.max(min, parsed);
 }
 
+function parseProblemSizesInput(rawValue: string): number[] {
+  return Array.from(
+    new Set(
+      rawValue
+        .split(/[\s,;]+/)
+        .map(item => sanitizeIntegerInput(item, 1, Number.NaN))
+        .filter(value => Number.isFinite(value) && value > 0),
+    ),
+  );
+}
+
 function App() {
   const [token, setToken] = React.useState(() => localStorage.getItem('benchlab.token') ?? '');
   const [login, setLogin] = React.useState('');
@@ -178,8 +189,8 @@ function App() {
   const [message, setMessage] = React.useState('Ready');
   const [busy, setBusy] = React.useState(false);
   const [selectedTemplateKey, setSelectedTemplateKey] = React.useState(BENCHMARK_SUITE[2]?.key ?? BENCHMARK_SUITE[0].key);
-  const [problemSizes, setProblemSizes] = React.useState<string[]>(
-    (BENCHMARK_SUITE[2]?.datasetSizes ?? BENCHMARK_SUITE[0].datasetSizes).map(value => String(value)),
+  const [problemSizesInput, setProblemSizesInput] = React.useState(
+    (BENCHMARK_SUITE[2]?.datasetSizes ?? BENCHMARK_SUITE[0].datasetSizes).join('\n'),
   );
   const [runIterations, setRunIterations] = React.useState('5');
   const [warmupIterations, setWarmupIterations] = React.useState('1');
@@ -197,7 +208,7 @@ function App() {
   }, [selectedAlgorithmId]);
 
   React.useEffect(() => {
-    setProblemSizes(selectedTemplate.datasetSizes.map(value => String(value)));
+    setProblemSizesInput(selectedTemplate.datasetSizes.join('\n'));
   }, [selectedTemplate]);
 
   async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -266,8 +277,7 @@ function App() {
     setBusy(true);
     setMessage(`Seeding algorithm ${selectedTemplate.name}`);
     try {
-      const normalizedSizes = problemSizes.map(value => sanitizeIntegerInput(value, 1, 1));
-      const uniqueSizes = Array.from(new Set(normalizedSizes));
+      const uniqueSizes = parseProblemSizesInput(problemSizesInput);
       if (uniqueSizes.length === 0) {
         throw new Error('Sizes must contain at least one positive integer');
       }
@@ -427,45 +437,17 @@ function App() {
           </label>
           <div className="control-label">
             <span className="field-title">Problem sizes</span>
-            <span className="field-help">Each row is a separate input size. Add, edit, or remove values individually.</span>
-            <div className="sizes-list">
-              {problemSizes.map((size, index) => (
-                <div key={`${index}-${size}`} className="size-row">
-                  <span className="size-tag">N{index + 1}</span>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={size}
-                    onChange={(event) => {
-                      const next = [...problemSizes];
-                      next[index] = event.target.value;
-                      setProblemSizes(next);
-                    }}
-                    onBlur={() => {
-                      const next = [...problemSizes];
-                      next[index] = String(sanitizeIntegerInput(next[index], 1, 1));
-                      setProblemSizes(next);
-                    }}
-                    aria-label={`Problem size ${index + 1}`}
-                  />
-                  <button
-                    type="button"
-                    className="icon-button"
-                    onClick={() => setProblemSizes(problemSizes.filter((_, i) => i !== index))}
-                    aria-label={`Remove size ${index + 1}`}
-                    disabled={problemSizes.length <= 1}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              ))}
-            </div>
+            <span className="field-help">Enter multiple values separated by new lines, commas, spaces, or semicolons.</span>
+            <textarea
+              className="sizes-textarea"
+              value={problemSizesInput}
+              onChange={event => setProblemSizesInput(event.target.value)}
+              placeholder="1000000&#10;5000000&#10;10000000&#10;25000000"
+              aria-label="Problem sizes list"
+              rows={5}
+            />
             <div className="size-actions">
-              <button type="button" className="inline-button" onClick={() => setProblemSizes([...problemSizes, problemSizes[problemSizes.length - 1] ?? '1000'])}>
-                <Plus size={16} />
-                <span>Add size</span>
-              </button>
-              <button type="button" className="inline-button secondary" onClick={() => setProblemSizes(selectedTemplate.datasetSizes.map(value => String(value)))}>
+              <button type="button" className="inline-button secondary" onClick={() => setProblemSizesInput(selectedTemplate.datasetSizes.join('\n'))}>
                 <RefreshCw size={16} />
                 <span>Use defaults</span>
               </button>
