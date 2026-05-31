@@ -154,7 +154,7 @@ jobs:
       VPS_PATH: ${{ vars.VPS_PATH || '/opt/benchlab/app' }}
       VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
       GHCR_USERNAME: ${{ vars.GHCR_USERNAME || github.actor }}
-      GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
+      GHCR_READ_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       COMPOSE_PROJECT_NAME: ${{ vars.COMPOSE_PROJECT_NAME || 'benchlab' }}
       BENCHLAB_API_IMAGE: ${{ needs.build-container.outputs.api_image }}
       BENCHLAB_WORKER_IMAGE: ${{ needs.build-container.outputs.worker_image }}
