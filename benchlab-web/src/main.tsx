@@ -77,6 +77,8 @@ const BENCHMARK_SUITE: AlgorithmTemplate[] = [
       RUBY: "n = ENV.fetch('BENCHLAB_DATASET_SIZE', '1000').to_i\na = n % 97\nb = (n * 3) % 101\nputs((a + b) % 997)",
       RUST:
         'use std::env;\nfn main() {\n    let n: i64 = env::var("BENCHLAB_DATASET_SIZE").unwrap_or_else(|_| "1000".into()).parse().unwrap_or(1000);\n    let a = n % 97;\n    let b = (n * 3) % 101;\n    println!("{}", (a + b) % 997);\n}',
+      ASSEMBLY:
+        '.section .rodata\nenv_name: .string "BENCHLAB_DATASET_SIZE"\nparse_fmt: .string "%ld"\nout_fmt: .string "%ld\\n"\n.section .bss\n.lcomm parsed_n, 8\n.text\n.globl main\n.extern getenv\n.extern sscanf\n.extern printf\nmain:\npush %rbp\nmov %rsp, %rbp\nsub $16, %rsp\nlea env_name(%rip), %rdi\ncall getenv\ntest %rax, %rax\njne .parse\nmovq $1000, parsed_n(%rip)\njmp .compute\n.parse:\nmov %rax, %rdi\nlea parse_fmt(%rip), %rsi\nlea parsed_n(%rip), %rdx\nxor %eax, %eax\ncall sscanf\n.compute:\nmov parsed_n(%rip), %rax\nmov %rax, %rbx\nmov $97, %rcx\ncqo\nidiv %rcx\nmov %rdx, %r8\nmov parsed_n(%rip), %rax\nimul $3, %rax, %rax\nmov $101, %rcx\ncqo\nidiv %rcx\nadd %rdx, %r8\nmov %r8, %rax\nmov $997, %rcx\ncqo\nidiv %rcx\nlea out_fmt(%rip), %rdi\nmov %rdx, %rsi\nxor %eax, %eax\ncall printf\nxor %eax, %eax\nleave\nret',
     },
   },
   {
@@ -113,6 +115,8 @@ const BENCHMARK_SUITE: AlgorithmTemplate[] = [
       RUBY: "n = ENV.fetch('BENCHLAB_DATASET_SIZE', '1000').to_i\ns = 0\n(0...n).each do |i|\n  s += i % 97\nend\nputs s",
       RUST:
         'use std::env;\nfn main() {\n    let n: i64 = env::var("BENCHLAB_DATASET_SIZE").unwrap_or_else(|_| "1000".into()).parse().unwrap_or(1000);\n    let mut s: i64 = 0;\n    for i in 0..n { s += i % 97; }\n    println!("{}", s);\n}',
+      ASSEMBLY:
+        '.section .rodata\nenv_name: .string "BENCHLAB_DATASET_SIZE"\nparse_fmt: .string "%ld"\nout_fmt: .string "%ld\\n"\n.section .bss\n.lcomm parsed_n, 8\n.text\n.globl main\n.extern getenv\n.extern sscanf\n.extern printf\nmain:\npush %rbp\nmov %rsp, %rbp\npush %rbx\npush %r12\npush %r13\nsub $8, %rsp\nlea env_name(%rip), %rdi\ncall getenv\ntest %rax, %rax\njne .parse\nmovq $1000, parsed_n(%rip)\njmp .start\n.parse:\nmov %rax, %rdi\nlea parse_fmt(%rip), %rsi\nlea parsed_n(%rip), %rdx\nxor %eax, %eax\ncall sscanf\n.start:\nmov parsed_n(%rip), %r12\nxor %rbx, %rbx\nxor %r13, %r13\n.loop:\ncmp %r12, %rbx\njge .done\nmov %rbx, %rax\nmov $97, %rcx\ncqo\nidiv %rcx\nadd %rdx, %r13\ninc %rbx\njmp .loop\n.done:\nlea out_fmt(%rip), %rdi\nmov %r13, %rsi\nxor %eax, %eax\ncall printf\nadd $8, %rsp\npop %r13\npop %r12\npop %rbx\nxor %eax, %eax\nleave\nret',
     },
   },
   {
