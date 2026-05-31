@@ -127,6 +127,7 @@ select {
   gap: 14px;
   position: sticky;
   top: 0;
+  overflow: hidden;
 }
 
 .sidebar .brand-row {
@@ -134,17 +135,25 @@ select {
 }
 
 .sidebar button {
-  justify-content: flex-start;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  justify-content: initial;
+  justify-items: start;
   min-height: 46px;
+  text-align: left;
 }
 
 .sidebar button span {
-  flex: 1;
+  overflow: hidden;
   text-align: left;
+  text-overflow: ellipsis;
+  width: 100%;
 }
 
 .sidebar select {
   height: 44px;
+  min-width: 0;
+  text-overflow: ellipsis;
 }
 
 .status-text {

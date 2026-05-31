@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.6
+
+- Fixed dashboard refresh selection so the chart stays on the current or latest benchmark algorithm instead of falling back to the first sorted algorithm.
+- Tightened sidebar button and selector layout to prevent clipped labels in the production dashboard.
+- Centered single-point chart data so sparse benchmark series remain visible.
+
 ## 0.0.5
 
 - Required a production-only admin password secret and rotated the seeded JHipster admin password at startup.

@@ -68,8 +68,13 @@ function App() {
   const [runs, setRuns] = React.useState<RunSummary[]>([]);
   const [message, setMessage] = React.useState('Ready');
   const [busy, setBusy] = React.useState(false);
+  const selectedAlgorithmIdRef = React.useRef<number | null>(selectedAlgorithmId);
 
   const authHeaders = React.useMemo(() => ({ Authorization: `Bearer ${token}` }), [token]);
+
+  React.useEffect(() => {
+    selectedAlgorithmIdRef.current = selectedAlgorithmId;
+  }, [selectedAlgorithmId]);
 
   async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
     const response = await fetch(path, {
@@ -108,14 +113,17 @@ function App() {
     }
   }
 
-  async function refresh(nextAlgorithmId = selectedAlgorithmId) {
+  async function refresh(nextAlgorithmId?: number | null) {
     if (!token) return;
     setBusy(true);
     try {
       const [algorithmData, runData] = await Promise.all([api<Algorithm[]>('/api/algorithms'), api<RunSummary[]>('/api/runs')]);
       setAlgorithms(algorithmData);
       setRuns(runData);
-      const algorithmId = nextAlgorithmId ?? algorithmData[0]?.id ?? null;
+      const currentAlgorithmId = selectedAlgorithmIdRef.current;
+      const currentStillExists = currentAlgorithmId != null && algorithmData.some((algorithm) => algorithm.id === currentAlgorithmId);
+      const latestRunAlgorithmId = runData.find((run) => algorithmData.some((algorithm) => algorithm.id === run.algorithmId))?.algorithmId ?? null;
+      const algorithmId = nextAlgorithmId ?? (currentStillExists ? currentAlgorithmId : latestRunAlgorithmId) ?? algorithmData[0]?.id ?? null;
       setSelectedAlgorithmId(algorithmId);
       if (algorithmId) {
         setComplexity(await api<ComplexityResponse>(`/api/benchmarks/complexity?algorithmId=${algorithmId}&metric=wallTimeMs`));
@@ -226,7 +234,7 @@ function App() {
   React.useEffect(() => {
     if (token) {
       refresh();
-      const interval = window.setInterval(() => refresh(), 6000);
+      const interval = window.setInterval(() => refresh(selectedAlgorithmIdRef.current), 6000);
       return () => window.clearInterval(interval);
     }
     return undefined;
@@ -332,7 +340,13 @@ function ComplexityChart({ complexity }: { complexity: ComplexityResponse | null
   const minX = Math.min(...allPoints.map((point) => point.datasetSize));
   const maxX = Math.max(...allPoints.map((point) => point.datasetSize));
   const maxY = Math.max(...allPoints.map((point) => point.avg), 1);
-  const xScale = (value: number) => padding.left + ((value - minX) / Math.max(maxX - minX, 1)) * (width - padding.left - padding.right);
+  const plotWidth = width - padding.left - padding.right;
+  const xScale = (value: number) => {
+    if (minX === maxX) {
+      return padding.left + plotWidth / 2;
+    }
+    return padding.left + ((value - minX) / (maxX - minX)) * plotWidth;
+  };
   const yScale = (value: number) => height - padding.bottom - (value / maxY) * (height - padding.top - padding.bottom);
 
   const ticks = Array.from(new Set(allPoints.map((point) => point.datasetSize))).sort((a, b) => a - b);
