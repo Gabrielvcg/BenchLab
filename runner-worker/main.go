@@ -132,6 +132,52 @@ func executeRun(event RunRequestedEvent) RunResultCallbackRequest {
 		return failedResult(host, "FAILED", err.Error())
 	}
 
+	compileMs := int64(0)
+	if len(runnerSpec.compileCommand) > 0 {
+		compileResult := runDockerCommand(event, runnerSpec, tempDir, runnerSpec.compileCommand, true)
+		compileMs = compileResult.elapsedMs
+		if compileResult.err != nil {
+			status, exitCode, failureReason, timedOut := classifyRunError(compileResult.err, compileResult.contextErr, "COMPILE_ERROR")
+			return RunResultCallbackRequest{
+				Status:              status,
+				RunnerHost:          host,
+				FailureReason:       failureReason,
+				CpuTimeMs:           0,
+				WallTimeMs:          0,
+				PeakMemoryMb:        float64(event.MemoryMb),
+				ExitCode:            exitCode,
+				TimedOut:            timedOut,
+				CompileMs:           compileMs,
+				StdoutTruncated:     truncate(compileResult.stdout, outputLimit),
+				StderrTruncated:     truncate(compileResult.stderr, outputLimit),
+				OutputSizeBytes:     int64(len(compileResult.stdout) + len(compileResult.stderr)),
+				ArtifactChecksum:    sha256Of(compileResult.stdout + compileResult.stderr),
+				TechnicalLogSummary: fmt.Sprintf("language=%s datasetVersion=%s compile failed", event.Language, event.DatasetVersion),
+			}
+		}
+	}
+
+	warmupResult := runDockerCommand(event, runnerSpec, tempDir, runnerSpec.runCommand, false)
+	if warmupResult.err != nil {
+		status, exitCode, failureReason, timedOut := classifyRunError(warmupResult.err, warmupResult.contextErr, "RUNTIME_ERROR")
+		return RunResultCallbackRequest{
+			Status:              status,
+			RunnerHost:          host,
+			FailureReason:       failureReason,
+			CpuTimeMs:           0,
+			WallTimeMs:          0,
+			PeakMemoryMb:        float64(event.MemoryMb),
+			ExitCode:            exitCode,
+			TimedOut:            timedOut,
+			CompileMs:           compileMs,
+			StdoutTruncated:     truncate(warmupResult.stdout, outputLimit),
+			StderrTruncated:     truncate(warmupResult.stderr, outputLimit),
+			OutputSizeBytes:     int64(len(warmupResult.stdout) + len(warmupResult.stderr)),
+			ArtifactChecksum:    sha256Of(warmupResult.stdout + warmupResult.stderr),
+			TechnicalLogSummary: fmt.Sprintf("language=%s datasetVersion=%s warmup failed", event.Language, event.DatasetVersion),
+		}
+	}
+
 	status := "SUCCEEDED"
 	exitCode := 0
 	failureReason := ""
@@ -142,50 +188,14 @@ func executeRun(event RunRequestedEvent) RunResultCallbackRequest {
 	lastErrStr := ""
 
 	for i := 0; i < event.Iterations; i++ {
-		started := time.Now()
-		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(event.TimeoutMs)*time.Millisecond)
+		runResult := runDockerCommand(event, runnerSpec, tempDir, runnerSpec.runCommand, false)
+		totalElapsed += runResult.elapsedMs
+		totalOutputBytes += int64(len(runResult.stdout) + len(runResult.stderr))
+		lastOutStr = truncate(runResult.stdout, outputLimit)
+		lastErrStr = truncate(runResult.stderr, outputLimit)
 
-		args := []string{
-			"run", "--rm", "--network", "none", "--read-only",
-			"--tmpfs", "/tmp:rw,exec,nosuid,size=64m",
-			"--memory", fmt.Sprintf("%dm", event.MemoryMb),
-			"--cpus", fmt.Sprintf("%.2f", event.CpuLimit),
-			"-e", fmt.Sprintf("BENCHLAB_DATASET_SIZE=%d", event.DatasetSize),
-			"-e", fmt.Sprintf("BENCHLAB_DATASET_SEED=%d", event.DatasetSeed),
-			"-v", dockerVolumeMount(tempDir),
-			"-w", "/workspace",
-			runnerSpec.image,
-		}
-		args = append(args, runnerSpec.command...)
-
-		cmd := exec.CommandContext(ctx, "docker", args...)
-		var stdout bytes.Buffer
-		var stderr bytes.Buffer
-		cmd.Stdout = &stdout
-		cmd.Stderr = &stderr
-		runErr := cmd.Run()
-		cancel()
-
-		elapsed := time.Since(started).Milliseconds()
-		totalElapsed += elapsed
-		totalOutputBytes += int64(len(stdout.Bytes()) + len(stderr.Bytes()))
-		lastOutStr = truncate(stdout.String(), outputLimit)
-		lastErrStr = truncate(stderr.String(), outputLimit)
-
-		if runErr != nil {
-			status = "RUNTIME_ERROR"
-			var exitErr *exec.ExitError
-			switch {
-			case errors.Is(ctx.Err(), context.DeadlineExceeded):
-				status = "TIMEOUT"
-				failureReason = "ejecucion excedio timeout"
-				timedOut = true
-			case errors.As(runErr, &exitErr):
-				exitCode = exitErr.ExitCode()
-				failureReason = fmt.Sprintf("proceso finalizo con codigo %d", exitCode)
-			default:
-				failureReason = runErr.Error()
-			}
+		if runResult.err != nil {
+			status, exitCode, failureReason, timedOut = classifyRunError(runResult.err, runResult.contextErr, "RUNTIME_ERROR")
 			break
 		}
 	}
@@ -201,18 +211,27 @@ func executeRun(event RunRequestedEvent) RunResultCallbackRequest {
 		PeakMemoryMb:        float64(event.MemoryMb),
 		ExitCode:            exitCode,
 		TimedOut:            timedOut,
-		CompileMs:           0,
+		CompileMs:           compileMs,
 		StdoutTruncated:     lastOutStr,
 		StderrTruncated:     lastErrStr,
 		OutputSizeBytes:     totalOutputBytes,
 		ArtifactChecksum:    checksum,
-		TechnicalLogSummary: fmt.Sprintf("language=%s datasetVersion=%s iterations=%d", event.Language, event.DatasetVersion, event.Iterations),
+		TechnicalLogSummary: fmt.Sprintf("language=%s datasetVersion=%s warmup=1 iterations=%d", event.Language, event.DatasetVersion, event.Iterations),
 	}
 }
 
 type dockerRunnerSpec struct {
-	image   string
-	command []string
+	image          string
+	compileCommand []string
+	runCommand     []string
+}
+
+type dockerRunResult struct {
+	elapsedMs  int64
+	stdout     string
+	stderr     string
+	err        error
+	contextErr error
 }
 
 func prepareRunnerSpec(language, sourceCode, tempDir string) (dockerRunnerSpec, error) {
@@ -222,23 +241,71 @@ func prepareRunnerSpec(language, sourceCode, tempDir string) (dockerRunnerSpec, 
 		if err != nil {
 			return dockerRunnerSpec{}, fmt.Errorf("no se pudo escribir archivo python: %w", err)
 		}
-		return dockerRunnerSpec{image: "python:3.12-alpine", command: []string{"python", "/workspace/main.py"}}, nil
+		return dockerRunnerSpec{image: "python:3.12-alpine", runCommand: []string{"python", "/workspace/main.py"}}, nil
 	case "JAVA":
 		err := os.WriteFile(filepath.Join(tempDir, "Main.java"), []byte(sourceCode), 0o600)
 		if err != nil {
 			return dockerRunnerSpec{}, fmt.Errorf("no se pudo escribir archivo java: %w", err)
 		}
-		cmd := []string{"sh", "-lc", "javac -d /tmp Main.java && java -cp /tmp Main"}
-		return dockerRunnerSpec{image: "eclipse-temurin:21-jdk", command: cmd}, nil
+		compileCmd := []string{"sh", "-lc", "mkdir -p classes && javac -d classes Main.java"}
+		runCmd := []string{"java", "-cp", "/workspace/classes", "Main"}
+		return dockerRunnerSpec{image: "eclipse-temurin:21-jdk", compileCommand: compileCmd, runCommand: runCmd}, nil
 	case "C":
 		err := os.WriteFile(filepath.Join(tempDir, "main.c"), []byte(sourceCode), 0o600)
 		if err != nil {
 			return dockerRunnerSpec{}, fmt.Errorf("no se pudo escribir archivo c: %w", err)
 		}
-		cmd := []string{"sh", "-lc", "gcc main.c -O2 -o /tmp/app && /tmp/app"}
-		return dockerRunnerSpec{image: "gcc:14", command: cmd}, nil
+		compileCmd := []string{"gcc", "main.c", "-O2", "-o", "benchlab-app"}
+		runCmd := []string{"/workspace/benchlab-app"}
+		return dockerRunnerSpec{image: "gcc:14", compileCommand: compileCmd, runCommand: runCmd}, nil
 	default:
 		return dockerRunnerSpec{}, fmt.Errorf("lenguaje no soportado en fase actual: %s", language)
+	}
+}
+
+func runDockerCommand(event RunRequestedEvent, runnerSpec dockerRunnerSpec, tempDir string, command []string, writableWorkspace bool) dockerRunResult {
+	started := time.Now()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(event.TimeoutMs)*time.Millisecond)
+	defer cancel()
+
+	args := []string{
+		"run", "--rm", "--network", "none", "--read-only",
+		"--tmpfs", "/tmp:rw,exec,nosuid,size=64m",
+		"--memory", fmt.Sprintf("%dm", event.MemoryMb),
+		"--cpus", fmt.Sprintf("%.2f", event.CpuLimit),
+		"-e", fmt.Sprintf("BENCHLAB_DATASET_SIZE=%d", event.DatasetSize),
+		"-e", fmt.Sprintf("BENCHLAB_DATASET_SEED=%d", event.DatasetSeed),
+		"-v", dockerVolumeMount(tempDir, !writableWorkspace),
+		"-w", "/workspace",
+		runnerSpec.image,
+	}
+	args = append(args, command...)
+
+	cmd := exec.CommandContext(ctx, "docker", args...)
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	runErr := cmd.Run()
+
+	return dockerRunResult{
+		elapsedMs:  time.Since(started).Milliseconds(),
+		stdout:     stdout.String(),
+		stderr:     stderr.String(),
+		err:        runErr,
+		contextErr: ctx.Err(),
+	}
+}
+
+func classifyRunError(runErr error, contextErr error, defaultStatus string) (string, int, string, bool) {
+	var exitErr *exec.ExitError
+	switch {
+	case errors.Is(contextErr, context.DeadlineExceeded):
+		return "TIMEOUT", 1, "ejecucion excedio timeout", true
+	case errors.As(runErr, &exitErr):
+		return defaultStatus, exitErr.ExitCode(), fmt.Sprintf("proceso finalizo con codigo %d", exitErr.ExitCode()), false
+	default:
+		return defaultStatus, 1, runErr.Error(), false
 	}
 }
 
@@ -270,12 +337,16 @@ func sendResult(apiBaseURL, workerToken string, runID int64, payload RunResultCa
 	return nil
 }
 
-func dockerVolumeMount(dir string) string {
+func dockerVolumeMount(dir string, readOnly bool) string {
+	mode := "rw"
+	if readOnly {
+		mode = "ro"
+	}
 	if runtime.GOOS == "windows" {
 		clean := strings.ReplaceAll(dir, "\\", "/")
-		return fmt.Sprintf("%s:/workspace:ro", clean)
+		return fmt.Sprintf("%s:/workspace:%s", clean, mode)
 	}
-	return fmt.Sprintf("%s:/workspace:ro", dir)
+	return fmt.Sprintf("%s:/workspace:%s", dir, mode)
 }
 
 func failedResult(host, status, reason string) RunResultCallbackRequest {

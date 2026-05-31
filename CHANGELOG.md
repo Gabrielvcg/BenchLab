@@ -7,6 +7,7 @@
 - Centered single-point chart data so sparse benchmark series remain visible.
 - Increased demo benchmark input sizes so algorithm work is more visible than container startup overhead.
 - Fixed login panel brand and sign-in button alignment.
+- Separated runner compilation time from measured execution time and added an unmeasured warm-up execution per benchmark job.
 
 ## 0.0.5
 

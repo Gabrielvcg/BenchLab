@@ -59,6 +59,7 @@ Production also requires `BENCHLAB_SECURITY_ADMIN_PASSWORD`; the API uses it to 
 - Execution is isolated with Docker flags: `--network none`, `--read-only`, `--tmpfs /tmp`, memory and CPU limits.
 - Base runner image definitions are available under `/runner-images`.
 - Each benchmark run supports `iterations` (default `5`) for more stable average timings.
+- Worker timings run one warm-up execution before measuring; compiled languages report compilation separately in `compileMs` and keep `wallTimeMs` focused on execution time.
 
 OpenAPI source: `src/main/resources/swagger/api.yml`
 
