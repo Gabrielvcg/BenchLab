@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.4
+
+- Added `benchlab-web` dashboard for production testing and benchmark visualization.
+- Added benchmark complexity endpoint grouped by language and dataset size.
+- Passed dataset size and seed to runner containers through environment variables for realistic input-size benchmarks.
+
 ## 0.0.3
 
 - Added GitHub Actions CI/CD for test/Sonar, GHCR image publishing, and VPS deployment.

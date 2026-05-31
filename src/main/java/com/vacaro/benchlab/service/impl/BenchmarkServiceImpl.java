@@ -17,18 +17,22 @@ import com.vacaro.benchlab.service.BenchmarkService;
 import com.vacaro.benchlab.service.dto.benchmark.AlgorithmResponse;
 import com.vacaro.benchlab.service.dto.benchmark.BenchmarkCompareResponse;
 import com.vacaro.benchlab.service.dto.benchmark.BenchmarkCompareRow;
+import com.vacaro.benchlab.service.dto.benchmark.BenchmarkComplexityPoint;
+import com.vacaro.benchlab.service.dto.benchmark.BenchmarkComplexityResponse;
+import com.vacaro.benchlab.service.dto.benchmark.BenchmarkComplexitySeries;
 import com.vacaro.benchlab.service.dto.benchmark.BenchmarkTimeseriesPoint;
 import com.vacaro.benchlab.service.dto.benchmark.BenchmarkTimeseriesResponse;
 import com.vacaro.benchlab.service.dto.benchmark.CreateAlgorithmRequest;
+import com.vacaro.benchlab.service.dto.benchmark.CreateDatasetRequest;
 import com.vacaro.benchlab.service.dto.benchmark.CreateImplementationRequest;
 import com.vacaro.benchlab.service.dto.benchmark.CreateRunRequest;
-import com.vacaro.benchlab.service.dto.benchmark.CreateDatasetRequest;
 import com.vacaro.benchlab.service.dto.benchmark.DatasetResponse;
 import com.vacaro.benchlab.service.dto.benchmark.ImplementationResponse;
 import com.vacaro.benchlab.service.dto.benchmark.RunArtifactResponse;
 import com.vacaro.benchlab.service.dto.benchmark.RunMetricResponse;
 import com.vacaro.benchlab.service.dto.benchmark.RunResponse;
 import com.vacaro.benchlab.service.dto.benchmark.RunResultCallbackRequest;
+import com.vacaro.benchlab.service.dto.benchmark.RunSummaryResponse;
 import com.vacaro.benchlab.service.messaging.RunEventPublisher;
 import com.vacaro.benchlab.service.messaging.RunRequestedEvent;
 import java.nio.charset.StandardCharsets;
@@ -38,8 +42,11 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HexFormat;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -101,7 +108,14 @@ public class BenchmarkServiceImpl implements BenchmarkService {
         dataset.setChecksum(request.checksum());
         dataset.setDatasetVersion(request.datasetVersion());
         Dataset saved = datasetRepository.save(dataset);
-        return new DatasetResponse(saved.getId(), saved.getType(), saved.getSizeValue(), saved.getSeed(), saved.getChecksum(), saved.getDatasetVersion());
+        return new DatasetResponse(
+            saved.getId(),
+            saved.getType(),
+            saved.getSizeValue(),
+            saved.getSeed(),
+            saved.getChecksum(),
+            saved.getDatasetVersion()
+        );
     }
 
     @Override
@@ -144,6 +158,8 @@ public class BenchmarkServiceImpl implements BenchmarkService {
                 saved.getId(),
                 implementation.getId(),
                 dataset.getId(),
+                dataset.getSizeValue(),
+                dataset.getSeed(),
                 implementation.getLanguage().name(),
                 implementation.getSourceCode(),
                 implementation.getCompileConfig(),
@@ -163,15 +179,82 @@ public class BenchmarkServiceImpl implements BenchmarkService {
     @Override
     @Transactional(readOnly = true)
     public RunResponse getRun(Long runId) {
-        BenchmarkRun run = benchmarkRunRepository.findById(runId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Run not found"));
+        BenchmarkRun run = benchmarkRunRepository
+            .findById(runId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Run not found"));
         RunMetric metric = runMetricRepository.findByBenchmarkRunId(runId).orElse(null);
         RunArtifact artifact = runArtifactRepository.findByBenchmarkRunId(runId).orElse(null);
         return toRunResponse(run, metric, artifact);
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<AlgorithmResponse> listAlgorithms() {
+        return algorithmRepository
+            .findAll()
+            .stream()
+            .sorted(Comparator.comparing(Algorithm::getName, String.CASE_INSENSITIVE_ORDER))
+            .map(algorithm ->
+                new AlgorithmResponse(
+                    algorithm.getId(),
+                    algorithm.getName(),
+                    algorithm.getCategory(),
+                    algorithm.getVersion(),
+                    algorithm.getComplexityDeclared()
+                )
+            )
+            .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DatasetResponse> listDatasets() {
+        return datasetRepository
+            .findAll()
+            .stream()
+            .sorted(Comparator.comparing(Dataset::getSizeValue).thenComparing(Dataset::getDatasetVersion, String.CASE_INSENSITIVE_ORDER))
+            .map(dataset ->
+                new DatasetResponse(
+                    dataset.getId(),
+                    dataset.getType(),
+                    dataset.getSizeValue(),
+                    dataset.getSeed(),
+                    dataset.getChecksum(),
+                    dataset.getDatasetVersion()
+                )
+            )
+            .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RunSummaryResponse> listRecentRuns() {
+        return benchmarkRunRepository
+            .findTop25ByOrderByQueuedAtDesc()
+            .stream()
+            .map(run -> {
+                RunMetric metric = runMetricRepository.findByBenchmarkRunId(run.getId()).orElse(null);
+                return new RunSummaryResponse(
+                    run.getId(),
+                    run.getStatus().name(),
+                    run.getImplementation().getLanguage().name(),
+                    run.getImplementation().getAlgorithm().getId(),
+                    run.getImplementation().getAlgorithm().getName(),
+                    run.getDataset().getId(),
+                    run.getDataset().getSizeValue(),
+                    run.getQueuedAt() == null ? null : run.getQueuedAt().toString(),
+                    run.getFinishedAt() == null ? null : run.getFinishedAt().toString(),
+                    metric == null ? null : metric.getWallTimeMs()
+                );
+            })
+            .toList();
+    }
+
+    @Override
     public void registerRunResult(Long runId, RunResultCallbackRequest request) {
-        BenchmarkRun run = benchmarkRunRepository.findById(runId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Run not found"));
+        BenchmarkRun run = benchmarkRunRepository
+            .findById(runId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Run not found"));
         run.setStatus(BenchmarkRunStatus.valueOf(request.status()));
         run.setRunnerHost(request.runnerHost());
         run.setFailureReason(request.failureReason());
@@ -208,7 +291,7 @@ public class BenchmarkServiceImpl implements BenchmarkService {
         var grouped = runs
             .stream()
             .filter(r -> r.getStatus() == BenchmarkRunStatus.SUCCEEDED)
-            .collect(java.util.stream.Collectors.groupingBy(r -> r.getImplementation().getLanguage().name()));
+            .collect(Collectors.groupingBy(r -> r.getImplementation().getLanguage().name()));
 
         List<BenchmarkCompareRow> rows = new ArrayList<>();
         grouped.forEach((language, languageRuns) -> {
@@ -254,6 +337,48 @@ public class BenchmarkServiceImpl implements BenchmarkService {
             .toList();
 
         return new BenchmarkTimeseriesResponse(algorithmId, language, points);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BenchmarkComplexityResponse complexity(Long algorithmId, String metric) {
+        String selectedMetric = metric == null || metric.isBlank() ? "wallTimeMs" : metric;
+        if (!selectedMetric.equals("wallTimeMs") && !selectedMetric.equals("cpuTimeMs")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported metric");
+        }
+
+        Map<String, Map<Long, List<BenchmarkRun>>> grouped = benchmarkRunRepository
+            .findAll()
+            .stream()
+            .filter(run -> run.getStatus() == BenchmarkRunStatus.SUCCEEDED)
+            .filter(run -> run.getImplementation().getAlgorithm().getId().equals(algorithmId))
+            .collect(
+                Collectors.groupingBy(
+                    run -> run.getImplementation().getLanguage().name(),
+                    LinkedHashMap::new,
+                    Collectors.groupingBy(run -> run.getDataset().getId(), LinkedHashMap::new, Collectors.toList())
+                )
+            );
+
+        List<BenchmarkComplexitySeries> series = grouped
+            .entrySet()
+            .stream()
+            .map(languageEntry -> {
+                List<BenchmarkComplexityPoint> points = languageEntry
+                    .getValue()
+                    .values()
+                    .stream()
+                    .map(datasetRuns -> toComplexityPoint(datasetRuns, selectedMetric))
+                    .filter(point -> point != null)
+                    .sorted(Comparator.comparing(BenchmarkComplexityPoint::datasetSize))
+                    .toList();
+                return new BenchmarkComplexitySeries(languageEntry.getKey(), points);
+            })
+            .filter(item -> !item.points().isEmpty())
+            .sorted(Comparator.comparing(BenchmarkComplexitySeries::language))
+            .toList();
+
+        return new BenchmarkComplexityResponse(algorithmId, selectedMetric, series);
     }
 
     private static RunResponse toRunResponse(BenchmarkRun run, RunMetric metric, RunArtifact artifact) {
@@ -310,5 +435,33 @@ public class BenchmarkServiceImpl implements BenchmarkService {
         int index = (int) Math.ceil((percentile / 100.0) * sortedValues.size()) - 1;
         int safeIndex = Math.max(0, Math.min(index, sortedValues.size() - 1));
         return sortedValues.get(safeIndex);
+    }
+
+    private BenchmarkComplexityPoint toComplexityPoint(List<BenchmarkRun> datasetRuns, String metricName) {
+        if (datasetRuns.isEmpty()) {
+            return null;
+        }
+        List<Long> values = datasetRuns
+            .stream()
+            .map(run -> runMetricRepository.findByBenchmarkRunId(run.getId()).orElse(null))
+            .filter(metric -> metric != null)
+            .map(metric -> metricName.equals("cpuTimeMs") ? metric.getCpuTimeMs() : metric.getWallTimeMs())
+            .filter(value -> value != null)
+            .sorted()
+            .toList();
+        if (values.isEmpty()) {
+            return null;
+        }
+        BenchmarkRun firstRun = datasetRuns.get(0);
+        double avg = values.stream().mapToLong(Long::longValue).average().orElse(0);
+        return new BenchmarkComplexityPoint(
+            firstRun.getDataset().getId(),
+            firstRun.getDataset().getSizeValue(),
+            avg,
+            calcStdDev(values, avg),
+            percentile(values, 50),
+            percentile(values, 95),
+            values.size()
+        );
     }
 }

@@ -4,18 +4,20 @@ import com.vacaro.benchlab.config.BenchLabProperties;
 import com.vacaro.benchlab.service.BenchmarkService;
 import com.vacaro.benchlab.service.dto.benchmark.AlgorithmResponse;
 import com.vacaro.benchlab.service.dto.benchmark.BenchmarkCompareResponse;
+import com.vacaro.benchlab.service.dto.benchmark.BenchmarkComplexityResponse;
 import com.vacaro.benchlab.service.dto.benchmark.BenchmarkTimeseriesResponse;
 import com.vacaro.benchlab.service.dto.benchmark.CreateAlgorithmRequest;
+import com.vacaro.benchlab.service.dto.benchmark.CreateDatasetRequest;
 import com.vacaro.benchlab.service.dto.benchmark.CreateImplementationRequest;
 import com.vacaro.benchlab.service.dto.benchmark.CreateRunRequest;
-import com.vacaro.benchlab.service.dto.benchmark.CreateDatasetRequest;
 import com.vacaro.benchlab.service.dto.benchmark.DatasetResponse;
 import com.vacaro.benchlab.service.dto.benchmark.ImplementationResponse;
 import com.vacaro.benchlab.service.dto.benchmark.RunResponse;
 import com.vacaro.benchlab.service.dto.benchmark.RunResultCallbackRequest;
+import com.vacaro.benchlab.service.dto.benchmark.RunSummaryResponse;
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api")
@@ -46,9 +49,19 @@ public class BenchmarkResource {
         return ResponseEntity.ok(benchmarkService.createAlgorithm(request));
     }
 
+    @GetMapping("/algorithms")
+    public ResponseEntity<List<AlgorithmResponse>> listAlgorithms() {
+        return ResponseEntity.ok(benchmarkService.listAlgorithms());
+    }
+
     @PostMapping("/datasets")
     public ResponseEntity<DatasetResponse> createDataset(@Valid @RequestBody CreateDatasetRequest request) {
         return ResponseEntity.ok(benchmarkService.createDataset(request));
+    }
+
+    @GetMapping("/datasets")
+    public ResponseEntity<List<DatasetResponse>> listDatasets() {
+        return ResponseEntity.ok(benchmarkService.listDatasets());
     }
 
     @PostMapping("/runs")
@@ -59,6 +72,11 @@ public class BenchmarkResource {
     @GetMapping("/runs/{id}")
     public ResponseEntity<RunResponse> getRun(@PathVariable("id") Long runId) {
         return ResponseEntity.ok(benchmarkService.getRun(runId));
+    }
+
+    @GetMapping("/runs")
+    public ResponseEntity<List<RunSummaryResponse>> listRecentRuns() {
+        return ResponseEntity.ok(benchmarkService.listRecentRuns());
     }
 
     @PostMapping("/internal/runs/{id}/result")
@@ -82,5 +100,13 @@ public class BenchmarkResource {
     @GetMapping("/benchmarks/timeseries")
     public ResponseEntity<BenchmarkTimeseriesResponse> timeseries(@RequestParam Long algorithmId, @RequestParam String language) {
         return ResponseEntity.ok(benchmarkService.timeseries(algorithmId, language));
+    }
+
+    @GetMapping("/benchmarks/complexity")
+    public ResponseEntity<BenchmarkComplexityResponse> complexity(
+        @RequestParam Long algorithmId,
+        @RequestParam(required = false, defaultValue = "wallTimeMs") String metric
+    ) {
+        return ResponseEntity.ok(benchmarkService.complexity(algorithmId, metric));
     }
 }

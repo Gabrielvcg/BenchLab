@@ -72,6 +72,7 @@ jobs:
     outputs:
       api_image: ${{ steps.images.outputs.api_image }}
       worker_image: ${{ steps.images.outputs.worker_image }}
+      web_image: ${{ steps.images.outputs.web_image }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -103,6 +104,7 @@ jobs:
           repository="${GITHUB_REPOSITORY,,}"
           echo "api_image=ghcr.io/${repository}-api:${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
           echo "worker_image=ghcr.io/${repository}-runner-worker:${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
+          echo "web_image=ghcr.io/${repository}-web:${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
 
       - name: Build and publish API image to GHCR
         env:
@@ -142,6 +144,14 @@ jobs:
           push: true
           tags: ${{ steps.images.outputs.worker_image }}
 
+      - name: Build and publish web image to GHCR
+        uses: docker/build-push-action@v6
+        with:
+          context: ./benchlab-web
+          file: ./benchlab-web/Dockerfile
+          push: true
+          tags: ${{ steps.images.outputs.web_image }}
+
   deploy-vps:
     name: Deploy to VPS
     runs-on: ubuntu-latest
@@ -158,7 +168,9 @@ jobs:
       COMPOSE_PROJECT_NAME: ${{ vars.COMPOSE_PROJECT_NAME || 'benchlab' }}
       BENCHLAB_API_IMAGE: ${{ needs.build-container.outputs.api_image }}
       BENCHLAB_WORKER_IMAGE: ${{ needs.build-container.outputs.worker_image }}
+      BENCHLAB_WEB_IMAGE: ${{ needs.build-container.outputs.web_image }}
       APP_HOST_PORT: ${{ vars.APP_HOST_PORT || '127.0.0.1:8083' }}
+      WEB_HOST_PORT: ${{ vars.WEB_HOST_PORT || '127.0.0.1:3003' }}
       API_HEALTH_URL: ${{ vars.API_HEALTH_URL || 'http://127.0.0.1:8083/management/health' }}
       POSTGRES_HOST_PORT: ${{ vars.POSTGRES_HOST_PORT || '127.0.0.1:5435' }}
       RABBITMQ_MANAGEMENT_HOST_PORT: ${{ vars.RABBITMQ_MANAGEMENT_HOST_PORT || '127.0.0.1:15673' }}
@@ -250,7 +262,9 @@ jobs:
           write_env COMPOSE_PROJECT_NAME "${COMPOSE_PROJECT_NAME}"
           write_env BENCHLAB_API_IMAGE "${BENCHLAB_API_IMAGE}"
           write_env BENCHLAB_WORKER_IMAGE "${BENCHLAB_WORKER_IMAGE}"
+          write_env BENCHLAB_WEB_IMAGE "${BENCHLAB_WEB_IMAGE}"
           write_env APP_HOST_PORT "${APP_HOST_PORT}"
+          write_env WEB_HOST_PORT "${WEB_HOST_PORT}"
           write_env API_HEALTH_URL "${API_HEALTH_URL}"
           write_env POSTGRES_HOST_PORT "${POSTGRES_HOST_PORT}"
           write_env RABBITMQ_MANAGEMENT_HOST_PORT "${RABBITMQ_MANAGEMENT_HOST_PORT}"

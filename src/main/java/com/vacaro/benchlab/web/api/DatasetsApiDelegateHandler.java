@@ -3,6 +3,7 @@ package com.vacaro.benchlab.web.api;
 import com.vacaro.benchlab.service.BenchmarkService;
 import com.vacaro.benchlab.service.api.dto.CreateDatasetRequest;
 import com.vacaro.benchlab.service.api.dto.DatasetResponse;
+import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
@@ -27,14 +28,21 @@ public class DatasetsApiDelegateHandler implements DatasetsApiDelegate {
             )
         );
 
-        return ResponseEntity.ok(
-            new DatasetResponse()
-                .id(saved.id())
-                .type(saved.type())
-                .sizeValue(saved.sizeValue())
-                .seed(saved.seed())
-                .checksum(saved.checksum())
-                .datasetVersion(saved.datasetVersion())
-        );
+        return ResponseEntity.ok(toDatasetResponse(saved));
+    }
+
+    @Override
+    public ResponseEntity<List<DatasetResponse>> listDatasets() {
+        return ResponseEntity.ok(benchmarkService.listDatasets().stream().map(DatasetsApiDelegateHandler::toDatasetResponse).toList());
+    }
+
+    private static DatasetResponse toDatasetResponse(com.vacaro.benchlab.service.dto.benchmark.DatasetResponse dataset) {
+        return new DatasetResponse()
+            .id(dataset.id())
+            .type(dataset.type())
+            .sizeValue(dataset.sizeValue())
+            .seed(dataset.seed())
+            .checksum(dataset.checksum())
+            .datasetVersion(dataset.datasetVersion());
     }
 }

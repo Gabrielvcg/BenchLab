@@ -5,7 +5,7 @@
 BenchLab follows the same runtime-only VPS pattern used by the other Spring APIs:
 
 - GitHub Actions runs tests and SonarCloud.
-- GitHub Actions publishes two GHCR images: API and `runner-worker`.
+- GitHub Actions publishes three GHCR images: API, `runner-worker`, and `benchlab-web`.
 - The VPS receives only `/deploy` files and a generated `.env`.
 - The VPS runs `docker compose pull` and `docker compose up -d`; it does not build Java or Go code.
 
@@ -18,6 +18,7 @@ Recommended variables:
 ```text
 APP_HOST_PORT=127.0.0.1:8083
 API_HEALTH_URL=http://127.0.0.1:8083/management/health
+WEB_HOST_PORT=127.0.0.1:3003
 COMPOSE_PROJECT_NAME=benchlab
 GHCR_USERNAME=Gabrielvcg
 JHIPSTER_MAIL_BASE_URL=https://benchlab.example.com
@@ -62,6 +63,7 @@ The generated VPS `.env` has the same shape as:
 ```env
 BENCHLAB_API_IMAGE=ghcr.io/example/benchlab-api:latest
 BENCHLAB_WORKER_IMAGE=ghcr.io/example/benchlab-runner-worker:latest
+BENCHLAB_WEB_IMAGE=ghcr.io/example/benchlab-web:latest
 POSTGRES_PASSWORD=change-me
 RABBITMQ_USER=benchlab
 RABBITMQ_PASSWORD=change-me
@@ -102,3 +104,7 @@ Keep backups in a folder mounted to persistent VPS storage.
 ## 7) Notes for the worker
 
 The worker container mounts `/var/run/docker.sock` and uses `WORKER_TEMP_PATH` for source files passed into short-lived runner containers. Keep `WORKER_TEMP_PATH` as an absolute path that exists both on the host and inside the worker container.
+
+## 8) Web dashboard
+
+The web dashboard is exposed internally on `WEB_HOST_PORT` and should be published through host-level Nginx. The reference config is [`/deploy/nginx/benchlab.conf`](../../deploy/nginx/benchlab.conf), with `/` going to the web container and `/api/**` going to the API.

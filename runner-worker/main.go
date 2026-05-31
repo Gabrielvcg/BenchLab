@@ -25,6 +25,8 @@ type RunRequestedEvent struct {
 	JobID            int64   `json:"jobId"`
 	ImplementationID int64   `json:"implementationId"`
 	DatasetID        int64   `json:"datasetId"`
+	DatasetSize      int64   `json:"datasetSize"`
+	DatasetSeed      int64   `json:"datasetSeed"`
 	Language         string  `json:"language"`
 	SourceCode       string  `json:"sourceCode"`
 	CompileConfig    string  `json:"compileConfig"`
@@ -148,6 +150,8 @@ func executeRun(event RunRequestedEvent) RunResultCallbackRequest {
 			"--tmpfs", "/tmp:rw,noexec,nosuid,size=64m",
 			"--memory", fmt.Sprintf("%dm", event.MemoryMb),
 			"--cpus", fmt.Sprintf("%.2f", event.CpuLimit),
+			"-e", fmt.Sprintf("BENCHLAB_DATASET_SIZE=%d", event.DatasetSize),
+			"-e", fmt.Sprintf("BENCHLAB_DATASET_SEED=%d", event.DatasetSeed),
 			"-v", dockerVolumeMount(tempDir),
 			"-w", "/workspace",
 			runnerSpec.image,

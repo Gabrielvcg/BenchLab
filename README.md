@@ -6,6 +6,7 @@ Benchmark platform API for comparing algorithm implementations across programmin
 
 - `benchmark-api` (this repository): JHipster monolith for auth, catalog, run orchestration, and benchmark queries.
 - `runner-worker` (`/runner-worker`): Go worker consuming jobs from RabbitMQ and reporting results.
+- `benchlab-web` (`/benchlab-web`): lightweight production dashboard for comparing languages by dataset size.
 - Persistence: PostgreSQL for transactional data and run artifacts (truncated output + metadata).
 - Queue: RabbitMQ for asynchronous run dispatch.
 
@@ -48,6 +49,7 @@ export BENCHLAB_WORKER_TOKEN=benchlab-internal-token
 - `GET /api/runs/{id}`
 - `GET /api/benchmarks/compare?algorithmId=&datasetId=`
 - `GET /api/benchmarks/timeseries?algorithmId=&language=`
+- `GET /api/benchmarks/complexity?algorithmId=&metric=wallTimeMs`
 
 ## Worker Runtime Notes
 

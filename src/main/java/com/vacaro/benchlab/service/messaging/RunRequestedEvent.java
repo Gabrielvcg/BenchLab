@@ -4,6 +4,8 @@ public record RunRequestedEvent(
     Long jobId,
     Long implementationId,
     Long datasetId,
+    Long datasetSize,
+    Long datasetSeed,
     String language,
     String sourceCode,
     String compileConfig,

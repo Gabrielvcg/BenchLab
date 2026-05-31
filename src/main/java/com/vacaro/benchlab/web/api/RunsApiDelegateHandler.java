@@ -5,6 +5,8 @@ import com.vacaro.benchlab.service.api.dto.CreateRunRequest;
 import com.vacaro.benchlab.service.api.dto.RunArtifactResponse;
 import com.vacaro.benchlab.service.api.dto.RunMetricResponse;
 import com.vacaro.benchlab.service.api.dto.RunResponse;
+import com.vacaro.benchlab.service.api.dto.RunSummaryResponse;
+import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
@@ -35,6 +37,29 @@ public class RunsApiDelegateHandler implements RunsApiDelegate {
     @Override
     public ResponseEntity<RunResponse> getRun(Long id) {
         return ResponseEntity.ok(toRunResponse(benchmarkService.getRun(id)));
+    }
+
+    @Override
+    public ResponseEntity<List<RunSummaryResponse>> listRecentRuns() {
+        return ResponseEntity.ok(
+            benchmarkService
+                .listRecentRuns()
+                .stream()
+                .map(run ->
+                    new RunSummaryResponse()
+                        .id(run.id())
+                        .status(run.status())
+                        .language(run.language())
+                        .algorithmId(run.algorithmId())
+                        .algorithmName(run.algorithmName())
+                        .datasetId(run.datasetId())
+                        .datasetSize(run.datasetSize())
+                        .queuedAt(run.queuedAt())
+                        .finishedAt(run.finishedAt())
+                        .wallTimeMs(run.wallTimeMs())
+                )
+                .toList()
+        );
     }
 
     static RunResponse toRunResponse(com.vacaro.benchlab.service.dto.benchmark.RunResponse run) {

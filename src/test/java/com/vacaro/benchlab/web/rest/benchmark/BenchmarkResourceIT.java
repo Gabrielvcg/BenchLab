@@ -200,7 +200,11 @@ class BenchmarkResourceIT {
             .perform(
                 post("/api/runs")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsBytes(Map.of("implementationId", implementationId, "datasetId", datasetId, "iterations", 3)))
+                    .content(
+                        objectMapper.writeValueAsBytes(
+                            Map.of("implementationId", implementationId, "datasetId", datasetId, "iterations", 3)
+                        )
+                    )
             )
             .andExpect(status().isOk())
             .andReturn();
@@ -236,6 +240,23 @@ class BenchmarkResourceIT {
 
         BenchmarkRun run = benchmarkRunRepository.findById(runId).orElseThrow();
         assertThat(run.getStatus()).isEqualTo(BenchmarkRunStatus.SUCCEEDED);
+
+        mockMvc.perform(get("/api/algorithms")).andExpect(status().isOk()).andExpect(jsonPath("$[0].id").value(algorithmId));
+
+        mockMvc.perform(get("/api/datasets")).andExpect(status().isOk()).andExpect(jsonPath("$[0].id").value(datasetId));
+
+        mockMvc
+            .perform(get("/api/runs"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].id").value(runId))
+            .andExpect(jsonPath("$[0].wallTimeMs").value(12));
+
+        mockMvc
+            .perform(get("/api/benchmarks/complexity").param("algorithmId", algorithmId.toString()).param("metric", "wallTimeMs"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.series[0].language").value("PYTHON"))
+            .andExpect(jsonPath("$.series[0].points[0].datasetSize").value(100))
+            .andExpect(jsonPath("$.series[0].points[0].avg").value(12.0));
     }
 
     @Test
@@ -276,7 +297,18 @@ class BenchmarkResourceIT {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(
                         objectMapper.writeValueAsBytes(
-                            Map.of("algorithmId", algorithmId, "language", "PYTHON", "sourceCode", "print('x')", "compileConfig", "", "runtimeConfig", "")
+                            Map.of(
+                                "algorithmId",
+                                algorithmId,
+                                "language",
+                                "PYTHON",
+                                "sourceCode",
+                                "print('x')",
+                                "compileConfig",
+                                "",
+                                "runtimeConfig",
+                                ""
+                            )
                         )
                     )
             )
