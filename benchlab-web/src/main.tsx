@@ -533,6 +533,20 @@ function ComplexityChart({ complexity }: { complexity: ComplexityResponse | null
   if (!complexity || allPoints.length === 0) {
     return <section className="empty-chart">No benchmark points yet. Run a selected algorithm or launch runs from the API.</section>;
   }
+  const orderedSeries = [...complexity.series].sort((left, right) => left.language.localeCompare(right.language));
+  const languagePairs: Array<ComplexitySeries[]> = [];
+  for (let index = 0; index < orderedSeries.length; index += 2) {
+    languagePairs.push(orderedSeries.slice(index, index + 2));
+  }
+  const languageStats = orderedSeries.map((series) => {
+    const points = [...series.points].sort((left, right) => left.datasetSize - right.datasetSize);
+    const avgOfAvg = points.reduce((total, point) => total + point.avg, 0) / Math.max(points.length, 1);
+    const best = Math.min(...points.map(point => point.avg));
+    const worst = Math.max(...points.map(point => point.avg));
+    const avgP95 = points.reduce((total, point) => total + point.p95, 0) / Math.max(points.length, 1);
+    const growth = points.length > 1 ? points[points.length - 1].avg / Math.max(points[0].avg, 1) : 1;
+    return { language: series.language, avgOfAvg, best, worst, avgP95, growth, points: points.length };
+  });
 
   const width = 980;
   const height = 430;
@@ -552,7 +566,9 @@ function ComplexityChart({ complexity }: { complexity: ComplexityResponse | null
   const ticks = Array.from(new Set(allPoints.map((point) => point.datasetSize))).sort((a, b) => a - b);
 
   return (
+    <>
     <section className="chart-surface">
+      <h2>Global comparison</h2>
       <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Complexity chart">
         <line x1={padding.left} y1={padding.top} x2={padding.left} y2={height - padding.bottom} className="axis" />
         <line x1={padding.left} y1={height - padding.bottom} x2={width - padding.right} y2={height - padding.bottom} className="axis" />
@@ -572,7 +588,7 @@ function ComplexityChart({ complexity }: { complexity: ComplexityResponse | null
             {tick.toLocaleString()}
           </text>
         ))}
-        {complexity.series.map((series) => {
+        {orderedSeries.map((series) => {
           const line = series.points.map((point) => `${xScale(point.datasetSize)},${yScale(point.avg)}`).join(' ');
           const color = languageColors[series.language] ?? '#475569';
           return (
@@ -586,7 +602,7 @@ function ComplexityChart({ complexity }: { complexity: ComplexityResponse | null
         })}
       </svg>
       <div className="legend">
-        {complexity.series.map((series) => (
+        {orderedSeries.map((series) => (
           <span key={series.language}>
             <i style={{ background: languageColors[series.language] ?? '#475569' }} />
             {series.language}
@@ -594,12 +610,68 @@ function ComplexityChart({ complexity }: { complexity: ComplexityResponse | null
         ))}
       </div>
     </section>
+    <section className="pair-grid">
+      {languagePairs.map((pair) => (
+        <section key={pair.map(item => item.language).join('-')} className="chart-surface chart-surface-compact">
+          <h2>{pair.length === 2 ? `${pair[0].language} vs ${pair[1].language}` : pair[0].language}</h2>
+          <div className="legend">
+            {pair.map((series) => (
+              <span key={series.language}>
+                <i style={{ background: languageColors[series.language] ?? '#475569' }} />
+                {series.language}
+              </span>
+            ))}
+          </div>
+          <div className="pair-points">
+            {pair.map((series) => (
+              <p key={`${series.language}-summary`}>
+                <strong>{series.language}</strong>: {series.points.map(point => `${point.datasetSize}:${Math.round(point.avg)}ms`).join(' | ')}
+              </p>
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+    <section className="table-surface">
+      <h2>Language stats</h2>
+      <div className="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Language</th>
+              <th>Points</th>
+              <th>Best avg ms</th>
+              <th>Worst avg ms</th>
+              <th>Mean avg ms</th>
+              <th>Mean p95 ms</th>
+              <th>Growth (last/first)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {languageStats.map((stat) => (
+              <tr key={stat.language}>
+                <td>{stat.language}</td>
+                <td>{stat.points}</td>
+                <td>{Math.round(stat.best)}</td>
+                <td>{Math.round(stat.worst)}</td>
+                <td>{Math.round(stat.avgOfAvg)}</td>
+                <td>{Math.round(stat.avgP95)}</td>
+                <td>{stat.growth.toFixed(2)}x</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    </>
   );
 }
 
 function RunTable({ runs }: { runs: RunSummary[] }) {
-  const [sortBy, setSortBy] = React.useState<'id' | 'status' | 'algorithmName' | 'language' | 'datasetSize' | 'wallTimeMs'>('id');
-  const [sortDirection, setSortDirection] = React.useState<'asc' | 'desc'>('desc');
+  const [sortBy, setSortBy] = React.useState<'languageSize' | 'id' | 'status' | 'algorithmName' | 'language' | 'datasetSize' | 'wallTimeMs'>(
+    'languageSize',
+  );
+  const [sortDirection, setSortDirection] = React.useState<'asc' | 'desc'>('asc');
 
   const sortedRuns = React.useMemo(() => {
     const direction = sortDirection === 'asc' ? 1 : -1;
@@ -607,6 +679,13 @@ function RunTable({ runs }: { runs: RunSummary[] }) {
     sorted.sort((left, right) => {
       const numberCompare = (a: number | null | undefined, b: number | null | undefined) => (a ?? -1) - (b ?? -1);
 
+      if (sortBy === 'languageSize') {
+        const byLanguage = left.language.localeCompare(right.language) * direction;
+        if (byLanguage !== 0) return byLanguage;
+        const bySize = numberCompare(left.datasetSize, right.datasetSize) * direction;
+        if (bySize !== 0) return bySize;
+        return numberCompare(right.id, left.id);
+      }
       if (sortBy === 'id') return numberCompare(left.id, right.id) * direction;
       if (sortBy === 'datasetSize') return numberCompare(left.datasetSize, right.datasetSize) * direction;
       if (sortBy === 'wallTimeMs') return numberCompare(left.wallTimeMs, right.wallTimeMs) * direction;
@@ -617,7 +696,7 @@ function RunTable({ runs }: { runs: RunSummary[] }) {
     return sorted;
   }, [runs, sortBy, sortDirection]);
 
-  function updateSort(nextSortBy: 'id' | 'status' | 'algorithmName' | 'language' | 'datasetSize' | 'wallTimeMs') {
+  function updateSort(nextSortBy: 'languageSize' | 'id' | 'status' | 'algorithmName' | 'language' | 'datasetSize' | 'wallTimeMs') {
     if (sortBy === nextSortBy) {
       setSortDirection(current => (current === 'asc' ? 'desc' : 'asc'));
       return;
@@ -630,6 +709,9 @@ function RunTable({ runs }: { runs: RunSummary[] }) {
     <section className="table-surface">
       <h2>Recent runs</h2>
       <div className="sort-controls" role="group" aria-label="Sort runs table">
+        <button type="button" className="sort-chip" onClick={() => updateSort('languageSize')} aria-pressed={sortBy === 'languageSize'}>
+          Language + Size {sortBy === 'languageSize' ? (sortDirection === 'asc' ? '^' : 'v') : ''}
+        </button>
         <button type="button" className="sort-chip" onClick={() => updateSort('id')} aria-pressed={sortBy === 'id'}>
           ID {sortBy === 'id' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
         </button>

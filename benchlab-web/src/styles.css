@@ -359,6 +359,28 @@ h2 {
   padding: 16px;
 }
 
+.chart-surface-compact {
+  padding: 14px;
+}
+
+.pair-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 14px;
+}
+
+.pair-points {
+  margin-top: 8px;
+  display: grid;
+  gap: 6px;
+  color: #3f534b;
+  font-size: 0.85rem;
+}
+
+.pair-points p {
+  margin: 0;
+}
+
 svg {
   width: 100%;
   display: block;
