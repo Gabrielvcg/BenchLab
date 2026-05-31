@@ -147,7 +147,7 @@ func executeRun(event RunRequestedEvent) RunResultCallbackRequest {
 
 		args := []string{
 			"run", "--rm", "--network", "none", "--read-only",
-			"--tmpfs", "/tmp:rw,nosuid,size=64m",
+			"--tmpfs", "/tmp:rw,exec,nosuid,size=64m",
 			"--memory", fmt.Sprintf("%dm", event.MemoryMb),
 			"--cpus", fmt.Sprintf("%.2f", event.CpuLimit),
 			"-e", fmt.Sprintf("BENCHLAB_DATASET_SIZE=%d", event.DatasetSize),
