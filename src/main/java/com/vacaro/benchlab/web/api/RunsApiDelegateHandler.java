@@ -28,7 +28,8 @@ public class RunsApiDelegateHandler implements RunsApiDelegate {
                 createRunRequest.getTimeoutMs(),
                 createRunRequest.getMemoryMb(),
                 createRunRequest.getCpuLimit(),
-                createRunRequest.getIterations()
+                createRunRequest.getIterations(),
+                createRunRequest.getWarmupIterations()
             )
         );
         return ResponseEntity.ok(toRunResponse(saved));
