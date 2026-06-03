@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.9
+
+- Fixed Rust benchmark compilation in `runner-worker` by switching from the broken `rust:1-alpine` image to a full Rust toolchain image that includes `rustc`.
+- Added a worker regression test covering Rust runner preparation so future image changes do not silently break compilation.
+
 ## 0.0.8
 
 - Added `RUST` as a first-class benchmark language in the dashboard suite and runner worker.
