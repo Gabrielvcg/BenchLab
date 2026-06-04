@@ -1,6 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { Activity, BarChart3, CirclePlay, LogOut, RefreshCw, ShieldCheck } from 'lucide-react';
+import { Activity, BarChart3, CirclePlay, LogOut, RefreshCw, RotateCcw, ShieldCheck, ZoomIn, ZoomOut } from 'lucide-react';
 import './styles.css';
 
 type Algorithm = {
@@ -30,6 +30,15 @@ type ComplexityResponse = {
   algorithmId: number;
   metric: string;
   series: ComplexitySeries[];
+};
+
+type ChartScale = 'linear' | 'log';
+type ChartHoverPoint = {
+  language: string;
+  point: ComplexityPoint;
+  color: string;
+  x: number;
+  y: number;
 };
 
 type RunSummary = {
@@ -158,14 +167,14 @@ const BENCHMARK_SUITE: AlgorithmTemplate[] = [
 ];
 
 const languageColors: Record<string, string> = {
-  C: '#0e7c66',
-  JAVA: '#c44536',
-  PYTHON: '#3166b1',
-  GO: '#008f9c',
-  RUBY: '#9b1d48',
-  RUST: '#b6652d',
-  ASSEMBLY: '#4b5563',
-  CPP: '#6c5ce7',
+  C: '#00843d',
+  JAVA: '#d9482f',
+  PYTHON: '#2563eb',
+  GO: '#0099b8',
+  RUBY: '#c2185b',
+  RUST: '#f47c20',
+  ASSEMBLY: '#111827',
+  CPP: '#7c3aed',
 };
 
 const AVAILABLE_LANGUAGES: ImplementationLanguage[] = ['PYTHON', 'JAVA', 'C', 'GO', 'RUBY', 'RUST', 'ASSEMBLY'];
@@ -194,6 +203,21 @@ function parseProblemSizesInput(rawValue: string): number[] {
         .filter(value => Number.isFinite(value) && value > 0),
     ),
   );
+}
+
+function formatDatasetTick(value: number): string {
+  return value.toLocaleString('es-ES');
+}
+
+function formatDurationTick(value: number): string {
+  if (value >= 1000) {
+    return `${(value / 1000).toLocaleString('es-ES', { maximumFractionDigits: 1 })}s`;
+  }
+  return `${Math.round(value).toLocaleString('es-ES')}ms`;
+}
+
+function linearTicks(maxValue: number): number[] {
+  return Array.from(new Set([0, 0.25, 0.5, 0.75, 1].map(step => Math.round(maxValue * step))));
 }
 
 function App() {
@@ -631,74 +655,10 @@ function ComplexityChart({ complexity }: { complexity: ComplexityResponse | null
     return { language: series.language, avgOfAvg, best, worst, avgP95, growth, points: points.length };
   });
 
-  const width = 980;
-  const height = 430;
-  const padding = { top: 28, right: 34, bottom: 58, left: 76 };
-  const minX = Math.min(...allPoints.map((point) => point.datasetSize));
-  const maxX = Math.max(...allPoints.map((point) => point.datasetSize));
-  const maxY = Math.max(...allPoints.map((point) => point.avg), 1);
-  const plotWidth = width - padding.left - padding.right;
-  const xScale = (value: number) => {
-    if (minX === maxX) {
-      return padding.left + plotWidth / 2;
-    }
-    return padding.left + ((value - minX) / (maxX - minX)) * plotWidth;
-  };
-  const yScale = (value: number) => height - padding.bottom - (value / maxY) * (height - padding.top - padding.bottom);
-  const yScaleLog = (value: number) => {
-    const min = 1;
-    const logMax = Math.log10(Math.max(maxY, min));
-    const safeValue = Math.max(value, min);
-    return height - padding.bottom - (Math.log10(safeValue) / Math.max(logMax, 1)) * (height - padding.top - padding.bottom);
-  };
-
-  const ticks = Array.from(new Set(allPoints.map((point) => point.datasetSize))).sort((a, b) => a - b);
-
   return (
     <>
-    <section className="chart-surface">
-      <h2>Global comparison</h2>
-      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Complexity chart">
-        <line x1={padding.left} y1={padding.top} x2={padding.left} y2={height - padding.bottom} className="axis" />
-        <line x1={padding.left} y1={height - padding.bottom} x2={width - padding.right} y2={height - padding.bottom} className="axis" />
-        {[0, 0.25, 0.5, 0.75, 1].map((step) => {
-          const y = yScale(maxY * step);
-          return (
-            <g key={step}>
-              <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} className="grid" />
-              <text x={padding.left - 12} y={y + 4} textAnchor="end" className="tick">
-                {Math.round(maxY * step)}
-              </text>
-            </g>
-          );
-        })}
-        {ticks.map((tick) => (
-          <text key={tick} x={xScale(tick)} y={height - 22} textAnchor="middle" className="tick">
-            {tick.toLocaleString()}
-          </text>
-        ))}
-        {orderedSeries.map((series) => {
-          const line = series.points.map((point) => `${xScale(point.datasetSize)},${yScale(point.avg)}`).join(' ');
-          const color = languageColors[series.language] ?? '#475569';
-          return (
-            <g key={series.language}>
-              <polyline points={line} fill="none" stroke={color} strokeWidth="4" strokeLinejoin="round" strokeLinecap="round" />
-              {series.points.map((point) => (
-                <circle key={`${series.language}-${point.datasetId}`} cx={xScale(point.datasetSize)} cy={yScale(point.avg)} r="5" fill={color} />
-              ))}
-            </g>
-          );
-        })}
-      </svg>
-      <div className="legend">
-        {orderedSeries.map((series) => (
-          <span key={series.language}>
-            <i style={{ background: languageColors[series.language] ?? '#475569' }} />
-            {series.language}
-          </span>
-        ))}
-      </div>
-    </section>
+    <BenchmarkLineChart title="Interactive runtime explorer: size vs wall time" series={orderedSeries} scale="linear" explorer />
+    <BenchmarkLineChart title="Global comparison" series={orderedSeries} scale="linear" />
     <section className="chart-surface">
       <h2>Custom comparison</h2>
       <div className="chart-language-controls">
@@ -732,52 +692,10 @@ function ComplexityChart({ complexity }: { complexity: ComplexityResponse | null
       {customSeries.length === 0 ? (
         <p className="pair-note">Select at least one language to render the chart.</p>
       ) : (
-        <PairChartCard pair={customSeries} title="Selected languages" />
+        <BenchmarkLineChart title="Selected languages" series={customSeries} scale="linear" compact embedded />
       )}
     </section>
-    <section className="chart-surface">
-      <h2>Global comparison (log scale)</h2>
-      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Complexity chart log scale">
-        <line x1={padding.left} y1={padding.top} x2={padding.left} y2={height - padding.bottom} className="axis" />
-        <line x1={padding.left} y1={height - padding.bottom} x2={width - padding.right} y2={height - padding.bottom} className="axis" />
-        {[1, 10, 100, 1000, 10000, 100000].filter(step => step <= maxY).map((step) => {
-          const y = yScaleLog(step);
-          return (
-            <g key={step}>
-              <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} className="grid" />
-              <text x={padding.left - 12} y={y + 4} textAnchor="end" className="tick">
-                {step}
-              </text>
-            </g>
-          );
-        })}
-        {ticks.map((tick) => (
-          <text key={`log-${tick}`} x={xScale(tick)} y={height - 22} textAnchor="middle" className="tick">
-            {tick.toLocaleString()}
-          </text>
-        ))}
-        {orderedSeries.map((series) => {
-          const line = series.points.map((point) => `${xScale(point.datasetSize)},${yScaleLog(point.avg)}`).join(' ');
-          const color = languageColors[series.language] ?? '#475569';
-          return (
-            <g key={`log-${series.language}`}>
-              <polyline points={line} fill="none" stroke={color} strokeWidth="4" strokeLinejoin="round" strokeLinecap="round" />
-              {series.points.map((point) => (
-                <circle key={`log-${series.language}-${point.datasetId}`} cx={xScale(point.datasetSize)} cy={yScaleLog(point.avg)} r="5" fill={color} />
-              ))}
-            </g>
-          );
-        })}
-      </svg>
-      <div className="legend">
-        {orderedSeries.map((series) => (
-          <span key={`log-legend-${series.language}`}>
-            <i style={{ background: languageColors[series.language] ?? '#475569' }} />
-            {series.language}
-          </span>
-        ))}
-      </div>
-    </section>
+    <BenchmarkLineChart title="Global comparison (log scale)" series={orderedSeries} scale="log" />
     <section className="pair-grid">
       {closestPairs.map((pair, index) => (
         <PairChartCard key={pair.map(item => item.language).join('-')} pair={pair} title={`Closest matchup #${index + 1}`} />
@@ -818,58 +736,218 @@ function ComplexityChart({ complexity }: { complexity: ComplexityResponse | null
   );
 }
 
-function PairChartCard({ pair, title }: { pair: ComplexitySeries[]; title?: string }) {
-  const allPoints = pair.flatMap(series => series.points);
+function BenchmarkLineChart({
+  series,
+  title,
+  scale,
+  compact = false,
+  embedded = false,
+  explorer = false,
+}: {
+  series: ComplexitySeries[];
+  title: string;
+  scale: ChartScale;
+  compact?: boolean;
+  embedded?: boolean;
+  explorer?: boolean;
+}) {
+  const [zoomLevel, setZoomLevel] = React.useState(0);
+  const [hoverPoint, setHoverPoint] = React.useState<ChartHoverPoint | null>(null);
+  const clipId = `chart-clip-${React.useId().replace(/:/g, '')}`;
+  const svgRef = React.useRef<SVGSVGElement | null>(null);
+  const allPoints = series.flatMap(item => item.points);
   if (allPoints.length === 0) return null;
 
-  const width = 600;
-  const height = 220;
-  const padding = { top: 18, right: 18, bottom: 40, left: 48 };
+  const width = compact ? 680 : 980;
+  const height = explorer ? 540 : compact ? 300 : 450;
+  const padding = compact ? { top: 26, right: 48, bottom: 68, left: 86 } : { top: 34, right: 48, bottom: 72, left: 92 };
+  const zoomFactors = [1, 1.5, 2.25, 3.5, 5];
+  const zoomFactor = zoomFactors[zoomLevel];
   const minX = Math.min(...allPoints.map(point => point.datasetSize));
   const maxX = Math.max(...allPoints.map(point => point.datasetSize));
   const maxY = Math.max(...allPoints.map(point => point.avg), 1);
+  const visibleMaxY = Math.max(maxY / zoomFactor, 1);
   const plotWidth = width - padding.left - padding.right;
+  const plotHeight = height - padding.top - padding.bottom;
   const xScale = (value: number) => {
     if (minX === maxX) return padding.left + plotWidth / 2;
     return padding.left + ((value - minX) / (maxX - minX)) * plotWidth;
   };
-  const yScale = (value: number) => height - padding.bottom - (value / maxY) * (height - padding.top - padding.bottom);
+  const yScale = (value: number) => {
+    if (scale === 'log') {
+      const logMax = Math.log10(Math.max(visibleMaxY, 1));
+      return height - padding.bottom - (Math.log10(Math.max(value, 1)) / Math.max(logMax, 1)) * plotHeight;
+    }
+    return height - padding.bottom - (value / visibleMaxY) * plotHeight;
+  };
   const ticks = Array.from(new Set(allPoints.map(point => point.datasetSize))).sort((a, b) => a - b);
+  const yTicks =
+    scale === 'log'
+      ? [1, 10, 100, 1000, 10000, 100000].filter(tick => tick <= visibleMaxY)
+      : linearTicks(visibleMaxY);
+  const canZoomOut = zoomLevel > 0;
+  const canZoomIn = zoomLevel < zoomFactors.length - 1;
+  const tooltipWidth = 190;
+  const tooltipHeight = 86;
+  const tooltipX = hoverPoint ? Math.min(Math.max(hoverPoint.x + 14, padding.left), width - padding.right - tooltipWidth) : 0;
+  const tooltipY = hoverPoint ? Math.min(Math.max(hoverPoint.y - tooltipHeight - 12, padding.top), height - padding.bottom - tooltipHeight) : 0;
+  const activePointKey = hoverPoint ? `${hoverPoint.language}-${hoverPoint.point.datasetId}` : '';
+
+  function updateHoverPoint(event: React.MouseEvent<SVGSVGElement>) {
+    if (!explorer || !svgRef.current) {
+      return;
+    }
+    const bounds = svgRef.current.getBoundingClientRect();
+    const svgX = ((event.clientX - bounds.left) / bounds.width) * width;
+    const svgY = ((event.clientY - bounds.top) / bounds.height) * height;
+    if (svgX < padding.left || svgX > width - padding.right || svgY < padding.top || svgY > height - padding.bottom) {
+      setHoverPoint(null);
+      return;
+    }
+    let nearest: ChartHoverPoint | null = null;
+    let nearestDistance = Number.POSITIVE_INFINITY;
+    series.forEach(item => {
+      const color = languageColors[item.language] ?? '#475569';
+      item.points.forEach(point => {
+        const pointX = xScale(point.datasetSize);
+        const pointY = yScale(point.avg);
+        if (pointY < padding.top || pointY > height - padding.bottom) {
+          return;
+        }
+        const distance = Math.hypot(svgX - pointX, svgY - pointY);
+        if (distance < nearestDistance) {
+          nearestDistance = distance;
+          nearest = { language: item.language, point, color, x: pointX, y: pointY };
+        }
+      });
+    });
+    setHoverPoint(nearest);
+  }
 
   return (
-    <section className="chart-surface chart-surface-compact">
-      <h2>{title ?? (pair.length === 2 ? `${pair[0].language} vs ${pair[1].language}` : pair[0].language)}</h2>
-      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Pair comparison chart">
+    <section className={embedded ? 'chart-panel' : `chart-surface chart-surface-compact${explorer ? ' chart-explorer' : ''}`}>
+      <div className="chart-heading">
+        <div>
+          <h2>{title}</h2>
+          <p>
+            {explorer
+              ? `Hover a point for size - ms | Y zoom ${zoomFactor.toFixed(zoomFactor % 1 === 0 ? 0 : 1)}x`
+              : scale === 'log'
+                ? `Log scale | Y zoom ${zoomFactor.toFixed(zoomFactor % 1 === 0 ? 0 : 1)}x`
+                : `Y zoom ${zoomFactor.toFixed(zoomFactor % 1 === 0 ? 0 : 1)}x`}
+          </p>
+        </div>
+        <div className="chart-tools" role="group" aria-label={`${title} zoom controls`}>
+          <button type="button" className="icon-button" onClick={() => setZoomLevel(level => Math.min(level + 1, zoomFactors.length - 1))} disabled={!canZoomIn} title="Zoom in">
+            <ZoomIn size={16} />
+          </button>
+          <button type="button" className="icon-button" onClick={() => setZoomLevel(level => Math.max(level - 1, 0))} disabled={!canZoomOut} title="Zoom out">
+            <ZoomOut size={16} />
+          </button>
+          <button type="button" className="icon-button" onClick={() => setZoomLevel(0)} disabled={!canZoomOut} title="Reset zoom">
+            <RotateCcw size={16} />
+          </button>
+        </div>
+      </div>
+      <svg
+        ref={svgRef}
+        viewBox={`0 0 ${width} ${height}`}
+        role="img"
+        aria-label={`${title} chart`}
+        className={explorer ? 'explorer-svg' : undefined}
+        onMouseMove={updateHoverPoint}
+        onMouseLeave={() => setHoverPoint(null)}
+      >
+        <defs>
+          <clipPath id={clipId}>
+            <rect x={padding.left} y={padding.top} width={plotWidth} height={plotHeight} />
+          </clipPath>
+        </defs>
         <line x1={padding.left} y1={padding.top} x2={padding.left} y2={height - padding.bottom} className="axis" />
         <line x1={padding.left} y1={height - padding.bottom} x2={width - padding.right} y2={height - padding.bottom} className="axis" />
-        {ticks.map((tick) => (
-          <text key={`pair-${tick}`} x={xScale(tick)} y={height - 12} textAnchor="middle" className="tick">
-            {tick.toLocaleString()}
-          </text>
-        ))}
-        {pair.map(series => {
-          const line = series.points.map(point => `${xScale(point.datasetSize)},${yScale(point.avg)}`).join(' ');
-          const color = languageColors[series.language] ?? '#475569';
+        {yTicks.map((tick) => {
+          const y = yScale(tick);
           return (
-            <g key={`pair-line-${series.language}`}>
-              <polyline points={line} fill="none" stroke={color} strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
-              {series.points.map(point => (
-                <circle key={`pair-${series.language}-${point.datasetId}`} cx={xScale(point.datasetSize)} cy={yScale(point.avg)} r="4" fill={color} />
-              ))}
+            <g key={`pair-y-${tick}`}>
+              <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} className="grid" />
+              <text x={padding.left - 12} y={y + 4} textAnchor="end" className="tick">
+                {formatDurationTick(tick)}
+              </text>
             </g>
           );
         })}
+        {ticks.map((tick, index) => {
+          const isFirst = index === 0;
+          const isLast = index === ticks.length - 1;
+          return (
+            <text
+              key={`pair-${tick}`}
+              x={xScale(tick)}
+              y={height - 16}
+              textAnchor={isFirst ? 'start' : isLast ? 'end' : 'middle'}
+              className="tick"
+            >
+              {formatDatasetTick(tick)}
+            </text>
+          );
+        })}
+        <text x={padding.left + plotWidth / 2} y={height - 24} textAnchor="middle" className="axis-label">
+          Input size
+        </text>
+        <text x={22} y={padding.top + plotHeight / 2} textAnchor="middle" className="axis-label" transform={`rotate(-90 22 ${padding.top + plotHeight / 2})`}>
+          Wall time
+        </text>
+        <g clipPath={`url(#${clipId})`}>
+          {series.map(item => {
+            const points = [...item.points].sort((left, right) => left.datasetSize - right.datasetSize);
+            const line = points.map(point => `${xScale(point.datasetSize)},${yScale(point.avg)}`).join(' ');
+            const color = languageColors[item.language] ?? '#475569';
+            return (
+              <g key={`chart-line-${title}-${item.language}`}>
+                <polyline points={line} fill="none" stroke={color} strokeWidth={explorer ? '5' : compact ? '3' : '4'} strokeLinejoin="round" strokeLinecap="round" />
+                {points.map(point => (
+                  <circle
+                    key={`chart-point-${title}-${item.language}-${point.datasetId}`}
+                    cx={xScale(point.datasetSize)}
+                    cy={yScale(point.avg)}
+                    r={activePointKey === `${item.language}-${point.datasetId}` ? (explorer ? '9' : '7') : explorer ? '6' : compact ? '4' : '5'}
+                    fill={color}
+                    className={explorer ? 'explorer-point' : undefined}
+                  />
+                ))}
+              </g>
+            );
+          })}
+        </g>
+        {explorer && hoverPoint && (
+          <g className="chart-hover-layer">
+            <line x1={hoverPoint.x} y1={padding.top} x2={hoverPoint.x} y2={height - padding.bottom} className="crosshair" />
+            <line x1={padding.left} y1={hoverPoint.y} x2={width - padding.right} y2={hoverPoint.y} className="crosshair" />
+            <circle cx={hoverPoint.x} cy={hoverPoint.y} r="10" fill="none" stroke={hoverPoint.color} strokeWidth="3" />
+            <g transform={`translate(${tooltipX} ${tooltipY})`}>
+              <rect width={tooltipWidth} height={tooltipHeight} rx="8" className="chart-tooltip-box" />
+              <circle cx="16" cy="18" r="5" fill={hoverPoint.color} />
+              <text x="30" y="23" className="chart-tooltip-title">{hoverPoint.language}</text>
+              <text x="14" y="48" className="chart-tooltip-text">Size: {formatDatasetTick(hoverPoint.point.datasetSize)}</text>
+              <text x="14" y="70" className="chart-tooltip-text">ms: {formatDurationTick(hoverPoint.point.avg)}</text>
+            </g>
+          </g>
+        )}
       </svg>
       <div className="legend">
-        {pair.map((series) => (
-          <span key={`pair-legend-${series.language}`}>
-            <i style={{ background: languageColors[series.language] ?? '#475569' }} />
-            {series.language}
+        {series.map((item) => (
+          <span key={`chart-legend-${title}-${item.language}`}>
+            <i style={{ background: languageColors[item.language] ?? '#475569' }} />
+            {item.language}
           </span>
         ))}
       </div>
     </section>
   );
+}
+
+function PairChartCard({ pair, title }: { pair: ComplexitySeries[]; title?: string }) {
+  return <BenchmarkLineChart series={pair} title={title ?? (pair.length === 2 ? `${pair[0].language} vs ${pair[1].language}` : pair[0].language)} scale="linear" compact />;
 }
 
 function RunTable({ runs }: { runs: RunSummary[] }) {

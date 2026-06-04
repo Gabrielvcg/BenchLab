@@ -389,6 +389,49 @@ h2 {
   padding: 14px;
 }
 
+.chart-panel {
+  margin-top: 14px;
+}
+
+.chart-explorer {
+  background: #fbfdfc;
+  border-color: #9fb4aa;
+}
+
+.chart-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+.chart-heading h2,
+.chart-heading p {
+  margin: 0;
+}
+
+.chart-heading p {
+  color: #5a6b64;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.chart-tools {
+  display: inline-flex;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.icon-button {
+  width: 34px;
+  min-height: 34px;
+  padding: 0;
+  border-radius: 999px;
+  display: inline-grid;
+  place-items: center;
+}
+
 .pair-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -426,6 +469,10 @@ svg {
   display: block;
 }
 
+.explorer-svg {
+  cursor: crosshair;
+}
+
 .axis {
   stroke: #293d36;
   stroke-width: 2;
@@ -438,7 +485,45 @@ svg {
 
 .tick {
   fill: #627069;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.axis-label {
+  fill: #40524a;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.explorer-point {
+  stroke: #fbfdfc;
+  stroke-width: 2;
+}
+
+.crosshair {
+  stroke: #1f332c;
+  stroke-width: 1.4;
+  stroke-dasharray: 6 5;
+  opacity: 0.72;
+}
+
+.chart-tooltip-box {
+  fill: #102520;
+  opacity: 0.94;
+  stroke: #d9e6df;
+  stroke-width: 1;
+}
+
+.chart-tooltip-title {
+  fill: #f8faf8;
   font-size: 13px;
+  font-weight: 900;
+}
+
+.chart-tooltip-text {
+  fill: #e9f1ed;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .legend {
