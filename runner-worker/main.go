@@ -275,9 +275,9 @@ func prepareRunnerSpec(language, sourceCode, tempDir string) (dockerRunnerSpec, 
 		if err != nil {
 			return dockerRunnerSpec{}, fmt.Errorf("no se pudo escribir archivo rust: %w", err)
 		}
-		compileCmd := []string{"sh", "-lc", "rustc -C opt-level=3 -o benchlab-app main.rs"}
+		compileCmd := []string{"sh", "-lc", "PATH=/usr/local/cargo/bin:$PATH rustc -C opt-level=3 -o benchlab-app main.rs"}
 		runCmd := []string{"/workspace/benchlab-app"}
-		return dockerRunnerSpec{image: "rust:1-bookworm", compileCommand: compileCmd, runCommand: runCmd}, nil
+		return dockerRunnerSpec{image: "rust:1.87-bookworm", compileCommand: compileCmd, runCommand: runCmd}, nil
 	case "ASSEMBLY":
 		err := os.WriteFile(filepath.Join(tempDir, "main.s"), []byte(sourceCode), 0o600)
 		if err != nil {
