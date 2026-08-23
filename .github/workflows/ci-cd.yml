@@ -396,8 +396,8 @@ jobs:
             -o UserKnownHostsFile=~/.ssh/known_hosts \
             -i ~/.ssh/vps_deploy_key \
             -p "${VPS_PORT}" \
-            "${VPS_USER}@${VPS_HOST}" \
-            "umask 077 && cat > '${VPS_PATH}/.env'" < .env.production
+          "${VPS_USER}@${VPS_HOST}" \
+            "umask 077 && if [ -f '${VPS_PATH}/.env' ]; then cp -p '${VPS_PATH}/.env' '${VPS_PATH}/.env.previous'; fi && cat > '${VPS_PATH}/.env'" < .env.production
 
       - name: Pull and restart services on VPS
         shell: bash
