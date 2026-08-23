@@ -278,7 +278,7 @@ func prepareRunnerSpec(language, sourceCode, tempDir string) (dockerRunnerSpec, 
 		if err != nil {
 			return dockerRunnerSpec{}, fmt.Errorf("no se pudo escribir archivo python: %w", err)
 		}
-		return dockerRunnerSpec{image: "python:3.12-alpine", runCommand: []string{"python", "/workspace/main.py"}}, nil
+		return dockerRunnerSpec{image: runnerImage("RUNNER_IMAGE_PYTHON", "python:3.12-alpine"), runCommand: []string{"python", "/workspace/main.py"}}, nil
 	case "JAVA":
 		err := os.WriteFile(filepath.Join(tempDir, "Main.java"), []byte(sourceCode), 0o600)
 		if err != nil {
@@ -286,7 +286,7 @@ func prepareRunnerSpec(language, sourceCode, tempDir string) (dockerRunnerSpec, 
 		}
 		compileCmd := []string{"sh", "-lc", "mkdir -p classes && javac -d classes Main.java"}
 		runCmd := []string{"java", "-cp", "/workspace/classes", "Main"}
-		return dockerRunnerSpec{image: "eclipse-temurin:21-jdk", compileCommand: compileCmd, runCommand: runCmd}, nil
+		return dockerRunnerSpec{image: runnerImage("RUNNER_IMAGE_JAVA", "eclipse-temurin:21-jdk"), compileCommand: compileCmd, runCommand: runCmd}, nil
 	case "GO":
 		err := os.WriteFile(filepath.Join(tempDir, "main.go"), []byte(sourceCode), 0o600)
 		if err != nil {
@@ -294,7 +294,7 @@ func prepareRunnerSpec(language, sourceCode, tempDir string) (dockerRunnerSpec, 
 		}
 		compileCmd := []string{"sh", "-c", "GOCACHE=/tmp/go-build go build -trimpath -o benchlab-app main.go"}
 		runCmd := []string{"/workspace/benchlab-app"}
-		return dockerRunnerSpec{image: "golang:1.22-alpine", compileCommand: compileCmd, runCommand: runCmd}, nil
+		return dockerRunnerSpec{image: runnerImage("RUNNER_IMAGE_GO", "golang:1.22-alpine"), compileCommand: compileCmd, runCommand: runCmd}, nil
 	case "RUST":
 		err := os.WriteFile(filepath.Join(tempDir, "main.rs"), []byte(sourceCode), 0o600)
 		if err != nil {
@@ -302,7 +302,7 @@ func prepareRunnerSpec(language, sourceCode, tempDir string) (dockerRunnerSpec, 
 		}
 		compileCmd := []string{"sh", "-lc", "PATH=/usr/local/cargo/bin:$PATH rustc -C opt-level=3 -o benchlab-app main.rs"}
 		runCmd := []string{"/workspace/benchlab-app"}
-		return dockerRunnerSpec{image: "rust:1.87-bookworm", compileCommand: compileCmd, runCommand: runCmd}, nil
+		return dockerRunnerSpec{image: runnerImage("RUNNER_IMAGE_RUST", "rust:1.87-bookworm"), compileCommand: compileCmd, runCommand: runCmd}, nil
 	case "ASSEMBLY":
 		err := os.WriteFile(filepath.Join(tempDir, "main.s"), []byte(sourceCode), 0o600)
 		if err != nil {
@@ -310,13 +310,13 @@ func prepareRunnerSpec(language, sourceCode, tempDir string) (dockerRunnerSpec, 
 		}
 		compileCmd := []string{"sh", "-lc", "gcc -x assembler -o benchlab-app main.s"}
 		runCmd := []string{"/workspace/benchlab-app"}
-		return dockerRunnerSpec{image: "gcc:14", compileCommand: compileCmd, runCommand: runCmd}, nil
+		return dockerRunnerSpec{image: runnerImage("RUNNER_IMAGE_CPP", "gcc:14"), compileCommand: compileCmd, runCommand: runCmd}, nil
 	case "RUBY":
 		err := os.WriteFile(filepath.Join(tempDir, "main.rb"), []byte(sourceCode), 0o600)
 		if err != nil {
 			return dockerRunnerSpec{}, fmt.Errorf("no se pudo escribir archivo ruby: %w", err)
 		}
-		return dockerRunnerSpec{image: "ruby:3.3-alpine", runCommand: []string{"ruby", "/workspace/main.rb"}}, nil
+		return dockerRunnerSpec{image: runnerImage("RUNNER_IMAGE_RUBY", "ruby:3.3-alpine"), runCommand: []string{"ruby", "/workspace/main.rb"}}, nil
 	case "C":
 		err := os.WriteFile(filepath.Join(tempDir, "main.c"), []byte(sourceCode), 0o600)
 		if err != nil {
@@ -324,10 +324,17 @@ func prepareRunnerSpec(language, sourceCode, tempDir string) (dockerRunnerSpec, 
 		}
 		compileCmd := []string{"gcc", "main.c", "-O2", "-o", "benchlab-app"}
 		runCmd := []string{"/workspace/benchlab-app"}
-		return dockerRunnerSpec{image: "gcc:14", compileCommand: compileCmd, runCommand: runCmd}, nil
+		return dockerRunnerSpec{image: runnerImage("RUNNER_IMAGE_C", "gcc:14"), compileCommand: compileCmd, runCommand: runCmd}, nil
 	default:
 		return dockerRunnerSpec{}, fmt.Errorf("lenguaje no soportado en fase actual: %s", language)
 	}
+}
+
+func runnerImage(environmentKey, fallback string) string {
+	if configured := strings.TrimSpace(os.Getenv(environmentKey)); configured != "" {
+		return configured
+	}
+	return fallback
 }
 
 func runDockerCommand(event RunRequestedEvent, runnerSpec dockerRunnerSpec, tempDir string, command []string, writableWorkspace bool) dockerRunResult {

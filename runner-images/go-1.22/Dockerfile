@@ -1,3 +1,3 @@
-﻿FROM eclipse-temurin:21-jdk
+FROM golang:1.22-alpine
 WORKDIR /workspace
 ENTRYPOINT []

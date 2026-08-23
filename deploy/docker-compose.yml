@@ -77,6 +77,13 @@ services:
       BENCHLAB_WORKER_TOKEN: ${BENCHLAB_WORKER_TOKEN:?BENCHLAB_WORKER_TOKEN must be set}
       TMPDIR: ${WORKER_TEMP_PATH:-/opt/benchlab/worker-tmp}
       WORKER_HEALTH_ADDRESS: ':8081'
+      RUNNER_IMAGE_PYTHON: ${RUNNER_IMAGE_PYTHON:-python:3.12-alpine}
+      RUNNER_IMAGE_JAVA: ${RUNNER_IMAGE_JAVA:-eclipse-temurin:21-jdk}
+      RUNNER_IMAGE_GO: ${RUNNER_IMAGE_GO:-golang:1.22-alpine}
+      RUNNER_IMAGE_RUST: ${RUNNER_IMAGE_RUST:-rust:1.87-bookworm}
+      RUNNER_IMAGE_C: ${RUNNER_IMAGE_C:-gcc:14}
+      RUNNER_IMAGE_CPP: ${RUNNER_IMAGE_CPP:-gcc:14}
+      RUNNER_IMAGE_RUBY: ${RUNNER_IMAGE_RUBY:-ruby:3.3-alpine}
     mem_limit: 256m
     pids_limit: 128
     volumes:
