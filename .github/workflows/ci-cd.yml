@@ -239,6 +239,8 @@ jobs:
     name: Deploy to VPS
     runs-on: ubuntu-latest
     needs: build-container
+    # Production deployment is always an explicit, manually dispatched promotion.
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     environment: prod
     env:
       VPS_HOST: ${{ vars.VPS_HOST }}
