@@ -229,11 +229,28 @@ jobs:
             [cpp]=runner-images/gcc
             [ruby]=runner-images/ruby-3.3
           )
-          for language in "${!images[@]}"; do
+          languages=(python java go rust c cpp ruby)
+          pids=()
+          for language in "${languages[@]}"; do
             docker buildx build "${images[$language]}" \
               --tag "${REGISTRY_PREFIX,,}-runner-${language}:${GITHUB_SHA}" \
-              --push
+              --push >"/tmp/benchlab-runner-${language}.log" 2>&1 &
+            pids+=("$!")
           done
+          failed=0
+          for index in "${!pids[@]}"; do
+            if ! wait "${pids[$index]}"; then
+              language="${languages[$index]}"
+              echo "Runner build failed (see /tmp/benchlab-runner-${language}.log)."
+              failed=1
+            fi
+          done
+          if [ "${failed}" -ne 0 ]; then
+            for log in /tmp/benchlab-runner-*.log; do
+              echo "--- ${log}"; tail -80 "${log}" || true
+            done
+            exit 1
+          fi
 
   deploy-vps:
     name: Deploy to VPS
