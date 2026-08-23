@@ -88,6 +88,7 @@ services:
     pids_limit: 128
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - ${DOCKER_AUTH_CONFIG_PATH:-/home/vacaro/.docker/config.json}:/root/.docker/config.json:ro
       - ${WORKER_TEMP_PATH:-/opt/benchlab/worker-tmp}:${WORKER_TEMP_PATH:-/opt/benchlab/worker-tmp}
     depends_on:
       api:
