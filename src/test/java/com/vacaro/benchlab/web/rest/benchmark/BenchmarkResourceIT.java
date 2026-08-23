@@ -11,7 +11,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vacaro.benchlab.IntegrationTest;
 import com.vacaro.benchlab.domain.BenchmarkRun;
 import com.vacaro.benchlab.domain.BenchmarkRunStatus;
+import com.vacaro.benchlab.domain.User;
 import com.vacaro.benchlab.repository.BenchmarkRunRepository;
+import com.vacaro.benchlab.repository.UserRepository;
 import com.vacaro.benchlab.service.messaging.RunEventPublisher;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -19,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -37,6 +40,12 @@ class BenchmarkResourceIT {
     @Autowired
     private BenchmarkRunRepository benchmarkRunRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @MockBean
     private RunEventPublisher runEventPublisher;
 
@@ -44,6 +53,7 @@ class BenchmarkResourceIT {
     @Transactional
     @WithMockUser("benchmark-user")
     void shouldCreateAlgorithmDatasetImplementationAndRun() throws Exception {
+        persistBenchmarkUser();
         MvcResult algorithmResult = mockMvc
             .perform(
                 post("/api/algorithms")
@@ -140,6 +150,7 @@ class BenchmarkResourceIT {
     @Transactional
     @WithMockUser("benchmark-user")
     void shouldAcceptInternalWorkerCallbackWithToken() throws Exception {
+        persistBenchmarkUser();
         MvcResult algorithmResult = mockMvc
             .perform(
                 post("/api/algorithms")
@@ -279,6 +290,7 @@ class BenchmarkResourceIT {
     @Transactional
     @WithMockUser("benchmark-user")
     void shouldRejectInternalWorkerCallbackWithoutToken() throws Exception {
+        persistBenchmarkUser();
         MvcResult algorithmResult = mockMvc
             .perform(
                 post("/api/algorithms")
@@ -377,5 +389,14 @@ class BenchmarkResourceIT {
                     )
             )
             .andExpect(status().isUnauthorized());
+    }
+
+    private void persistBenchmarkUser() {
+        User user = new User();
+        user.setLogin("benchmark-user");
+        user.setEmail("benchmark-user@example.com");
+        user.setActivated(true);
+        user.setPassword(passwordEncoder.encode("test-password"));
+        userRepository.saveAndFlush(user);
     }
 }
