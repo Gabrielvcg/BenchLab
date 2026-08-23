@@ -116,7 +116,7 @@ jobs:
     needs:
       - sonarcloud-analysis
       - component-checks
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     outputs:
       api_image: ${{ steps.images.outputs.api_image }}
       worker_image: ${{ steps.images.outputs.worker_image }}
