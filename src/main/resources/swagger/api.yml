@@ -179,8 +179,8 @@ paths:
           required: false
           schema:
             type: string
-            default: wallTimeMs
-            enum: [wallTimeMs, cpuTimeMs]
+            default: orchestrationWallTimeMs
+            enum: [orchestrationWallTimeMs]
       responses:
         '200':
           description: Complexity by dataset size and language
@@ -195,10 +195,10 @@ components:
       type: object
       required: [name, category, version, complexityDeclared]
       properties:
-        name: { type: string }
-        category: { type: string }
-        version: { type: string }
-        complexityDeclared: { type: string }
+        name: { type: string, minLength: 1, maxLength: 255 }
+        category: { type: string, minLength: 1, maxLength: 255 }
+        version: { type: string, minLength: 1, maxLength: 100 }
+        complexityDeclared: { type: string, minLength: 1, maxLength: 255 }
     AlgorithmResponse:
       type: object
       properties:
@@ -211,11 +211,11 @@ components:
       type: object
       required: [type, sizeValue, checksum, datasetVersion]
       properties:
-        type: { type: string }
-        sizeValue: { type: integer, format: int64 }
+        type: { type: string, minLength: 1, maxLength: 255 }
+        sizeValue: { type: integer, format: int64, minimum: 1, maximum: 25000000 }
         seed: { type: integer, format: int64 }
-        checksum: { type: string }
-        datasetVersion: { type: string }
+        checksum: { type: string, minLength: 1, maxLength: 255 }
+        datasetVersion: { type: string, minLength: 1, maxLength: 100 }
     DatasetResponse:
       type: object
       properties:
@@ -232,14 +232,20 @@ components:
         algorithmId:
           type: integer
           format: int64
+          minimum: 1
         language:
           type: string
+          enum: [PYTHON, JAVA, C, GO, RUBY, RUST, ASSEMBLY]
         sourceCode:
           type: string
+          minLength: 1
+          maxLength: 65536
         compileConfig:
           type: string
+          maxLength: 1000
         runtimeConfig:
           type: string
+          maxLength: 1000
     ImplementationResponse:
       type: object
       properties:
@@ -260,34 +266,67 @@ components:
         implementationId:
           type: integer
           format: int64
+          minimum: 1
         datasetId:
           type: integer
           format: int64
+          minimum: 1
         timeoutMs:
           type: integer
+          minimum: 100
+          maximum: 30000
+          default: 5000
         memoryMb:
           type: integer
+          minimum: 32
+          maximum: 512
+          default: 256
         cpuLimit:
           type: number
           format: double
+          minimum: 0.1
+          maximum: 2.0
+          default: 1.0
         iterations:
           type: integer
+          minimum: 1
+          maximum: 10
+          default: 5
         warmupIterations:
           type: integer
+          minimum: 0
+          maximum: 3
+          default: 1
     RunMetricResponse:
       type: object
       properties:
-        cpuTimeMs: { type: integer, format: int64 }
-        wallTimeMs: { type: integer, format: int64 }
-        peakMemoryMb: { type: number, format: double }
+        cpuTimeMs:
+          type: integer
+          format: int64
+          nullable: true
+          description: Actual CPU time when measured; null in the current runner.
+        orchestrationWallTimeMs:
+          type: integer
+          format: int64
+          description: Average Docker command wall time, including container and process startup.
+        peakMemoryMb:
+          type: number
+          format: double
+          nullable: true
+          description: Actual peak memory when measured; null in the current runner.
         exitCode: { type: integer }
         timedOut: { type: boolean }
-        compileMs: { type: integer, format: int64 }
+        compileWallTimeMs:
+          type: integer
+          format: int64
+          description: Docker compile-command wall time, including container startup.
     RunArtifactResponse:
       type: object
       properties:
-        stdoutTruncated: { type: string }
-        stderrTruncated: { type: string }
+        stdoutPreview: { type: string }
+        stderrPreview: { type: string }
+        stdoutTruncated: { type: boolean }
+        stderrTruncated: { type: boolean }
         outputSizeBytes: { type: integer, format: int64 }
         artifactChecksum: { type: string }
         technicalLogSummary: { type: string }
@@ -317,7 +356,7 @@ components:
         datasetSize: { type: integer, format: int64 }
         queuedAt: { type: string }
         finishedAt: { type: string }
-        wallTimeMs: { type: integer, format: int64 }
+        orchestrationWallTimeMs: { type: integer, format: int64 }
     BenchmarkCompareRow:
       type: object
       properties:
@@ -340,7 +379,7 @@ components:
       type: object
       properties:
         finishedAt: { type: string }
-        wallTimeMs: { type: integer, format: int64 }
+        orchestrationWallTimeMs: { type: integer, format: int64 }
     BenchmarkTimeseriesResponse:
       type: object
       properties:

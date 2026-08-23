@@ -10,5 +10,5 @@ public record RunSummaryResponse(
     Long datasetSize,
     String queuedAt,
     String finishedAt,
-    Long wallTimeMs
+    Long orchestrationWallTimeMs
 ) {}

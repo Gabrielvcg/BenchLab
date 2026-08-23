@@ -312,6 +312,22 @@ textarea {
   margin-top: auto;
 }
 
+.status-text + .status-text {
+  margin-top: 0;
+}
+
+.preset-estimate {
+  display: block;
+  padding: 8px 10px;
+  border: 1px solid #c5d2cc;
+  border-radius: 8px;
+  background: #f3f7f5;
+  color: #29443c;
+  font-size: 0.76rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
 .workspace {
   padding: 28px 30px;
   display: grid;
@@ -324,6 +340,44 @@ header {
   justify-content: space-between;
   gap: 18px;
   align-items: end;
+}
+
+.progress-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 10px 14px;
+  border: 1px solid #d7e0db;
+  border-radius: 12px;
+  background: #f8faf9;
+  color: #53655d;
+  font-size: 0.82rem;
+}
+
+.progress-strip span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.progress-strip strong {
+  color: #183b33;
+}
+
+.live-indicator {
+  margin-left: auto;
+  color: #0e6f5b;
+  font-weight: 800;
+}
+
+.live-indicator::before {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #19a37d;
+  content: '';
 }
 
 .eyebrow {

@@ -41,6 +41,14 @@ services:
       JHIPSTER_MAIL_BASE_URL: ${JHIPSTER_MAIL_BASE_URL:-https://benchlab.example.com}
       BENCHLAB_WORKER_TOKEN: ${BENCHLAB_WORKER_TOKEN:?BENCHLAB_WORKER_TOKEN must be set}
       BENCHLAB_SECURITY_ADMIN_PASSWORD: ${BENCHLAB_SECURITY_ADMIN_PASSWORD:?BENCHLAB_SECURITY_ADMIN_PASSWORD must be set}
+      BENCHLAB_LIMITS_MAX_SOURCE_BYTES: ${BENCHLAB_LIMITS_MAX_SOURCE_BYTES:-65536}
+      BENCHLAB_LIMITS_MAX_TIMEOUT_MS: ${BENCHLAB_LIMITS_MAX_TIMEOUT_MS:-30000}
+      BENCHLAB_LIMITS_MAX_MEMORY_MB: ${BENCHLAB_LIMITS_MAX_MEMORY_MB:-512}
+      BENCHLAB_LIMITS_MAX_CPU_LIMIT: ${BENCHLAB_LIMITS_MAX_CPU_LIMIT:-2.0}
+      BENCHLAB_LIMITS_MAX_ITERATIONS: ${BENCHLAB_LIMITS_MAX_ITERATIONS:-10}
+      BENCHLAB_LIMITS_MAX_WARMUP_ITERATIONS: ${BENCHLAB_LIMITS_MAX_WARMUP_ITERATIONS:-3}
+      BENCHLAB_LIMITS_MAX_DATASET_SIZE: ${BENCHLAB_LIMITS_MAX_DATASET_SIZE:-25000000}
+      BENCHLAB_LIMITS_MAX_OUTSTANDING_RUNS_PER_USER: ${BENCHLAB_LIMITS_MAX_OUTSTANDING_RUNS_PER_USER:-32}
     ports:
       - '${APP_HOST_PORT:-127.0.0.1:8083}:8080'
     depends_on:
@@ -68,6 +76,9 @@ services:
       BENCHLAB_API_BASE_URL: http://api:8080
       BENCHLAB_WORKER_TOKEN: ${BENCHLAB_WORKER_TOKEN:?BENCHLAB_WORKER_TOKEN must be set}
       TMPDIR: ${WORKER_TEMP_PATH:-/opt/benchlab/worker-tmp}
+      WORKER_HEALTH_ADDRESS: ':8081'
+    mem_limit: 256m
+    pids_limit: 128
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${WORKER_TEMP_PATH:-/opt/benchlab/worker-tmp}:${WORKER_TEMP_PATH:-/opt/benchlab/worker-tmp}
@@ -76,6 +87,12 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://localhost:8081/health/ready >/dev/null || exit 1']
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 10s
     networks:
       - backend
 

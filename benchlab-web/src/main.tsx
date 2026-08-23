@@ -1,6 +1,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { Activity, BarChart3, CirclePlay, LogOut, RefreshCw, RotateCcw, ShieldCheck, ZoomIn, ZoomOut } from 'lucide-react';
+import { describeApiError, estimateDockerInvocations, hasActiveRuns, mapWithConcurrency, summarizeRuns } from './app-logic';
 import './styles.css';
 
 type Algorithm = {
@@ -51,7 +52,7 @@ type RunSummary = {
   datasetSize: number;
   queuedAt: string | null;
   finishedAt: string | null;
-  wallTimeMs: number | null;
+  orchestrationWallTimeMs: number | null;
 };
 
 type AuthResponse = {
@@ -65,6 +66,7 @@ type AlgorithmTemplate = {
   name: string;
   category: string;
   complexityDeclared: string;
+  quickDatasetSizes: number[];
   datasetSizes: number[];
   sources: Partial<Record<ImplementationLanguage, string>>;
 };
@@ -75,6 +77,7 @@ const BENCHMARK_SUITE: AlgorithmTemplate[] = [
     name: 'constant-read',
     category: 'synthetic',
     complexityDeclared: 'O(1)',
+    quickDatasetSizes: [100000, 500000, 1000000],
     datasetSizes: [1000000, 5000000, 10000000, 25000000],
     sources: {
       PYTHON:
@@ -95,6 +98,7 @@ const BENCHMARK_SUITE: AlgorithmTemplate[] = [
     name: 'log-halving',
     category: 'synthetic',
     complexityDeclared: 'O(log n)',
+    quickDatasetSizes: [100000, 500000, 1000000],
     datasetSizes: [1000000, 5000000, 10000000, 25000000],
     sources: {
       PYTHON:
@@ -113,6 +117,7 @@ const BENCHMARK_SUITE: AlgorithmTemplate[] = [
     name: 'linear-sum',
     category: 'synthetic',
     complexityDeclared: 'O(n)',
+    quickDatasetSizes: [100000, 500000, 1000000],
     datasetSizes: [1000000, 5000000, 10000000, 25000000],
     sources: {
       PYTHON:
@@ -133,6 +138,7 @@ const BENCHMARK_SUITE: AlgorithmTemplate[] = [
     name: 'linearithmic-mix',
     category: 'synthetic',
     complexityDeclared: 'O(n log n)',
+    quickDatasetSizes: [10000, 50000, 100000],
     datasetSizes: [100000, 250000, 500000, 1000000],
     sources: {
       PYTHON:
@@ -151,6 +157,7 @@ const BENCHMARK_SUITE: AlgorithmTemplate[] = [
     name: 'quadratic-nested',
     category: 'synthetic',
     complexityDeclared: 'O(n^2)',
+    quickDatasetSizes: [500, 1000, 2000],
     datasetSizes: [2000, 4000, 6000, 8000],
     sources: {
       PYTHON:
@@ -178,6 +185,8 @@ const languageColors: Record<string, string> = {
 };
 
 const AVAILABLE_LANGUAGES: ImplementationLanguage[] = ['PYTHON', 'JAVA', 'C', 'GO', 'RUBY', 'RUST', 'ASSEMBLY'];
+const QUICK_DEMO_LANGUAGES: ImplementationLanguage[] = ['PYTHON', 'JAVA', 'C'];
+type DemoPreset = 'quick' | 'broad';
 
 function shuffleInPlace<T>(items: T[]): void {
   for (let i = items.length - 1; i > 0; i -= 1) {
@@ -229,16 +238,23 @@ function App() {
   const [complexity, setComplexity] = React.useState<ComplexityResponse | null>(null);
   const [runs, setRuns] = React.useState<RunSummary[]>([]);
   const [message, setMessage] = React.useState('Ready');
-  const [busy, setBusy] = React.useState(false);
+  const [isAuthenticating, setIsAuthenticating] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
+  const [submissionProgress, setSubmissionProgress] = React.useState<{ completed: number; total: number } | null>(null);
+  const [demoPreset, setDemoPreset] = React.useState<DemoPreset>('quick');
   const [selectedTemplateKey, setSelectedTemplateKey] = React.useState(BENCHMARK_SUITE[2]?.key ?? BENCHMARK_SUITE[0].key);
   const [problemSizesInput, setProblemSizesInput] = React.useState(
-    (BENCHMARK_SUITE[2]?.datasetSizes ?? BENCHMARK_SUITE[0].datasetSizes).join('\n'),
+    (BENCHMARK_SUITE[2]?.quickDatasetSizes ?? BENCHMARK_SUITE[0].quickDatasetSizes).join('\n'),
   );
-  const [selectedLanguages, setSelectedLanguages] = React.useState<ImplementationLanguage[]>(AVAILABLE_LANGUAGES);
-  const [runIterations, setRunIterations] = React.useState('5');
-  const [warmupIterations, setWarmupIterations] = React.useState('1');
-  const [runTimeoutMs, setRunTimeoutMs] = React.useState('60000');
+  const [selectedLanguages, setSelectedLanguages] = React.useState<ImplementationLanguage[]>(QUICK_DEMO_LANGUAGES);
+  const [runIterations, setRunIterations] = React.useState('2');
+  const [warmupIterations, setWarmupIterations] = React.useState('0');
+  const [runTimeoutMs, setRunTimeoutMs] = React.useState('15000');
   const selectedAlgorithmIdRef = React.useRef<number | null>(selectedAlgorithmId);
+  const refreshInFlightRef = React.useRef(false);
+  const refreshAbortRef = React.useRef<AbortController | null>(null);
+  const refreshSequenceRef = React.useRef(0);
 
   const authHeaders = React.useMemo(() => ({ Authorization: `Bearer ${token}` }), [token]);
   const selectedTemplate = React.useMemo(
@@ -255,15 +271,21 @@ function App() {
   }, [selectedAlgorithmId]);
 
   React.useEffect(() => {
+    if (demoPreset === 'quick') {
+      setProblemSizesInput(selectedTemplate.quickDatasetSizes.join('\n'));
+      const quickLanguages = QUICK_DEMO_LANGUAGES.filter(language => templateLanguages.includes(language));
+      setSelectedLanguages(quickLanguages.length > 0 ? quickLanguages : templateLanguages.slice(0, 3));
+      setRunIterations('2');
+      setWarmupIterations('0');
+      setRunTimeoutMs('15000');
+      return;
+    }
     setProblemSizesInput(selectedTemplate.datasetSizes.join('\n'));
-  }, [selectedTemplate]);
-
-  React.useEffect(() => {
-    setSelectedLanguages(current => {
-      const filtered = current.filter(language => templateLanguages.includes(language));
-      return filtered.length > 0 ? filtered : [...templateLanguages];
-    });
-  }, [templateLanguages]);
+    setSelectedLanguages([...templateLanguages]);
+    setRunIterations('5');
+    setWarmupIterations('1');
+    setRunTimeoutMs('30000');
+  }, [demoPreset, selectedTemplate, templateLanguages]);
 
   async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
     const response = await fetch(path, {
@@ -275,7 +297,8 @@ function App() {
       },
     });
     if (!response.ok) {
-      throw new Error(`${response.status} ${response.statusText}`);
+      const rawBody = await response.text();
+      throw new Error(describeApiError(response.status, response.statusText, rawBody));
     }
     if (response.status === 204) {
       return undefined as T;
@@ -285,7 +308,7 @@ function App() {
 
   async function signIn(event: React.FormEvent) {
     event.preventDefault();
-    setBusy(true);
+    setIsAuthenticating(true);
     setMessage('Authenticating');
     try {
       const auth = await api<AuthResponse>('/api/authenticate', {
@@ -298,15 +321,33 @@ function App() {
     } catch (error) {
       setMessage(`Login failed: ${(error as Error).message}`);
     } finally {
-      setBusy(false);
+      setIsAuthenticating(false);
     }
   }
 
-  async function refresh(nextAlgorithmId?: number | null) {
+  async function refresh(nextAlgorithmId?: number | null, background = false) {
     if (!token) return;
-    setBusy(true);
+    if (background && refreshInFlightRef.current) return;
+    refreshAbortRef.current?.abort();
+    const controller = new AbortController();
+    refreshAbortRef.current = controller;
+    refreshInFlightRef.current = true;
+    const sequence = refreshSequenceRef.current + 1;
+    refreshSequenceRef.current = sequence;
+    if (!background) setIsRefreshing(true);
     try {
-      const [algorithmData, runData] = await Promise.all([api<Algorithm[]>('/api/algorithms'), api<RunSummary[]>('/api/runs')]);
+      const preferredAlgorithmId = nextAlgorithmId ?? selectedAlgorithmIdRef.current;
+      const [algorithmData, runData, preferredComplexity] = await Promise.all([
+        api<Algorithm[]>('/api/algorithms', { signal: controller.signal }),
+        api<RunSummary[]>('/api/runs', { signal: controller.signal }),
+        preferredAlgorithmId
+          ? api<ComplexityResponse>(
+              `/api/benchmarks/complexity?algorithmId=${preferredAlgorithmId}&metric=orchestrationWallTimeMs`,
+              { signal: controller.signal },
+            )
+          : Promise.resolve(null),
+      ]);
+      if (sequence !== refreshSequenceRef.current) return;
       setAlgorithms(algorithmData);
       setRuns(runData);
       const currentAlgorithmId = selectedAlgorithmIdRef.current;
@@ -315,20 +356,33 @@ function App() {
       const algorithmId = nextAlgorithmId ?? (currentStillExists ? currentAlgorithmId : latestRunAlgorithmId) ?? algorithmData[0]?.id ?? null;
       setSelectedAlgorithmId(algorithmId);
       if (algorithmId) {
-        setComplexity(await api<ComplexityResponse>(`/api/benchmarks/complexity?algorithmId=${algorithmId}&metric=wallTimeMs`));
+        const complexityData =
+          preferredAlgorithmId === algorithmId && preferredComplexity
+            ? preferredComplexity
+            : await api<ComplexityResponse>(
+                `/api/benchmarks/complexity?algorithmId=${algorithmId}&metric=orchestrationWallTimeMs`,
+                { signal: controller.signal },
+              );
+        if (sequence !== refreshSequenceRef.current) return;
+        setComplexity(complexityData);
       } else {
         setComplexity(null);
       }
-      setMessage('Data refreshed');
+      if (!background) setMessage('Data refreshed');
     } catch (error) {
+      if ((error as Error).name === 'AbortError') return;
       setMessage(`Refresh failed: ${(error as Error).message}`);
     } finally {
-      setBusy(false);
+      if (sequence === refreshSequenceRef.current) {
+        refreshInFlightRef.current = false;
+        setIsRefreshing(false);
+      }
     }
   }
 
   async function runSelectedTemplate() {
-    setBusy(true);
+    setIsSubmitting(true);
+    setSubmissionProgress(null);
     setMessage(`Seeding algorithm ${selectedTemplate.name}`);
     try {
       const uniqueSizes = parseProblemSizesInput(problemSizesInput);
@@ -342,7 +396,7 @@ function App() {
       const normalizedWarmups = sanitizeIntegerInput(warmupIterations, 0, 0);
       const normalizedTimeoutMs = sanitizeIntegerInput(runTimeoutMs, 1000, 1000);
 
-      const suffix = new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 12);
+      const suffix = Date.now().toString(36);
       const algorithm = await api<Algorithm>('/api/algorithms', {
         method: 'POST',
         body: JSON.stringify({
@@ -353,10 +407,8 @@ function App() {
         }),
       });
 
-      const datasets: Array<{ id: number }> = [];
-      for (const size of uniqueSizes) {
-        datasets.push(
-          await api<{ id: number }>('/api/datasets', {
+      const datasets = await mapWithConcurrency(uniqueSizes, 3, size =>
+        api<{ id: number }>('/api/datasets', {
             method: 'POST',
             body: JSON.stringify({
               type: selectedTemplate.key,
@@ -366,8 +418,7 @@ function App() {
               datasetVersion: `n-${size}`,
             }),
           }),
-        );
-      }
+      );
 
       const implementations = await Promise.all(
         (Object.entries(selectedTemplate.sources) as Array<[ImplementationLanguage, string]>)
@@ -399,30 +450,59 @@ function App() {
       );
       shuffleInPlace(runQueue);
 
-      for (const runRequest of runQueue) {
-        await api('/api/runs', {
+      setSubmissionProgress({ completed: 0, total: runQueue.length });
+      await mapWithConcurrency(
+        runQueue,
+        4,
+        runRequest =>
+          api('/api/runs', {
           method: 'POST',
           body: JSON.stringify(runRequest),
-        });
-      }
+          }),
+        (completed, total) => {
+          setSubmissionProgress({ completed, total });
+          setMessage(`Queued ${completed} of ${total} runs`);
+        },
+      );
 
       setMessage('Runs queued. Refreshing while worker processes runs');
-      await refresh(algorithm.id);
+      await refresh(algorithm.id, true);
     } catch (error) {
       setMessage(`Run failed: ${(error as Error).message}`);
     } finally {
-      setBusy(false);
+      setIsSubmitting(false);
+      setSubmissionProgress(null);
     }
   }
 
   React.useEffect(() => {
     if (token) {
       refresh();
-      const interval = window.setInterval(() => refresh(selectedAlgorithmIdRef.current), 6000);
-      return () => window.clearInterval(interval);
     }
-    return undefined;
   }, [token]);
+
+  const activeRuns = hasActiveRuns(runs);
+  React.useEffect(() => {
+    if (!token || !activeRuns) return undefined;
+    const refreshIfVisible = () => {
+      if (document.visibilityState === 'visible') refresh(selectedAlgorithmIdRef.current, true);
+    };
+    const interval = window.setInterval(refreshIfVisible, 3000);
+    document.addEventListener('visibilitychange', refreshIfVisible);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', refreshIfVisible);
+    };
+  }, [token, activeRuns]);
+
+  const runProgress = React.useMemo(() => summarizeRuns(runs), [runs]);
+  const configuredDatasetCount = parseProblemSizesInput(problemSizesInput).length;
+  const estimatedInvocations = estimateDockerInvocations(
+    selectedLanguages,
+    configuredDatasetCount,
+    sanitizeIntegerInput(runIterations, 1, 1),
+    sanitizeIntegerInput(warmupIterations, 0, 0),
+  );
 
   if (!token) {
     return (
@@ -449,9 +529,9 @@ function App() {
               placeholder="Password"
             />
           </label>
-          <button type="submit" disabled={busy}>
+          <button type="submit" disabled={isAuthenticating}>
             <CirclePlay size={18} />
-            <span>Sign in</span>
+            <span>{isAuthenticating ? 'Signing in…' : 'Sign in'}</span>
           </button>
           {message !== 'Ready' ? <p className="login-message">{message}</p> : null}
         </form>
@@ -468,6 +548,17 @@ function App() {
         </div>
         <section className="control-panel">
           <h2 className="control-title">Run Configuration</h2>
+          <label className="control-label">
+            <span className="field-title">Demo preset</span>
+            <span className="field-help">
+              Quick demo is portfolio-friendly. Broader comparison is opt-in and launches substantially more isolated containers.
+            </span>
+            <select value={demoPreset} onChange={event => setDemoPreset(event.target.value as DemoPreset)} aria-label="Demo preset">
+              <option value="quick">Quick demo (recommended)</option>
+              <option value="broad">Broader comparison (slower)</option>
+            </select>
+            <span className="preset-estimate">Estimated isolated container invocations: {estimatedInvocations}</span>
+          </label>
           <label className="control-label">
             <span className="field-title">Chart algorithm</span>
             <span className="field-help">Algorithm used to display the complexity chart.</span>
@@ -526,15 +617,21 @@ function App() {
               rows={5}
             />
             <div className="size-actions">
-              <button type="button" className="inline-button secondary" onClick={() => setProblemSizesInput(selectedTemplate.datasetSizes.join('\n'))}>
+              <button
+                type="button"
+                className="inline-button secondary"
+                onClick={() =>
+                  setProblemSizesInput((demoPreset === 'quick' ? selectedTemplate.quickDatasetSizes : selectedTemplate.datasetSizes).join('\n'))
+                }
+              >
                 <RefreshCw size={16} />
-                <span>Use defaults</span>
+                <span>Use preset sizes</span>
               </button>
             </div>
           </div>
           <label className="control-label">
             <span className="field-title">Measured iterations</span>
-            <span className="field-help">How many times each input size is measured and averaged.</span>
+            <span className="field-help">Fresh isolated executions averaged as orchestration wall time.</span>
             <input
               type="text"
               inputMode="numeric"
@@ -546,7 +643,7 @@ function App() {
           </label>
           <label className="control-label">
             <span className="field-title">Warmup iterations</span>
-            <span className="field-help">Runs before measuring to stabilize performance.</span>
+            <span className="field-help">Unmeasured isolated runs; these do not warm the same process or JVM.</span>
             <input
               type="text"
               inputMode="numeric"
@@ -558,7 +655,7 @@ function App() {
           </label>
           <label className="control-label">
             <span className="field-title">Timeout (ms)</span>
-            <span className="field-help">Maximum time allowed for one benchmark run.</span>
+            <span className="field-help">Maximum time for each compile or run container invocation.</span>
             <input
               type="text"
               inputMode="numeric"
@@ -569,13 +666,13 @@ function App() {
             />
           </label>
         </section>
-        <button onClick={runSelectedTemplate} disabled={busy}>
+        <button onClick={runSelectedTemplate} disabled={isSubmitting}>
           <CirclePlay size={18} />
-          <span>Run selected</span>
+          <span>{isSubmitting ? 'Queuing runs…' : 'Run selected'}</span>
         </button>
-        <button onClick={() => refresh()} disabled={busy}>
+        <button onClick={() => refresh()} disabled={isRefreshing || isSubmitting}>
           <RefreshCw size={18} />
-          <span>Refresh</span>
+          <span>{isRefreshing ? 'Refreshing…' : 'Refresh'}</span>
         </button>
         <button
           onClick={() => {
@@ -586,20 +683,30 @@ function App() {
           <LogOut size={18} />
           <span>Sign out</span>
         </button>
-        <p className="status-text">{message}</p>
+        {submissionProgress ? (
+          <p className="status-text">Submission: {submissionProgress.completed}/{submissionProgress.total}</p>
+        ) : null}
+        <p className="status-text" role="status">{message}</p>
       </aside>
 
       <section className="workspace">
         <header>
           <div>
             <p className="eyebrow">Production laboratory</p>
-            <h1>Algorithm runtime by input size</h1>
+            <h1>Isolated execution wall time by input size</h1>
           </div>
           <div className="metric-pill">
             <BarChart3 size={18} />
-            wallTimeMs
+            orchestrationWallTimeMs
           </div>
         </header>
+        <section className="progress-strip" aria-label="Recent run progress">
+          <span><strong>{runProgress.queued}</strong> queued</span>
+          <span><strong>{runProgress.running}</strong> running</span>
+          <span><strong>{runProgress.completed}</strong> completed</span>
+          <span><strong>{runProgress.failed}</strong> failed</span>
+          {activeRuns ? <span className="live-indicator">Live updates</span> : <span>Idle</span>}
+        </section>
         <ComplexityChart complexity={complexity} />
         <RunTable runs={runs} />
       </section>
@@ -657,7 +764,7 @@ function ComplexityChart({ complexity }: { complexity: ComplexityResponse | null
 
   return (
     <>
-    <BenchmarkLineChart title="Interactive runtime explorer: size vs wall time" series={orderedSeries} scale="linear" explorer />
+    <BenchmarkLineChart title="Interactive explorer: size vs orchestration wall time" series={orderedSeries} scale="linear" explorer />
     <BenchmarkLineChart title="Global comparison" series={orderedSeries} scale="linear" />
     <section className="chart-surface">
       <h2>Custom comparison</h2>
@@ -895,7 +1002,7 @@ function BenchmarkLineChart({
           Input size
         </text>
         <text x={22} y={padding.top + plotHeight / 2} textAnchor="middle" className="axis-label" transform={`rotate(-90 22 ${padding.top + plotHeight / 2})`}>
-          Wall time
+          Orchestration wall time
         </text>
         <g clipPath={`url(#${clipId})`}>
           {series.map(item => {
@@ -951,9 +1058,9 @@ function PairChartCard({ pair, title }: { pair: ComplexitySeries[]; title?: stri
 }
 
 function RunTable({ runs }: { runs: RunSummary[] }) {
-  const [sortBy, setSortBy] = React.useState<'languageSize' | 'id' | 'status' | 'algorithmName' | 'language' | 'datasetSize' | 'wallTimeMs'>(
-    'languageSize',
-  );
+  const [sortBy, setSortBy] = React.useState<
+    'languageSize' | 'id' | 'status' | 'algorithmName' | 'language' | 'datasetSize' | 'orchestrationWallTimeMs'
+  >('languageSize');
   const [sortDirection, setSortDirection] = React.useState<'asc' | 'desc'>('asc');
 
   const sortedRuns = React.useMemo(() => {
@@ -971,7 +1078,9 @@ function RunTable({ runs }: { runs: RunSummary[] }) {
       }
       if (sortBy === 'id') return numberCompare(left.id, right.id) * direction;
       if (sortBy === 'datasetSize') return numberCompare(left.datasetSize, right.datasetSize) * direction;
-      if (sortBy === 'wallTimeMs') return numberCompare(left.wallTimeMs, right.wallTimeMs) * direction;
+      if (sortBy === 'orchestrationWallTimeMs') {
+        return numberCompare(left.orchestrationWallTimeMs, right.orchestrationWallTimeMs) * direction;
+      }
       if (sortBy === 'status') return left.status.localeCompare(right.status) * direction;
       if (sortBy === 'algorithmName') return left.algorithmName.localeCompare(right.algorithmName) * direction;
       return left.language.localeCompare(right.language) * direction;
@@ -979,7 +1088,9 @@ function RunTable({ runs }: { runs: RunSummary[] }) {
     return sorted;
   }, [runs, sortBy, sortDirection]);
 
-  function updateSort(nextSortBy: 'languageSize' | 'id' | 'status' | 'algorithmName' | 'language' | 'datasetSize' | 'wallTimeMs') {
+  function updateSort(
+    nextSortBy: 'languageSize' | 'id' | 'status' | 'algorithmName' | 'language' | 'datasetSize' | 'orchestrationWallTimeMs',
+  ) {
     if (sortBy === nextSortBy) {
       setSortDirection(current => (current === 'asc' ? 'desc' : 'asc'));
       return;
@@ -1015,8 +1126,13 @@ function RunTable({ runs }: { runs: RunSummary[] }) {
         <button type="button" className="sort-chip" onClick={() => updateSort('datasetSize')} aria-pressed={sortBy === 'datasetSize'}>
           Size {sortBy === 'datasetSize' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
         </button>
-        <button type="button" className="sort-chip" onClick={() => updateSort('wallTimeMs')} aria-pressed={sortBy === 'wallTimeMs'}>
-          Wall ms {sortBy === 'wallTimeMs' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+        <button
+          type="button"
+          className="sort-chip"
+          onClick={() => updateSort('orchestrationWallTimeMs')}
+          aria-pressed={sortBy === 'orchestrationWallTimeMs'}
+        >
+          Orchestration ms {sortBy === 'orchestrationWallTimeMs' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
         </button>
       </div>
       <div className="table-scroll">
@@ -1028,7 +1144,7 @@ function RunTable({ runs }: { runs: RunSummary[] }) {
               <th>Algorithm</th>
               <th>Language</th>
               <th>Size</th>
-              <th>Wall ms</th>
+              <th>Orchestration ms</th>
             </tr>
           </thead>
           <tbody>
@@ -1041,7 +1157,7 @@ function RunTable({ runs }: { runs: RunSummary[] }) {
                 <td>{run.algorithmName}</td>
                 <td>{run.language}</td>
                 <td>{run.datasetSize?.toLocaleString()}</td>
-                <td>{run.wallTimeMs ?? '-'}</td>
+                <td>{run.orchestrationWallTimeMs ?? '-'}</td>
               </tr>
             ))}
           </tbody>

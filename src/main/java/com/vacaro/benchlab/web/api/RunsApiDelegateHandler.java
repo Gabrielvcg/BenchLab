@@ -57,7 +57,7 @@ public class RunsApiDelegateHandler implements RunsApiDelegate {
                         .datasetSize(run.datasetSize())
                         .queuedAt(run.queuedAt())
                         .finishedAt(run.finishedAt())
-                        .wallTimeMs(run.wallTimeMs())
+                        .orchestrationWallTimeMs(run.orchestrationWallTimeMs())
                 )
                 .toList()
         );
@@ -68,16 +68,18 @@ public class RunsApiDelegateHandler implements RunsApiDelegate {
         if (run.metric() != null) {
             metric = new RunMetricResponse()
                 .cpuTimeMs(run.metric().cpuTimeMs())
-                .wallTimeMs(run.metric().wallTimeMs())
+                .orchestrationWallTimeMs(run.metric().orchestrationWallTimeMs())
                 .peakMemoryMb(run.metric().peakMemoryMb())
                 .exitCode(run.metric().exitCode())
                 .timedOut(run.metric().timedOut())
-                .compileMs(run.metric().compileMs());
+                .compileWallTimeMs(run.metric().compileWallTimeMs());
         }
 
         RunArtifactResponse artifact = null;
         if (run.artifact() != null) {
             artifact = new RunArtifactResponse()
+                .stdoutPreview(run.artifact().stdoutPreview())
+                .stderrPreview(run.artifact().stderrPreview())
                 .stdoutTruncated(run.artifact().stdoutTruncated())
                 .stderrTruncated(run.artifact().stderrTruncated())
                 .outputSizeBytes(run.artifact().outputSizeBytes())

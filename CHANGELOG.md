@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.0.10
+
+- Bounded worker stdout/stderr retention during execution and exposed explicit preview truncation metadata.
+- Replaced fabricated CPU and memory metrics with nullable unavailable values and renamed Docker wall timings to honest orchestration/compile wall-time fields.
+- Added configurable API admission limits, per-user outstanding-work protection, validation responses, and matching OpenAPI/deployment configuration.
+- Added a 24-invocation quick-demo preset, bounded-concurrency submission, active-only visibility-aware polling, stale-refresh protection, and run progress feedback.
+- Consolidated public benchmark route ownership under generated OpenAPI controllers and isolated authenticated worker callbacks.
+- Removed recent-run N+1/full-table benchmark aggregations, added query-backed projections, and added indexes for demonstrated run filters and orderings.
+- Expanded CI to Maven verification, Go test/vet, reproducible web install/test/build, and Compose validation.
+- Added worker liveness/readiness endpoints and documented the next queue reliability milestone.
+
 ## 0.0.9
 
 - Fixed Rust benchmark compilation in `runner-worker` by switching from the broken `rust:1-alpine` image to a full Rust toolchain image that includes `rustc`.

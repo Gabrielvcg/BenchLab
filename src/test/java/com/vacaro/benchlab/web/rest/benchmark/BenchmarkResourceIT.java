@@ -213,6 +213,18 @@ class BenchmarkResourceIT {
 
         mockMvc
             .perform(
+                post("/api/internal/runs/{id}/start", runId)
+                    .header("X-Worker-Token", "benchlab-internal-token")
+                    .header("X-Runner-Host", "worker-1")
+            )
+            .andExpect(status().isNoContent());
+
+        BenchmarkRun startedRun = benchmarkRunRepository.findById(runId).orElseThrow();
+        assertThat(startedRun.getStatus()).isEqualTo(BenchmarkRunStatus.RUNNING);
+        assertThat(startedRun.getStartedAt()).isNotNull();
+
+        mockMvc
+            .perform(
                 post("/api/internal/runs/{id}/result", runId)
                     .header("X-Worker-Token", "benchlab-internal-token")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -221,14 +233,14 @@ class BenchmarkResourceIT {
                             Map.ofEntries(
                                 Map.entry("status", "SUCCEEDED"),
                                 Map.entry("runnerHost", "worker-1"),
-                                Map.entry("cpuTimeMs", 10),
-                                Map.entry("wallTimeMs", 12),
-                                Map.entry("peakMemoryMb", 64.0),
+                                Map.entry("orchestrationWallTimeMs", 12),
                                 Map.entry("exitCode", 0),
                                 Map.entry("timedOut", false),
-                                Map.entry("compileMs", 0),
-                                Map.entry("stdoutTruncated", "ok"),
-                                Map.entry("stderrTruncated", ""),
+                                Map.entry("compileWallTimeMs", 0),
+                                Map.entry("stdoutPreview", "ok"),
+                                Map.entry("stderrPreview", ""),
+                                Map.entry("stdoutTruncated", false),
+                                Map.entry("stderrTruncated", false),
                                 Map.entry("outputSizeBytes", 2),
                                 Map.entry("artifactChecksum", "aaa"),
                                 Map.entry("technicalLogSummary", "ok")
@@ -249,10 +261,14 @@ class BenchmarkResourceIT {
             .perform(get("/api/runs"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].id").value(runId))
-            .andExpect(jsonPath("$[0].wallTimeMs").value(12));
+            .andExpect(jsonPath("$[0].orchestrationWallTimeMs").value(12));
 
         mockMvc
-            .perform(get("/api/benchmarks/complexity").param("algorithmId", algorithmId.toString()).param("metric", "wallTimeMs"))
+            .perform(
+                get("/api/benchmarks/complexity")
+                    .param("algorithmId", algorithmId.toString())
+                    .param("metric", "orchestrationWallTimeMs")
+            )
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.series[0].language").value("PYTHON"))
             .andExpect(jsonPath("$.series[0].points[0].datasetSize").value(100))
@@ -342,18 +358,18 @@ class BenchmarkResourceIT {
                                 "SUCCEEDED",
                                 "runnerHost",
                                 "worker-1",
-                                "cpuTimeMs",
+                                "orchestrationWallTimeMs",
                                 1,
-                                "wallTimeMs",
-                                1,
-                                "peakMemoryMb",
-                                1.0,
                                 "exitCode",
                                 0,
                                 "timedOut",
                                 false,
-                                "compileMs",
+                                "compileWallTimeMs",
                                 0,
+                                "stdoutTruncated",
+                                false,
+                                "stderrTruncated",
+                                false,
                                 "outputSizeBytes",
                                 0
                             )

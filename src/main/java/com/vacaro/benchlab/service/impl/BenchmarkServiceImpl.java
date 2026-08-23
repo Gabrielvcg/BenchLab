@@ -5,14 +5,18 @@ import com.vacaro.benchlab.domain.BenchmarkRun;
 import com.vacaro.benchlab.domain.BenchmarkRunStatus;
 import com.vacaro.benchlab.domain.Dataset;
 import com.vacaro.benchlab.domain.Implementation;
+import com.vacaro.benchlab.domain.ImplementationLanguage;
 import com.vacaro.benchlab.domain.RunArtifact;
 import com.vacaro.benchlab.domain.RunMetric;
+import com.vacaro.benchlab.config.BenchLabProperties;
 import com.vacaro.benchlab.repository.AlgorithmRepository;
+import com.vacaro.benchlab.repository.BenchmarkMetricSample;
 import com.vacaro.benchlab.repository.BenchmarkRunRepository;
 import com.vacaro.benchlab.repository.DatasetRepository;
 import com.vacaro.benchlab.repository.ImplementationRepository;
 import com.vacaro.benchlab.repository.RunArtifactRepository;
 import com.vacaro.benchlab.repository.RunMetricRepository;
+import com.vacaro.benchlab.repository.UserRepository;
 import com.vacaro.benchlab.service.BenchmarkService;
 import com.vacaro.benchlab.service.dto.benchmark.AlgorithmResponse;
 import com.vacaro.benchlab.service.dto.benchmark.BenchmarkCompareResponse;
@@ -35,15 +39,18 @@ import com.vacaro.benchlab.service.dto.benchmark.RunResultCallbackRequest;
 import com.vacaro.benchlab.service.dto.benchmark.RunSummaryResponse;
 import com.vacaro.benchlab.service.messaging.RunEventPublisher;
 import com.vacaro.benchlab.service.messaging.RunRequestedEvent;
+import com.vacaro.benchlab.security.SecurityUtils;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -56,6 +63,8 @@ import org.springframework.web.server.ResponseStatusException;
 @Transactional
 public class BenchmarkServiceImpl implements BenchmarkService {
 
+    private static final List<BenchmarkRunStatus> OUTSTANDING_STATUSES = List.of(BenchmarkRunStatus.QUEUED, BenchmarkRunStatus.RUNNING);
+
     private final AlgorithmRepository algorithmRepository;
     private final DatasetRepository datasetRepository;
     private final ImplementationRepository implementationRepository;
@@ -63,6 +72,8 @@ public class BenchmarkServiceImpl implements BenchmarkService {
     private final RunMetricRepository runMetricRepository;
     private final RunArtifactRepository runArtifactRepository;
     private final RunEventPublisher runEventPublisher;
+    private final BenchLabProperties benchLabProperties;
+    private final UserRepository userRepository;
 
     public BenchmarkServiceImpl(
         AlgorithmRepository algorithmRepository,
@@ -71,7 +82,9 @@ public class BenchmarkServiceImpl implements BenchmarkService {
         BenchmarkRunRepository benchmarkRunRepository,
         RunMetricRepository runMetricRepository,
         RunArtifactRepository runArtifactRepository,
-        RunEventPublisher runEventPublisher
+        RunEventPublisher runEventPublisher,
+        BenchLabProperties benchLabProperties,
+        UserRepository userRepository
     ) {
         this.algorithmRepository = algorithmRepository;
         this.datasetRepository = datasetRepository;
@@ -80,6 +93,8 @@ public class BenchmarkServiceImpl implements BenchmarkService {
         this.runMetricRepository = runMetricRepository;
         this.runArtifactRepository = runArtifactRepository;
         this.runEventPublisher = runEventPublisher;
+        this.benchLabProperties = benchLabProperties;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -101,6 +116,7 @@ public class BenchmarkServiceImpl implements BenchmarkService {
 
     @Override
     public DatasetResponse createDataset(CreateDatasetRequest request) {
+        validateDatasetSize(request.sizeValue());
         Dataset dataset = new Dataset();
         dataset.setType(request.type());
         dataset.setSizeValue(request.sizeValue());
@@ -120,6 +136,7 @@ public class BenchmarkServiceImpl implements BenchmarkService {
 
     @Override
     public ImplementationResponse createImplementation(CreateImplementationRequest request) {
+        validateSourceCode(request.sourceCode());
         Algorithm algorithm = algorithmRepository
             .findById(request.algorithmId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Algorithm not found"));
@@ -138,6 +155,24 @@ public class BenchmarkServiceImpl implements BenchmarkService {
 
     @Override
     public RunResponse createRun(CreateRunRequest request) {
+        int timeoutMs = request.timeoutMs() == null ? 5000 : request.timeoutMs();
+        int memoryMb = request.memoryMb() == null ? 256 : request.memoryMb();
+        double cpuLimit = request.cpuLimit() == null ? 1.0 : request.cpuLimit();
+        int iterations = request.iterations() == null ? 5 : request.iterations();
+        int warmupIterations = request.warmupIterations() == null ? 1 : request.warmupIterations();
+        validateRunLimits(timeoutMs, memoryMb, cpuLimit, iterations, warmupIterations);
+
+        String requestedBy = SecurityUtils
+            .getCurrentUserLogin()
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authenticated user is required"));
+        userRepository
+            .lockOneByLogin(requestedBy)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authenticated user no longer exists"));
+        long outstandingRuns = benchmarkRunRepository.countByRequestedByAndStatusIn(requestedBy, OUTSTANDING_STATUSES);
+        if (outstandingRuns >= benchLabProperties.getLimits().getMaxOutstandingRunsPerUser()) {
+            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Outstanding run limit reached; wait for active runs to finish");
+        }
+
         Implementation implementation = implementationRepository
             .findById(request.implementationId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Implementation not found"));
@@ -151,6 +186,7 @@ public class BenchmarkServiceImpl implements BenchmarkService {
         run.setStatus(BenchmarkRunStatus.QUEUED);
         run.setTraceId(UUID.randomUUID().toString());
         run.setQueuedAt(Instant.now());
+        run.setRequestedBy(requestedBy);
         BenchmarkRun saved = benchmarkRunRepository.save(run);
 
         runEventPublisher.publish(
@@ -165,11 +201,11 @@ public class BenchmarkServiceImpl implements BenchmarkService {
                 implementation.getCompileConfig(),
                 implementation.getRuntimeConfig(),
                 dataset.getDatasetVersion(),
-                request.timeoutMs() == null ? 5000 : request.timeoutMs(),
-                request.memoryMb() == null ? 256 : request.memoryMb(),
-                request.cpuLimit() == null ? 1.0 : request.cpuLimit(),
-                request.iterations() == null ? 5 : request.iterations(),
-                request.warmupIterations() == null ? 1 : request.warmupIterations(),
+                timeoutMs,
+                memoryMb,
+                cpuLimit,
+                iterations,
+                warmupIterations,
                 saved.getTraceId()
             )
         );
@@ -230,11 +266,18 @@ public class BenchmarkServiceImpl implements BenchmarkService {
     @Override
     @Transactional(readOnly = true)
     public List<RunSummaryResponse> listRecentRuns() {
-        return benchmarkRunRepository
-            .findTop25ByOrderByQueuedAtDesc()
+        List<BenchmarkRun> runs = benchmarkRunRepository.findTop25ByOrderByQueuedAtDesc();
+        if (runs.isEmpty()) {
+            return List.of();
+        }
+        Map<Long, RunMetric> metricsByRunId = runMetricRepository
+            .findByBenchmarkRunIdIn(runs.stream().map(BenchmarkRun::getId).toList())
+            .stream()
+            .collect(Collectors.toMap(metric -> metric.getBenchmarkRun().getId(), metric -> metric));
+        return runs
             .stream()
             .map(run -> {
-                RunMetric metric = runMetricRepository.findByBenchmarkRunId(run.getId()).orElse(null);
+                RunMetric metric = metricsByRunId.get(run.getId());
                 return new RunSummaryResponse(
                     run.getId(),
                     run.getStatus().name(),
@@ -245,10 +288,26 @@ public class BenchmarkServiceImpl implements BenchmarkService {
                     run.getDataset().getSizeValue(),
                     run.getQueuedAt() == null ? null : run.getQueuedAt().toString(),
                     run.getFinishedAt() == null ? null : run.getFinishedAt().toString(),
-                    metric == null ? null : metric.getWallTimeMs()
+                    metric == null ? null : metric.getOrchestrationWallTimeMs()
                 );
             })
             .toList();
+    }
+
+    @Override
+    public void markRunStarted(Long runId, String runnerHost) {
+        BenchmarkRun run = benchmarkRunRepository
+            .findById(runId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Run not found"));
+        if (!EnumSet.of(BenchmarkRunStatus.QUEUED, BenchmarkRunStatus.RUNNING).contains(run.getStatus())) {
+            return;
+        }
+        run.setStatus(BenchmarkRunStatus.RUNNING);
+        run.setRunnerHost(runnerHost);
+        if (run.getStartedAt() == null) {
+            run.setStartedAt(Instant.now());
+        }
+        benchmarkRunRepository.save(run);
     }
 
     @Override
@@ -256,7 +315,10 @@ public class BenchmarkServiceImpl implements BenchmarkService {
         BenchmarkRun run = benchmarkRunRepository
             .findById(runId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Run not found"));
-        run.setStatus(BenchmarkRunStatus.valueOf(request.status()));
+        if (!EnumSet.of(BenchmarkRunStatus.SUCCEEDED, BenchmarkRunStatus.FAILED, BenchmarkRunStatus.TIMEOUT, BenchmarkRunStatus.COMPILE_ERROR, BenchmarkRunStatus.RUNTIME_ERROR).contains(request.status())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Worker callback status must be terminal");
+        }
+        run.setStatus(request.status());
         run.setRunnerHost(request.runnerHost());
         run.setFailureReason(request.failureReason());
         if (run.getStartedAt() == null) {
@@ -268,15 +330,17 @@ public class BenchmarkServiceImpl implements BenchmarkService {
         RunMetric metric = runMetricRepository.findByBenchmarkRunId(runId).orElseGet(RunMetric::new);
         metric.setBenchmarkRun(run);
         metric.setCpuTimeMs(request.cpuTimeMs());
-        metric.setWallTimeMs(request.wallTimeMs());
+        metric.setOrchestrationWallTimeMs(request.orchestrationWallTimeMs());
         metric.setPeakMemoryMb(request.peakMemoryMb());
         metric.setExitCode(request.exitCode());
         metric.setTimedOut(request.timedOut());
-        metric.setCompileMs(request.compileMs());
+        metric.setCompileWallTimeMs(request.compileWallTimeMs());
         runMetricRepository.save(metric);
 
         RunArtifact artifact = runArtifactRepository.findByBenchmarkRunId(runId).orElseGet(RunArtifact::new);
         artifact.setBenchmarkRun(run);
+        artifact.setStdoutPreview(request.stdoutPreview());
+        artifact.setStderrPreview(request.stderrPreview());
         artifact.setStdoutTruncated(request.stdoutTruncated());
         artifact.setStderrTruncated(request.stderrTruncated());
         artifact.setOutputSizeBytes(request.outputSizeBytes());
@@ -288,19 +352,17 @@ public class BenchmarkServiceImpl implements BenchmarkService {
     @Override
     @Transactional(readOnly = true)
     public BenchmarkCompareResponse compare(Long algorithmId, Long datasetId) {
-        List<BenchmarkRun> runs = benchmarkRunRepository.findByImplementationAlgorithmIdAndDatasetId(algorithmId, datasetId);
-        var grouped = runs
+        var grouped = benchmarkRunRepository
+            .findComparisonSamples(algorithmId, datasetId, BenchmarkRunStatus.SUCCEEDED)
             .stream()
-            .filter(r -> r.getStatus() == BenchmarkRunStatus.SUCCEEDED)
-            .collect(Collectors.groupingBy(r -> r.getImplementation().getLanguage().name()));
+            .collect(Collectors.groupingBy(sample -> sample.getLanguage().name()));
 
         List<BenchmarkCompareRow> rows = new ArrayList<>();
         grouped.forEach((language, languageRuns) -> {
             List<Long> values = languageRuns
                 .stream()
-                .map(r -> runMetricRepository.findByBenchmarkRunId(r.getId()).orElse(null))
-                .filter(m -> m != null && m.getWallTimeMs() != null)
-                .map(RunMetric::getWallTimeMs)
+                .map(BenchmarkMetricSample::getOrchestrationWallTimeMs)
+                .filter(value -> value != null)
                 .sorted()
                 .toList();
             if (values.isEmpty()) {
@@ -320,20 +382,17 @@ public class BenchmarkServiceImpl implements BenchmarkService {
     @Override
     @Transactional(readOnly = true)
     public BenchmarkTimeseriesResponse timeseries(Long algorithmId, String language) {
+        ImplementationLanguage selectedLanguage;
+        try {
+            selectedLanguage = ImplementationLanguage.valueOf(language.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported language", ex);
+        }
         List<BenchmarkTimeseriesPoint> points = benchmarkRunRepository
-            .findAll()
+            .findTimeseriesSamples(algorithmId, selectedLanguage, BenchmarkRunStatus.SUCCEEDED)
             .stream()
-            .filter(r -> r.getImplementation().getAlgorithm().getId().equals(algorithmId))
-            .filter(r -> r.getImplementation().getLanguage().name().equalsIgnoreCase(language))
-            .filter(r -> r.getFinishedAt() != null)
-            .map(r -> {
-                RunMetric metric = runMetricRepository.findByBenchmarkRunId(r.getId()).orElse(null);
-                if (metric == null || metric.getWallTimeMs() == null) {
-                    return null;
-                }
-                return new BenchmarkTimeseriesPoint(r.getFinishedAt().toString(), metric.getWallTimeMs());
-            })
-            .filter(p -> p != null)
+            .filter(sample -> sample.getOrchestrationWallTimeMs() != null)
+            .map(sample -> new BenchmarkTimeseriesPoint(sample.getFinishedAt().toString(), sample.getOrchestrationWallTimeMs()))
             .sorted(Comparator.comparing(BenchmarkTimeseriesPoint::finishedAt))
             .toList();
 
@@ -343,21 +402,19 @@ public class BenchmarkServiceImpl implements BenchmarkService {
     @Override
     @Transactional(readOnly = true)
     public BenchmarkComplexityResponse complexity(Long algorithmId, String metric) {
-        String selectedMetric = metric == null || metric.isBlank() ? "wallTimeMs" : metric;
-        if (!selectedMetric.equals("wallTimeMs") && !selectedMetric.equals("cpuTimeMs")) {
+        String selectedMetric = metric == null || metric.isBlank() ? "orchestrationWallTimeMs" : metric;
+        if (!selectedMetric.equals("orchestrationWallTimeMs")) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported metric");
         }
 
-        Map<String, Map<Long, List<BenchmarkRun>>> grouped = benchmarkRunRepository
-            .findAll()
+        Map<String, Map<Long, List<BenchmarkMetricSample>>> grouped = benchmarkRunRepository
+            .findComplexitySamples(algorithmId, BenchmarkRunStatus.SUCCEEDED)
             .stream()
-            .filter(run -> run.getStatus() == BenchmarkRunStatus.SUCCEEDED)
-            .filter(run -> run.getImplementation().getAlgorithm().getId().equals(algorithmId))
             .collect(
                 Collectors.groupingBy(
-                    run -> run.getImplementation().getLanguage().name(),
+                    sample -> sample.getLanguage().name(),
                     LinkedHashMap::new,
-                    Collectors.groupingBy(run -> run.getDataset().getId(), LinkedHashMap::new, Collectors.toList())
+                    Collectors.groupingBy(BenchmarkMetricSample::getDatasetId, LinkedHashMap::new, Collectors.toList())
                 )
             );
 
@@ -369,7 +426,7 @@ public class BenchmarkServiceImpl implements BenchmarkService {
                     .getValue()
                     .values()
                     .stream()
-                    .map(datasetRuns -> toComplexityPoint(datasetRuns, selectedMetric))
+                    .map(this::toComplexityPoint)
                     .filter(point -> point != null)
                     .sorted(Comparator.comparing(BenchmarkComplexityPoint::datasetSize))
                     .toList();
@@ -387,16 +444,18 @@ public class BenchmarkServiceImpl implements BenchmarkService {
             ? null
             : new RunMetricResponse(
                 metric.getCpuTimeMs(),
-                metric.getWallTimeMs(),
+                metric.getOrchestrationWallTimeMs(),
                 metric.getPeakMemoryMb(),
                 metric.getExitCode(),
                 metric.getTimedOut(),
-                metric.getCompileMs()
+                metric.getCompileWallTimeMs()
             );
 
         RunArtifactResponse artifactResponse = artifact == null
             ? null
             : new RunArtifactResponse(
+                artifact.getStdoutPreview(),
+                artifact.getStderrPreview(),
                 artifact.getStdoutTruncated(),
                 artifact.getStderrTruncated(),
                 artifact.getOutputSizeBytes(),
@@ -438,31 +497,64 @@ public class BenchmarkServiceImpl implements BenchmarkService {
         return sortedValues.get(safeIndex);
     }
 
-    private BenchmarkComplexityPoint toComplexityPoint(List<BenchmarkRun> datasetRuns, String metricName) {
-        if (datasetRuns.isEmpty()) {
+    private BenchmarkComplexityPoint toComplexityPoint(List<BenchmarkMetricSample> datasetSamples) {
+        if (datasetSamples.isEmpty()) {
             return null;
         }
-        List<Long> values = datasetRuns
+        List<Long> values = datasetSamples
             .stream()
-            .map(run -> runMetricRepository.findByBenchmarkRunId(run.getId()).orElse(null))
-            .filter(metric -> metric != null)
-            .map(metric -> metricName.equals("cpuTimeMs") ? metric.getCpuTimeMs() : metric.getWallTimeMs())
+            .map(BenchmarkMetricSample::getOrchestrationWallTimeMs)
             .filter(value -> value != null)
             .sorted()
             .toList();
         if (values.isEmpty()) {
             return null;
         }
-        BenchmarkRun firstRun = datasetRuns.get(0);
+        BenchmarkMetricSample firstSample = datasetSamples.get(0);
         double avg = values.stream().mapToLong(Long::longValue).average().orElse(0);
         return new BenchmarkComplexityPoint(
-            firstRun.getDataset().getId(),
-            firstRun.getDataset().getSizeValue(),
+            firstSample.getDatasetId(),
+            firstSample.getDatasetSize(),
             avg,
             calcStdDev(values, avg),
             percentile(values, 50),
             percentile(values, 95),
             values.size()
         );
+    }
+
+    private void validateSourceCode(String sourceCode) {
+        if (sourceCode == null || sourceCode.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Source code is required");
+        }
+        int sourceBytes = sourceCode.getBytes(StandardCharsets.UTF_8).length;
+        if (sourceBytes > benchLabProperties.getLimits().getMaxSourceBytes()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Source code exceeds the configured byte limit");
+        }
+    }
+
+    private void validateDatasetSize(Long datasetSize) {
+        if (datasetSize == null || datasetSize < 1 || datasetSize > benchLabProperties.getLimits().getMaxDatasetSize()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Dataset size is outside the configured range");
+        }
+    }
+
+    private void validateRunLimits(int timeoutMs, int memoryMb, double cpuLimit, int iterations, int warmupIterations) {
+        BenchLabProperties.Limits limits = benchLabProperties.getLimits();
+        if (timeoutMs < 100 || timeoutMs > limits.getMaxTimeoutMs()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Timeout is outside the configured range");
+        }
+        if (memoryMb < 32 || memoryMb > limits.getMaxMemoryMb()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Memory is outside the configured range");
+        }
+        if (!Double.isFinite(cpuLimit) || cpuLimit < 0.1 || cpuLimit > limits.getMaxCpuLimit()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CPU limit is outside the configured range");
+        }
+        if (iterations < 1 || iterations > limits.getMaxIterations()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Iterations are outside the configured range");
+        }
+        if (warmupIterations < 0 || warmupIterations > limits.getMaxWarmupIterations()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Warmup iterations are outside the configured range");
+        }
     }
 }

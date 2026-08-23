@@ -51,6 +51,9 @@ public class BenchmarkRun {
     @Column(name = "failure_reason")
     private String failureReason;
 
+    @Column(name = "requested_by", nullable = false)
+    private String requestedBy;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public Implementation getImplementation() { return implementation; }
@@ -71,4 +74,6 @@ public class BenchmarkRun {
     public void setRunnerHost(String runnerHost) { this.runnerHost = runnerHost; }
     public String getFailureReason() { return failureReason; }
     public void setFailureReason(String failureReason) { this.failureReason = failureReason; }
+    public String getRequestedBy() { return requestedBy; }
+    public void setRequestedBy(String requestedBy) { this.requestedBy = requestedBy; }
 }
