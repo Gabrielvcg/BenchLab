@@ -160,13 +160,13 @@ jobs:
           echo "api_image=ghcr.io/${repository}-api:${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
           echo "worker_image=ghcr.io/${repository}-runner-worker:${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
           echo "web_image=ghcr.io/${repository}-web:${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
-          echo "runner_python_image=ghcr.io/${repository}-runner-python:${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
-          echo "runner_java_image=ghcr.io/${repository}-runner-java:${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
-          echo "runner_go_image=ghcr.io/${repository}-runner-go:${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
-          echo "runner_rust_image=ghcr.io/${repository}-runner-rust:${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
-          echo "runner_c_image=ghcr.io/${repository}-runner-c:${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
-          echo "runner_cpp_image=ghcr.io/${repository}-runner-cpp:${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
-          echo "runner_ruby_image=ghcr.io/${repository}-runner-ruby:${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
+          echo "runner_python_image=python:3.12-alpine@sha256:d09d15e60962ca365d1cd544a48773bac9d33f2fb1b00f2aa0deec78ade7dc31" >> "${GITHUB_OUTPUT}"
+          echo "runner_java_image=eclipse-temurin:21-jdk@sha256:85f00967bcc624fc19fa9c2cf124ea426a5363898e267141726f31f358c2e14b" >> "${GITHUB_OUTPUT}"
+          echo "runner_go_image=golang:1.22-alpine@sha256:1699c10032ca2582ec89a24a1312d986a3f094aed3d5c1147b19880afe40e052" >> "${GITHUB_OUTPUT}"
+          echo "runner_rust_image=rust:1.87-bookworm@sha256:251cec8da4689d180f124ef00024c2f83f79d9bf984e43c180a598119e326b84" >> "${GITHUB_OUTPUT}"
+          echo "runner_c_image=gcc:14@sha256:468b5b959b5f4025724d8549f45550c6ad38a32474733cbf130f8f2c1bc80805" >> "${GITHUB_OUTPUT}"
+          echo "runner_cpp_image=gcc:14@sha256:468b5b959b5f4025724d8549f45550c6ad38a32474733cbf130f8f2c1bc80805" >> "${GITHUB_OUTPUT}"
+          echo "runner_ruby_image=ruby:3.3-alpine@sha256:2f763b37070564bb00b736f1d4dba6e8f8d203b5f93b94463879fd8d79966f28" >> "${GITHUB_OUTPUT}"
 
       - name: Build and publish API image to GHCR
         env:
@@ -214,43 +214,6 @@ jobs:
           push: true
           tags: ${{ steps.images.outputs.web_image }}
 
-      - name: Build and publish immutable language runner images
-        env:
-          REGISTRY_PREFIX: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          declare -A images=(
-            [python]=runner-images/python-3.12
-            [java]=runner-images/java-21
-            [go]=runner-images/go-1.22
-            [rust]=runner-images/rust-1.87
-            [c]=runner-images/gcc
-            [cpp]=runner-images/gcc
-            [ruby]=runner-images/ruby-3.3
-          )
-          languages=(python java go rust c cpp ruby)
-          pids=()
-          for language in "${languages[@]}"; do
-            docker buildx build "${images[$language]}" \
-              --tag "${REGISTRY_PREFIX,,}-runner-${language}:${GITHUB_SHA}" \
-              --push >"/tmp/benchlab-runner-${language}.log" 2>&1 &
-            pids+=("$!")
-          done
-          failed=0
-          for index in "${!pids[@]}"; do
-            if ! wait "${pids[$index]}"; then
-              language="${languages[$index]}"
-              echo "Runner build failed (see /tmp/benchlab-runner-${language}.log)."
-              failed=1
-            fi
-          done
-          if [ "${failed}" -ne 0 ]; then
-            for log in /tmp/benchlab-runner-*.log; do
-              echo "--- ${log}"; tail -80 "${log}" || true
-            done
-            exit 1
-          fi
 
   deploy-vps:
     name: Deploy to VPS
