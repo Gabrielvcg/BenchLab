@@ -241,3 +241,12 @@ benchlab:
     run-requested-queue: benchlab.run.requested.q
   worker:
     callback-token: ${BENCHLAB_WORKER_TOKEN:benchlab-internal-token}
+  limits:
+    max-source-bytes: ${BENCHLAB_LIMITS_MAX_SOURCE_BYTES:65536}
+    max-timeout-ms: ${BENCHLAB_LIMITS_MAX_TIMEOUT_MS:30000}
+    max-memory-mb: ${BENCHLAB_LIMITS_MAX_MEMORY_MB:512}
+    max-cpu-limit: ${BENCHLAB_LIMITS_MAX_CPU_LIMIT:2.0}
+    max-iterations: ${BENCHLAB_LIMITS_MAX_ITERATIONS:10}
+    max-warmup-iterations: ${BENCHLAB_LIMITS_MAX_WARMUP_ITERATIONS:3}
+    max-dataset-size: ${BENCHLAB_LIMITS_MAX_DATASET_SIZE:25000000}
+    max-outstanding-runs-per-user: ${BENCHLAB_LIMITS_MAX_OUTSTANDING_RUNS_PER_USER:32}

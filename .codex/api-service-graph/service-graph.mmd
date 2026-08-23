@@ -1,0 +1,15 @@
+flowchart LR
+  UI["React dashboard"] -->|JWT HTTP| API["Generated OpenAPI controllers\n11 operations"]
+  UI -. duplicate mappings .-> LEGACY["BenchmarkResource\n11 duplicate operations + callback"]
+  API --> DELEGATES["5 delegate handlers"]
+  DELEGATES --> SERVICE["BenchmarkServiceImpl"]
+  LEGACY --> SERVICE
+  SERVICE --> REPOS["6 benchmark repositories"]
+  REPOS --> PG[(PostgreSQL)]
+  SERVICE --> PUBLISHER["RunEventPublisher"]
+  PUBLISHER --> MQ[["RabbitMQ direct exchange + durable queue"]]
+  MQ --> WORKER["Go runner-worker\nsingle synchronous consumer"]
+  WORKER --> DOCKER["Docker daemon\nfresh container per compile/run iteration"]
+  WORKER -->|result callback| LEGACY
+  AUTH["JHipster auth/user services"] --> REDIS[(Redis user caches)]
+  AUTH --> PG

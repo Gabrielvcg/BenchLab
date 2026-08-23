@@ -24,6 +24,7 @@ public interface BenchmarkService {
     List<AlgorithmResponse> listAlgorithms();
     List<DatasetResponse> listDatasets();
     List<RunSummaryResponse> listRecentRuns();
+    void markRunStarted(Long runId, String runnerHost);
     void registerRunResult(Long runId, RunResultCallbackRequest request);
     BenchmarkCompareResponse compare(Long algorithmId, Long datasetId);
     BenchmarkTimeseriesResponse timeseries(Long algorithmId, String language);

@@ -47,32 +47,87 @@ jobs:
             sed -i '/javax.net.ssl.trustStoreType=Windows-ROOT/d' .mvn/maven.config
           fi
 
-      - name: Run tests and SonarCloud analysis
+      - name: Run verification and SonarCloud analysis
         if: env.SONAR_TOKEN != ''
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION || 'gabrielvcg' }}
           SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY || format('{0}_{1}', github.repository_owner, github.event.repository.name) }}
         run: >
-          ./mvnw -ntp --batch-mode test sonar:sonar
+          ./mvnw -ntp --batch-mode verify sonar:sonar
           -Dsonar.token="${SONAR_TOKEN}"
           -Dsonar.host.url="https://sonarcloud.io"
           -Dsonar.organization="${SONAR_ORGANIZATION}"
           -Dsonar.projectKey="${SONAR_PROJECT_KEY}"
 
-      - name: Run tests without SonarCloud
+      - name: Run verification without SonarCloud
         if: env.SONAR_TOKEN == ''
-        run: ./mvnw -ntp --batch-mode test
+        run: ./mvnw -ntp --batch-mode verify
+
+  component-checks:
+    name: Worker, Web, and Compose Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go 1.22
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22.x'
+          cache-dependency-path: runner-worker/go.sum
+
+      - name: Test and vet worker
+        working-directory: runner-worker
+        run: |
+          go test ./...
+          go vet ./...
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: benchlab-web/package-lock.json
+
+      - name: Install, test, and build web
+        working-directory: benchlab-web
+        run: |
+          npm ci --ignore-scripts
+          npm test -- --run
+          npm run build
+
+      - name: Validate deployment Compose file
+        env:
+          BENCHLAB_API_IMAGE: example.invalid/benchlab-api:test
+          BENCHLAB_WORKER_IMAGE: example.invalid/benchlab-worker:test
+          BENCHLAB_WEB_IMAGE: example.invalid/benchlab-web:test
+          SPRING_DATASOURCE_PASSWORD: compose-validation-only
+          POSTGRES_PASSWORD: compose-validation-only
+          RABBITMQ_PASSWORD: compose-validation-only
+          JHIPSTER_SECURITY_AUTHENTICATION_JWT_BASE64_SECRET: Y29tcG9zZS12YWxpZGF0aW9uLW9ubHktbm90LWEtcnVudGltZS1zZWNyZXQ=
+          BENCHLAB_WORKER_TOKEN: compose-validation-only
+          BENCHLAB_SECURITY_ADMIN_PASSWORD: compose-validation-only
+        run: docker compose -f deploy/docker-compose.yml config --quiet
 
   build-container:
     name: Build Containers
     runs-on: ubuntu-latest
-    needs: sonarcloud-analysis
+    needs:
+      - sonarcloud-analysis
+      - component-checks
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     outputs:
       api_image: ${{ steps.images.outputs.api_image }}
       worker_image: ${{ steps.images.outputs.worker_image }}
       web_image: ${{ steps.images.outputs.web_image }}
+      runner_python_image: ${{ steps.images.outputs.runner_python_image }}
+      runner_java_image: ${{ steps.images.outputs.runner_java_image }}
+      runner_go_image: ${{ steps.images.outputs.runner_go_image }}
+      runner_rust_image: ${{ steps.images.outputs.runner_rust_image }}
+      runner_c_image: ${{ steps.images.outputs.runner_c_image }}
+      runner_cpp_image: ${{ steps.images.outputs.runner_cpp_image }}
+      runner_ruby_image: ${{ steps.images.outputs.runner_ruby_image }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -105,6 +160,13 @@ jobs:
           echo "api_image=ghcr.io/${repository}-api:${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
           echo "worker_image=ghcr.io/${repository}-runner-worker:${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
           echo "web_image=ghcr.io/${repository}-web:${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
+          echo "runner_python_image=ghcr.io/${repository}-runner-python:${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
+          echo "runner_java_image=ghcr.io/${repository}-runner-java:${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
+          echo "runner_go_image=ghcr.io/${repository}-runner-go:${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
+          echo "runner_rust_image=ghcr.io/${repository}-runner-rust:${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
+          echo "runner_c_image=ghcr.io/${repository}-runner-c:${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
+          echo "runner_cpp_image=ghcr.io/${repository}-runner-cpp:${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
+          echo "runner_ruby_image=ghcr.io/${repository}-runner-ruby:${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
 
       - name: Build and publish API image to GHCR
         env:
@@ -152,6 +214,27 @@ jobs:
           push: true
           tags: ${{ steps.images.outputs.web_image }}
 
+      - name: Build and publish immutable language runner images
+        env:
+          REGISTRY_PREFIX: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          declare -A images=(
+            [python]=runner-images/python-3.12
+            [java]=runner-images/java-21
+            [go]=runner-images/go-1.22
+            [rust]=runner-images/rust-1.87
+            [c]=runner-images/gcc
+            [cpp]=runner-images/gcc
+            [ruby]=runner-images/ruby-3.3
+          )
+          for language in "${!images[@]}"; do
+            docker buildx build "${images[$language]}" \
+              --tag "${REGISTRY_PREFIX,,}-runner-${language}:${GITHUB_SHA}" \
+              --push
+          done
+
   deploy-vps:
     name: Deploy to VPS
     runs-on: ubuntu-latest
@@ -169,6 +252,13 @@ jobs:
       BENCHLAB_API_IMAGE: ${{ needs.build-container.outputs.api_image }}
       BENCHLAB_WORKER_IMAGE: ${{ needs.build-container.outputs.worker_image }}
       BENCHLAB_WEB_IMAGE: ${{ needs.build-container.outputs.web_image }}
+      RUNNER_IMAGE_PYTHON: ${{ needs.build-container.outputs.runner_python_image }}
+      RUNNER_IMAGE_JAVA: ${{ needs.build-container.outputs.runner_java_image }}
+      RUNNER_IMAGE_GO: ${{ needs.build-container.outputs.runner_go_image }}
+      RUNNER_IMAGE_RUST: ${{ needs.build-container.outputs.runner_rust_image }}
+      RUNNER_IMAGE_C: ${{ needs.build-container.outputs.runner_c_image }}
+      RUNNER_IMAGE_CPP: ${{ needs.build-container.outputs.runner_cpp_image }}
+      RUNNER_IMAGE_RUBY: ${{ needs.build-container.outputs.runner_ruby_image }}
       APP_HOST_PORT: ${{ vars.APP_HOST_PORT || '127.0.0.1:8083' }}
       WEB_HOST_PORT: ${{ vars.WEB_HOST_PORT || '127.0.0.1:3003' }}
       API_HEALTH_URL: ${{ vars.API_HEALTH_URL || 'http://127.0.0.1:8083/management/health' }}
@@ -194,6 +284,14 @@ jobs:
       BENCHLAB_ADMIN_PASSWORD: ${{ secrets.BENCHLAB_ADMIN_PASSWORD }}
       JHIPSTER_SECURITY_AUTHENTICATION_JWT_BASE64_SECRET: ${{ secrets.JHIPSTER_SECURITY_AUTHENTICATION_JWT_BASE64_SECRET }}
       JHIPSTER_MAIL_BASE_URL: ${{ vars.JHIPSTER_MAIL_BASE_URL || 'https://benchlab.example.com' }}
+      BENCHLAB_LIMITS_MAX_SOURCE_BYTES: ${{ vars.BENCHLAB_LIMITS_MAX_SOURCE_BYTES || '65536' }}
+      BENCHLAB_LIMITS_MAX_TIMEOUT_MS: ${{ vars.BENCHLAB_LIMITS_MAX_TIMEOUT_MS || '30000' }}
+      BENCHLAB_LIMITS_MAX_MEMORY_MB: ${{ vars.BENCHLAB_LIMITS_MAX_MEMORY_MB || '512' }}
+      BENCHLAB_LIMITS_MAX_CPU_LIMIT: ${{ vars.BENCHLAB_LIMITS_MAX_CPU_LIMIT || '2.0' }}
+      BENCHLAB_LIMITS_MAX_ITERATIONS: ${{ vars.BENCHLAB_LIMITS_MAX_ITERATIONS || '10' }}
+      BENCHLAB_LIMITS_MAX_WARMUP_ITERATIONS: ${{ vars.BENCHLAB_LIMITS_MAX_WARMUP_ITERATIONS || '3' }}
+      BENCHLAB_LIMITS_MAX_DATASET_SIZE: ${{ vars.BENCHLAB_LIMITS_MAX_DATASET_SIZE || '25000000' }}
+      BENCHLAB_LIMITS_MAX_OUTSTANDING_RUNS_PER_USER: ${{ vars.BENCHLAB_LIMITS_MAX_OUTSTANDING_RUNS_PER_USER || '32' }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -264,6 +362,13 @@ jobs:
           write_env BENCHLAB_API_IMAGE "${BENCHLAB_API_IMAGE}"
           write_env BENCHLAB_WORKER_IMAGE "${BENCHLAB_WORKER_IMAGE}"
           write_env BENCHLAB_WEB_IMAGE "${BENCHLAB_WEB_IMAGE}"
+          write_env RUNNER_IMAGE_PYTHON "${RUNNER_IMAGE_PYTHON}"
+          write_env RUNNER_IMAGE_JAVA "${RUNNER_IMAGE_JAVA}"
+          write_env RUNNER_IMAGE_GO "${RUNNER_IMAGE_GO}"
+          write_env RUNNER_IMAGE_RUST "${RUNNER_IMAGE_RUST}"
+          write_env RUNNER_IMAGE_C "${RUNNER_IMAGE_C}"
+          write_env RUNNER_IMAGE_CPP "${RUNNER_IMAGE_CPP}"
+          write_env RUNNER_IMAGE_RUBY "${RUNNER_IMAGE_RUBY}"
           write_env APP_HOST_PORT "${APP_HOST_PORT}"
           write_env WEB_HOST_PORT "${WEB_HOST_PORT}"
           write_env API_HEALTH_URL "${API_HEALTH_URL}"
@@ -289,6 +394,14 @@ jobs:
           write_env BENCHLAB_SECURITY_ADMIN_PASSWORD "${BENCHLAB_ADMIN_PASSWORD}"
           write_env JHIPSTER_SECURITY_AUTHENTICATION_JWT_BASE64_SECRET "${JHIPSTER_SECURITY_AUTHENTICATION_JWT_BASE64_SECRET}"
           write_env JHIPSTER_MAIL_BASE_URL "${JHIPSTER_MAIL_BASE_URL}"
+          write_env BENCHLAB_LIMITS_MAX_SOURCE_BYTES "${BENCHLAB_LIMITS_MAX_SOURCE_BYTES}"
+          write_env BENCHLAB_LIMITS_MAX_TIMEOUT_MS "${BENCHLAB_LIMITS_MAX_TIMEOUT_MS}"
+          write_env BENCHLAB_LIMITS_MAX_MEMORY_MB "${BENCHLAB_LIMITS_MAX_MEMORY_MB}"
+          write_env BENCHLAB_LIMITS_MAX_CPU_LIMIT "${BENCHLAB_LIMITS_MAX_CPU_LIMIT}"
+          write_env BENCHLAB_LIMITS_MAX_ITERATIONS "${BENCHLAB_LIMITS_MAX_ITERATIONS}"
+          write_env BENCHLAB_LIMITS_MAX_WARMUP_ITERATIONS "${BENCHLAB_LIMITS_MAX_WARMUP_ITERATIONS}"
+          write_env BENCHLAB_LIMITS_MAX_DATASET_SIZE "${BENCHLAB_LIMITS_MAX_DATASET_SIZE}"
+          write_env BENCHLAB_LIMITS_MAX_OUTSTANDING_RUNS_PER_USER "${BENCHLAB_LIMITS_MAX_OUTSTANDING_RUNS_PER_USER}"
 
       - name: Upload deployment environment file
         shell: bash

@@ -120,6 +120,8 @@ Desktop.ini
 /deploy/.env.*
 !/deploy/.env.example
 /runner-worker/runner-worker.exe
+/benchlab-web/dist/
+/benchlab-web/*.tsbuildinfo
 
 ######################
 # Logs

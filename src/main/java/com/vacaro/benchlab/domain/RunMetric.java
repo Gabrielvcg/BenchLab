@@ -26,7 +26,7 @@ public class RunMetric {
     private Long cpuTimeMs;
 
     @Column(name = "wall_time_ms")
-    private Long wallTimeMs;
+    private Long orchestrationWallTimeMs;
 
     @Column(name = "peak_memory_mb")
     private Double peakMemoryMb;
@@ -38,7 +38,7 @@ public class RunMetric {
     private Boolean timedOut;
 
     @Column(name = "compile_ms")
-    private Long compileMs;
+    private Long compileWallTimeMs;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -46,14 +46,14 @@ public class RunMetric {
     public void setBenchmarkRun(BenchmarkRun benchmarkRun) { this.benchmarkRun = benchmarkRun; }
     public Long getCpuTimeMs() { return cpuTimeMs; }
     public void setCpuTimeMs(Long cpuTimeMs) { this.cpuTimeMs = cpuTimeMs; }
-    public Long getWallTimeMs() { return wallTimeMs; }
-    public void setWallTimeMs(Long wallTimeMs) { this.wallTimeMs = wallTimeMs; }
+    public Long getOrchestrationWallTimeMs() { return orchestrationWallTimeMs; }
+    public void setOrchestrationWallTimeMs(Long orchestrationWallTimeMs) { this.orchestrationWallTimeMs = orchestrationWallTimeMs; }
     public Double getPeakMemoryMb() { return peakMemoryMb; }
     public void setPeakMemoryMb(Double peakMemoryMb) { this.peakMemoryMb = peakMemoryMb; }
     public Integer getExitCode() { return exitCode; }
     public void setExitCode(Integer exitCode) { this.exitCode = exitCode; }
     public Boolean getTimedOut() { return timedOut; }
     public void setTimedOut(Boolean timedOut) { this.timedOut = timedOut; }
-    public Long getCompileMs() { return compileMs; }
-    public void setCompileMs(Long compileMs) { this.compileMs = compileMs; }
+    public Long getCompileWallTimeMs() { return compileWallTimeMs; }
+    public void setCompileWallTimeMs(Long compileWallTimeMs) { this.compileWallTimeMs = compileWallTimeMs; }
 }

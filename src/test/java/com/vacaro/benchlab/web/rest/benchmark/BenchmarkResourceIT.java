@@ -11,7 +11,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vacaro.benchlab.IntegrationTest;
 import com.vacaro.benchlab.domain.BenchmarkRun;
 import com.vacaro.benchlab.domain.BenchmarkRunStatus;
+import com.vacaro.benchlab.domain.User;
 import com.vacaro.benchlab.repository.BenchmarkRunRepository;
+import com.vacaro.benchlab.repository.UserRepository;
 import com.vacaro.benchlab.service.messaging.RunEventPublisher;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -19,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -37,6 +40,12 @@ class BenchmarkResourceIT {
     @Autowired
     private BenchmarkRunRepository benchmarkRunRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @MockBean
     private RunEventPublisher runEventPublisher;
 
@@ -44,6 +53,7 @@ class BenchmarkResourceIT {
     @Transactional
     @WithMockUser("benchmark-user")
     void shouldCreateAlgorithmDatasetImplementationAndRun() throws Exception {
+        persistBenchmarkUser();
         MvcResult algorithmResult = mockMvc
             .perform(
                 post("/api/algorithms")
@@ -140,6 +150,7 @@ class BenchmarkResourceIT {
     @Transactional
     @WithMockUser("benchmark-user")
     void shouldAcceptInternalWorkerCallbackWithToken() throws Exception {
+        persistBenchmarkUser();
         MvcResult algorithmResult = mockMvc
             .perform(
                 post("/api/algorithms")
@@ -213,6 +224,18 @@ class BenchmarkResourceIT {
 
         mockMvc
             .perform(
+                post("/api/internal/runs/{id}/start", runId)
+                    .header("X-Worker-Token", "benchlab-internal-token")
+                    .header("X-Runner-Host", "worker-1")
+            )
+            .andExpect(status().isNoContent());
+
+        BenchmarkRun startedRun = benchmarkRunRepository.findById(runId).orElseThrow();
+        assertThat(startedRun.getStatus()).isEqualTo(BenchmarkRunStatus.RUNNING);
+        assertThat(startedRun.getStartedAt()).isNotNull();
+
+        mockMvc
+            .perform(
                 post("/api/internal/runs/{id}/result", runId)
                     .header("X-Worker-Token", "benchlab-internal-token")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -221,14 +244,14 @@ class BenchmarkResourceIT {
                             Map.ofEntries(
                                 Map.entry("status", "SUCCEEDED"),
                                 Map.entry("runnerHost", "worker-1"),
-                                Map.entry("cpuTimeMs", 10),
-                                Map.entry("wallTimeMs", 12),
-                                Map.entry("peakMemoryMb", 64.0),
+                                Map.entry("orchestrationWallTimeMs", 12),
                                 Map.entry("exitCode", 0),
                                 Map.entry("timedOut", false),
-                                Map.entry("compileMs", 0),
-                                Map.entry("stdoutTruncated", "ok"),
-                                Map.entry("stderrTruncated", ""),
+                                Map.entry("compileWallTimeMs", 0),
+                                Map.entry("stdoutPreview", "ok"),
+                                Map.entry("stderrPreview", ""),
+                                Map.entry("stdoutTruncated", false),
+                                Map.entry("stderrTruncated", false),
                                 Map.entry("outputSizeBytes", 2),
                                 Map.entry("artifactChecksum", "aaa"),
                                 Map.entry("technicalLogSummary", "ok")
@@ -249,10 +272,14 @@ class BenchmarkResourceIT {
             .perform(get("/api/runs"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].id").value(runId))
-            .andExpect(jsonPath("$[0].wallTimeMs").value(12));
+            .andExpect(jsonPath("$[0].orchestrationWallTimeMs").value(12));
 
         mockMvc
-            .perform(get("/api/benchmarks/complexity").param("algorithmId", algorithmId.toString()).param("metric", "wallTimeMs"))
+            .perform(
+                get("/api/benchmarks/complexity")
+                    .param("algorithmId", algorithmId.toString())
+                    .param("metric", "orchestrationWallTimeMs")
+            )
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.series[0].language").value("PYTHON"))
             .andExpect(jsonPath("$.series[0].points[0].datasetSize").value(100))
@@ -263,6 +290,7 @@ class BenchmarkResourceIT {
     @Transactional
     @WithMockUser("benchmark-user")
     void shouldRejectInternalWorkerCallbackWithoutToken() throws Exception {
+        persistBenchmarkUser();
         MvcResult algorithmResult = mockMvc
             .perform(
                 post("/api/algorithms")
@@ -342,18 +370,18 @@ class BenchmarkResourceIT {
                                 "SUCCEEDED",
                                 "runnerHost",
                                 "worker-1",
-                                "cpuTimeMs",
+                                "orchestrationWallTimeMs",
                                 1,
-                                "wallTimeMs",
-                                1,
-                                "peakMemoryMb",
-                                1.0,
                                 "exitCode",
                                 0,
                                 "timedOut",
                                 false,
-                                "compileMs",
+                                "compileWallTimeMs",
                                 0,
+                                "stdoutTruncated",
+                                false,
+                                "stderrTruncated",
+                                false,
                                 "outputSizeBytes",
                                 0
                             )
@@ -361,5 +389,14 @@ class BenchmarkResourceIT {
                     )
             )
             .andExpect(status().isUnauthorized());
+    }
+
+    private void persistBenchmarkUser() {
+        User user = new User();
+        user.setLogin("benchmark-user");
+        user.setEmail("benchmark-user@example.com");
+        user.setActivated(true);
+        user.setPassword(passwordEncoder.encode("test-password"));
+        userRepository.saveAndFlush(user);
     }
 }

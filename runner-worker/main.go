@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -41,29 +42,36 @@ type RunRequestedEvent struct {
 }
 
 type RunResultCallbackRequest struct {
-	Status              string  `json:"status"`
-	RunnerHost          string  `json:"runnerHost"`
-	FailureReason       string  `json:"failureReason,omitempty"`
-	CpuTimeMs           int64   `json:"cpuTimeMs"`
-	WallTimeMs          int64   `json:"wallTimeMs"`
-	PeakMemoryMb        float64 `json:"peakMemoryMb"`
-	ExitCode            int     `json:"exitCode"`
-	TimedOut            bool    `json:"timedOut"`
-	CompileMs           int64   `json:"compileMs"`
-	StdoutTruncated     string  `json:"stdoutTruncated,omitempty"`
-	StderrTruncated     string  `json:"stderrTruncated,omitempty"`
-	OutputSizeBytes     int64   `json:"outputSizeBytes"`
-	ArtifactChecksum    string  `json:"artifactChecksum,omitempty"`
-	TechnicalLogSummary string  `json:"technicalLogSummary,omitempty"`
+	Status                  string   `json:"status"`
+	RunnerHost              string   `json:"runnerHost"`
+	FailureReason           string   `json:"failureReason,omitempty"`
+	CpuTimeMs               *int64   `json:"cpuTimeMs"`
+	OrchestrationWallTimeMs int64    `json:"orchestrationWallTimeMs"`
+	PeakMemoryMb            *float64 `json:"peakMemoryMb"`
+	ExitCode                int      `json:"exitCode"`
+	TimedOut                bool     `json:"timedOut"`
+	CompileWallTimeMs       int64    `json:"compileWallTimeMs"`
+	StdoutPreview           string   `json:"stdoutPreview,omitempty"`
+	StderrPreview           string   `json:"stderrPreview,omitempty"`
+	StdoutTruncated         bool     `json:"stdoutTruncated"`
+	StderrTruncated         bool     `json:"stderrTruncated"`
+	OutputSizeBytes         int64    `json:"outputSizeBytes"`
+	ArtifactChecksum        string   `json:"artifactChecksum,omitempty"`
+	TechnicalLogSummary     string   `json:"technicalLogSummary,omitempty"`
 }
 
 const outputLimit = 8000
+
+var callbackHTTPClient = &http.Client{Timeout: 10 * time.Second}
 
 func main() {
 	rabbitURL := envOrDefault("RABBITMQ_URL", "amqp://benchlab:benchlab@localhost:5672/")
 	queueName := envOrDefault("RUN_REQUESTED_QUEUE", "benchlab.run.requested.q")
 	apiBaseURL := envOrDefault("BENCHLAB_API_BASE_URL", "http://localhost:8080")
 	workerToken := envOrDefault("BENCHLAB_WORKER_TOKEN", "benchlab-internal-token")
+	healthAddress := envOrDefault("WORKER_HEALTH_ADDRESS", ":8081")
+	ready := &atomic.Bool{}
+	go serveHealth(healthAddress, ready)
 
 	conn, err := amqp.Dial(rabbitURL)
 	if err != nil {
@@ -82,12 +90,20 @@ func main() {
 		log.Fatalf("no se pudo consumir cola %s: %v", queueName, err)
 	}
 
-	log.Println("worker iniciado. Esperando jobs...")
+	ready.Store(true)
+	defer ready.Store(false)
+	log.Println("worker listo. Esperando trabajos...")
 	for msg := range msgs {
 		var event RunRequestedEvent
 		if err := json.Unmarshal(msg.Body, &event); err != nil {
 			log.Printf("mensaje invalido: %v", err)
 			_ = msg.Nack(false, false)
+			continue
+		}
+		runnerHost := workerHost()
+		if err := sendStarted(apiBaseURL, workerToken, event.JobID, runnerHost); err != nil {
+			log.Printf("error marcando inicio del trabajo. jobId=%d: %v", event.JobID, err)
+			_ = msg.Nack(false, true)
 			continue
 		}
 
@@ -104,10 +120,7 @@ func main() {
 }
 
 func executeRun(event RunRequestedEvent) RunResultCallbackRequest {
-	host, _ := os.Hostname()
-	if host == "" {
-		host = "runner-worker"
-	}
+	host := workerHost()
 
 	if event.TimeoutMs <= 0 {
 		event.TimeoutMs = 5000
@@ -136,27 +149,27 @@ func executeRun(event RunRequestedEvent) RunResultCallbackRequest {
 		return failedResult(host, "FAILED", err.Error())
 	}
 
-	compileMs := int64(0)
+	compileWallTimeMs := int64(0)
 	if len(runnerSpec.compileCommand) > 0 {
 		compileResult := runDockerCommand(event, runnerSpec, tempDir, runnerSpec.compileCommand, true)
-		compileMs = compileResult.elapsedMs
+		compileWallTimeMs = compileResult.elapsedMs
 		if compileResult.err != nil {
 			status, exitCode, failureReason, timedOut := classifyRunError(compileResult.err, compileResult.contextErr, "COMPILE_ERROR")
 			return RunResultCallbackRequest{
-				Status:              status,
-				RunnerHost:          host,
-				FailureReason:       failureReason,
-				CpuTimeMs:           0,
-				WallTimeMs:          0,
-				PeakMemoryMb:        float64(event.MemoryMb),
-				ExitCode:            exitCode,
-				TimedOut:            timedOut,
-				CompileMs:           compileMs,
-				StdoutTruncated:     truncate(compileResult.stdout, outputLimit),
-				StderrTruncated:     truncate(compileResult.stderr, outputLimit),
-				OutputSizeBytes:     int64(len(compileResult.stdout) + len(compileResult.stderr)),
-				ArtifactChecksum:    sha256Of(compileResult.stdout + compileResult.stderr),
-				TechnicalLogSummary: fmt.Sprintf("language=%s datasetVersion=%s compile failed", event.Language, event.DatasetVersion),
+				Status:                  status,
+				RunnerHost:              host,
+				FailureReason:           failureReason,
+				OrchestrationWallTimeMs: 0,
+				ExitCode:                exitCode,
+				TimedOut:                timedOut,
+				CompileWallTimeMs:       compileWallTimeMs,
+				StdoutPreview:           compileResult.stdout,
+				StderrPreview:           compileResult.stderr,
+				StdoutTruncated:         compileResult.stdoutTruncated,
+				StderrTruncated:         compileResult.stderrTruncated,
+				OutputSizeBytes:         compileResult.outputSizeBytes,
+				ArtifactChecksum:        sha256Of(compileResult.stdout + compileResult.stderr),
+				TechnicalLogSummary:     fmt.Sprintf("language=%s datasetVersion=%s compile failed", event.Language, event.DatasetVersion),
 			}
 		}
 	}
@@ -166,20 +179,20 @@ func executeRun(event RunRequestedEvent) RunResultCallbackRequest {
 		if warmupResult.err != nil {
 			status, exitCode, failureReason, timedOut := classifyRunError(warmupResult.err, warmupResult.contextErr, "RUNTIME_ERROR")
 			return RunResultCallbackRequest{
-				Status:              status,
-				RunnerHost:          host,
-				FailureReason:       failureReason,
-				CpuTimeMs:           0,
-				WallTimeMs:          0,
-				PeakMemoryMb:        float64(event.MemoryMb),
-				ExitCode:            exitCode,
-				TimedOut:            timedOut,
-				CompileMs:           compileMs,
-				StdoutTruncated:     truncate(warmupResult.stdout, outputLimit),
-				StderrTruncated:     truncate(warmupResult.stderr, outputLimit),
-				OutputSizeBytes:     int64(len(warmupResult.stdout) + len(warmupResult.stderr)),
-				ArtifactChecksum:    sha256Of(warmupResult.stdout + warmupResult.stderr),
-				TechnicalLogSummary: fmt.Sprintf("language=%s datasetVersion=%s warmup failed at iteration=%d", event.Language, event.DatasetVersion, i+1),
+				Status:                  status,
+				RunnerHost:              host,
+				FailureReason:           failureReason,
+				OrchestrationWallTimeMs: 0,
+				ExitCode:                exitCode,
+				TimedOut:                timedOut,
+				CompileWallTimeMs:       compileWallTimeMs,
+				StdoutPreview:           warmupResult.stdout,
+				StderrPreview:           warmupResult.stderr,
+				StdoutTruncated:         warmupResult.stdoutTruncated,
+				StderrTruncated:         warmupResult.stderrTruncated,
+				OutputSizeBytes:         warmupResult.outputSizeBytes,
+				ArtifactChecksum:        sha256Of(warmupResult.stdout + warmupResult.stderr),
+				TechnicalLogSummary:     fmt.Sprintf("language=%s datasetVersion=%s warmup failed at iteration=%d", event.Language, event.DatasetVersion, i+1),
 			}
 		}
 	}
@@ -192,13 +205,19 @@ func executeRun(event RunRequestedEvent) RunResultCallbackRequest {
 	totalOutputBytes := int64(0)
 	lastOutStr := ""
 	lastErrStr := ""
+	stdoutTruncated := false
+	stderrTruncated := false
+	completedIterations := 0
 
 	for i := 0; i < event.Iterations; i++ {
 		runResult := runDockerCommand(event, runnerSpec, tempDir, runnerSpec.runCommand, false)
 		totalElapsed += runResult.elapsedMs
-		totalOutputBytes += int64(len(runResult.stdout) + len(runResult.stderr))
-		lastOutStr = truncate(runResult.stdout, outputLimit)
-		lastErrStr = truncate(runResult.stderr, outputLimit)
+		totalOutputBytes += runResult.outputSizeBytes
+		lastOutStr = runResult.stdout
+		lastErrStr = runResult.stderr
+		stdoutTruncated = stdoutTruncated || runResult.stdoutTruncated
+		stderrTruncated = stderrTruncated || runResult.stderrTruncated
+		completedIterations++
 
 		if runResult.err != nil {
 			status, exitCode, failureReason, timedOut = classifyRunError(runResult.err, runResult.contextErr, "RUNTIME_ERROR")
@@ -206,22 +225,25 @@ func executeRun(event RunRequestedEvent) RunResultCallbackRequest {
 		}
 	}
 
-	avgElapsed := totalElapsed / int64(event.Iterations)
+	avgElapsed := int64(0)
+	if completedIterations > 0 {
+		avgElapsed = totalElapsed / int64(completedIterations)
+	}
 	checksum := sha256Of(lastOutStr + lastErrStr)
 	return RunResultCallbackRequest{
-		Status:           status,
-		RunnerHost:       host,
-		FailureReason:    failureReason,
-		CpuTimeMs:        avgElapsed,
-		WallTimeMs:       avgElapsed,
-		PeakMemoryMb:     float64(event.MemoryMb),
-		ExitCode:         exitCode,
-		TimedOut:         timedOut,
-		CompileMs:        compileMs,
-		StdoutTruncated:  lastOutStr,
-		StderrTruncated:  lastErrStr,
-		OutputSizeBytes:  totalOutputBytes,
-		ArtifactChecksum: checksum,
+		Status:                  status,
+		RunnerHost:              host,
+		FailureReason:           failureReason,
+		OrchestrationWallTimeMs: avgElapsed,
+		ExitCode:                exitCode,
+		TimedOut:                timedOut,
+		CompileWallTimeMs:       compileWallTimeMs,
+		StdoutPreview:           lastOutStr,
+		StderrPreview:           lastErrStr,
+		StdoutTruncated:         stdoutTruncated,
+		StderrTruncated:         stderrTruncated,
+		OutputSizeBytes:         totalOutputBytes,
+		ArtifactChecksum:        checksum,
 		TechnicalLogSummary: fmt.Sprintf(
 			"language=%s datasetVersion=%s warmup=%d iterations=%d",
 			event.Language,
@@ -239,11 +261,14 @@ type dockerRunnerSpec struct {
 }
 
 type dockerRunResult struct {
-	elapsedMs  int64
-	stdout     string
-	stderr     string
-	err        error
-	contextErr error
+	elapsedMs       int64
+	stdout          string
+	stderr          string
+	stdoutTruncated bool
+	stderrTruncated bool
+	outputSizeBytes int64
+	err             error
+	contextErr      error
 }
 
 func prepareRunnerSpec(language, sourceCode, tempDir string) (dockerRunnerSpec, error) {
@@ -253,7 +278,7 @@ func prepareRunnerSpec(language, sourceCode, tempDir string) (dockerRunnerSpec, 
 		if err != nil {
 			return dockerRunnerSpec{}, fmt.Errorf("no se pudo escribir archivo python: %w", err)
 		}
-		return dockerRunnerSpec{image: "python:3.12-alpine", runCommand: []string{"python", "/workspace/main.py"}}, nil
+		return dockerRunnerSpec{image: runnerImage("RUNNER_IMAGE_PYTHON", "python:3.12-alpine"), runCommand: []string{"python", "/workspace/main.py"}}, nil
 	case "JAVA":
 		err := os.WriteFile(filepath.Join(tempDir, "Main.java"), []byte(sourceCode), 0o600)
 		if err != nil {
@@ -261,7 +286,7 @@ func prepareRunnerSpec(language, sourceCode, tempDir string) (dockerRunnerSpec, 
 		}
 		compileCmd := []string{"sh", "-lc", "mkdir -p classes && javac -d classes Main.java"}
 		runCmd := []string{"java", "-cp", "/workspace/classes", "Main"}
-		return dockerRunnerSpec{image: "eclipse-temurin:21-jdk", compileCommand: compileCmd, runCommand: runCmd}, nil
+		return dockerRunnerSpec{image: runnerImage("RUNNER_IMAGE_JAVA", "eclipse-temurin:21-jdk"), compileCommand: compileCmd, runCommand: runCmd}, nil
 	case "GO":
 		err := os.WriteFile(filepath.Join(tempDir, "main.go"), []byte(sourceCode), 0o600)
 		if err != nil {
@@ -269,7 +294,7 @@ func prepareRunnerSpec(language, sourceCode, tempDir string) (dockerRunnerSpec, 
 		}
 		compileCmd := []string{"sh", "-c", "GOCACHE=/tmp/go-build go build -trimpath -o benchlab-app main.go"}
 		runCmd := []string{"/workspace/benchlab-app"}
-		return dockerRunnerSpec{image: "golang:1.22-alpine", compileCommand: compileCmd, runCommand: runCmd}, nil
+		return dockerRunnerSpec{image: runnerImage("RUNNER_IMAGE_GO", "golang:1.22-alpine"), compileCommand: compileCmd, runCommand: runCmd}, nil
 	case "RUST":
 		err := os.WriteFile(filepath.Join(tempDir, "main.rs"), []byte(sourceCode), 0o600)
 		if err != nil {
@@ -277,7 +302,7 @@ func prepareRunnerSpec(language, sourceCode, tempDir string) (dockerRunnerSpec, 
 		}
 		compileCmd := []string{"sh", "-lc", "PATH=/usr/local/cargo/bin:$PATH rustc -C opt-level=3 -o benchlab-app main.rs"}
 		runCmd := []string{"/workspace/benchlab-app"}
-		return dockerRunnerSpec{image: "rust:1.87-bookworm", compileCommand: compileCmd, runCommand: runCmd}, nil
+		return dockerRunnerSpec{image: runnerImage("RUNNER_IMAGE_RUST", "rust:1.87-bookworm"), compileCommand: compileCmd, runCommand: runCmd}, nil
 	case "ASSEMBLY":
 		err := os.WriteFile(filepath.Join(tempDir, "main.s"), []byte(sourceCode), 0o600)
 		if err != nil {
@@ -285,13 +310,13 @@ func prepareRunnerSpec(language, sourceCode, tempDir string) (dockerRunnerSpec, 
 		}
 		compileCmd := []string{"sh", "-lc", "gcc -x assembler -o benchlab-app main.s"}
 		runCmd := []string{"/workspace/benchlab-app"}
-		return dockerRunnerSpec{image: "gcc:14", compileCommand: compileCmd, runCommand: runCmd}, nil
+		return dockerRunnerSpec{image: runnerImage("RUNNER_IMAGE_CPP", "gcc:14"), compileCommand: compileCmd, runCommand: runCmd}, nil
 	case "RUBY":
 		err := os.WriteFile(filepath.Join(tempDir, "main.rb"), []byte(sourceCode), 0o600)
 		if err != nil {
 			return dockerRunnerSpec{}, fmt.Errorf("no se pudo escribir archivo ruby: %w", err)
 		}
-		return dockerRunnerSpec{image: "ruby:3.3-alpine", runCommand: []string{"ruby", "/workspace/main.rb"}}, nil
+		return dockerRunnerSpec{image: runnerImage("RUNNER_IMAGE_RUBY", "ruby:3.3-alpine"), runCommand: []string{"ruby", "/workspace/main.rb"}}, nil
 	case "C":
 		err := os.WriteFile(filepath.Join(tempDir, "main.c"), []byte(sourceCode), 0o600)
 		if err != nil {
@@ -299,10 +324,17 @@ func prepareRunnerSpec(language, sourceCode, tempDir string) (dockerRunnerSpec, 
 		}
 		compileCmd := []string{"gcc", "main.c", "-O2", "-o", "benchlab-app"}
 		runCmd := []string{"/workspace/benchlab-app"}
-		return dockerRunnerSpec{image: "gcc:14", compileCommand: compileCmd, runCommand: runCmd}, nil
+		return dockerRunnerSpec{image: runnerImage("RUNNER_IMAGE_C", "gcc:14"), compileCommand: compileCmd, runCommand: runCmd}, nil
 	default:
 		return dockerRunnerSpec{}, fmt.Errorf("lenguaje no soportado en fase actual: %s", language)
 	}
+}
+
+func runnerImage(environmentKey, fallback string) string {
+	if configured := strings.TrimSpace(os.Getenv(environmentKey)); configured != "" {
+		return configured
+	}
+	return fallback
 }
 
 func runDockerCommand(event RunRequestedEvent, runnerSpec dockerRunnerSpec, tempDir string, command []string, writableWorkspace bool) dockerRunResult {
@@ -324,19 +356,87 @@ func runDockerCommand(event RunRequestedEvent, runnerSpec dockerRunnerSpec, temp
 	args = append(args, command...)
 
 	cmd := exec.CommandContext(ctx, "docker", args...)
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
+	stdout := newBoundedCapture(outputLimit)
+	stderr := newBoundedCapture(outputLimit)
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	runErr := cmd.Run()
 
 	return dockerRunResult{
-		elapsedMs:  time.Since(started).Milliseconds(),
-		stdout:     stdout.String(),
-		stderr:     stderr.String(),
-		err:        runErr,
-		contextErr: ctx.Err(),
+		elapsedMs:       time.Since(started).Milliseconds(),
+		stdout:          stdout.String(),
+		stderr:          stderr.String(),
+		stdoutTruncated: stdout.Truncated(),
+		stderrTruncated: stderr.Truncated(),
+		outputSizeBytes: stdout.TotalBytes() + stderr.TotalBytes(),
+		err:             runErr,
+		contextErr:      ctx.Err(),
 	}
+}
+
+type boundedCapture struct {
+	buffer    bytes.Buffer
+	limit     int
+	total     int64
+	truncated bool
+}
+
+func newBoundedCapture(limit int) boundedCapture {
+	return boundedCapture{limit: max(limit, 0)}
+}
+
+func (capture *boundedCapture) Write(value []byte) (int, error) {
+	capture.total += int64(len(value))
+	remaining := capture.limit - capture.buffer.Len()
+	if remaining > 0 {
+		retained := min(len(value), remaining)
+		_, _ = capture.buffer.Write(value[:retained])
+	}
+	if capture.total > int64(capture.limit) {
+		capture.truncated = true
+	}
+	return len(value), nil
+}
+
+func (capture *boundedCapture) String() string {
+	return capture.buffer.String()
+}
+
+func (capture *boundedCapture) TotalBytes() int64 {
+	return capture.total
+}
+
+func (capture *boundedCapture) Truncated() bool {
+	return capture.truncated
+}
+
+func serveHealth(address string, ready *atomic.Bool) {
+	server := &http.Server{
+		Addr:              address,
+		Handler:           newHealthHandler(ready),
+		ReadHeaderTimeout: 2 * time.Second,
+	}
+	log.Printf("servidor de salud iniciado en %s", address)
+	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		log.Printf("servidor de salud detenido por error: %v", err)
+	}
+}
+
+func newHealthHandler(ready *atomic.Bool) http.Handler {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/health/live", func(response http.ResponseWriter, _ *http.Request) {
+		response.WriteHeader(http.StatusOK)
+		_, _ = response.Write([]byte("live"))
+	})
+	mux.HandleFunc("/health/ready", func(response http.ResponseWriter, _ *http.Request) {
+		if !ready.Load() {
+			http.Error(response, "not ready", http.StatusServiceUnavailable)
+			return
+		}
+		response.WriteHeader(http.StatusOK)
+		_, _ = response.Write([]byte("ready"))
+	})
+	return mux
 }
 
 func classifyRunError(runErr error, contextErr error, defaultStatus string) (string, int, string, bool) {
@@ -365,18 +465,46 @@ func sendResult(apiBaseURL, workerToken string, runID int64, payload RunResultCa
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-Worker-Token", workerToken)
 
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(req)
+	resp, err := callbackHTTPClient.Do(req)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		raw, _ := io.ReadAll(resp.Body)
+		raw, _ := io.ReadAll(io.LimitReader(resp.Body, 2048))
 		return fmt.Errorf("status=%d body=%s", resp.StatusCode, string(raw))
 	}
 	return nil
+}
+
+func sendStarted(apiBaseURL, workerToken string, runID int64, runnerHost string) error {
+	url := fmt.Sprintf("%s/api/internal/runs/%d/start", strings.TrimSuffix(apiBaseURL, "/"), runID)
+	req, err := http.NewRequest(http.MethodPost, url, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("X-Worker-Token", workerToken)
+	req.Header.Set("X-Runner-Host", runnerHost)
+
+	resp, err := callbackHTTPClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		raw, _ := io.ReadAll(io.LimitReader(resp.Body, 2048))
+		return fmt.Errorf("status=%d body=%s", resp.StatusCode, string(raw))
+	}
+	return nil
+}
+
+func workerHost() string {
+	host, _ := os.Hostname()
+	if host == "" {
+		return "runner-worker"
+	}
+	return host
 }
 
 func dockerVolumeMount(dir string, readOnly bool) string {
@@ -393,25 +521,16 @@ func dockerVolumeMount(dir string, readOnly bool) string {
 
 func failedResult(host, status, reason string) RunResultCallbackRequest {
 	return RunResultCallbackRequest{
-		Status:              status,
-		RunnerHost:          host,
-		FailureReason:       reason,
-		CpuTimeMs:           0,
-		WallTimeMs:          0,
-		PeakMemoryMb:        0,
-		ExitCode:            1,
-		TimedOut:            false,
-		CompileMs:           0,
-		OutputSizeBytes:     0,
-		TechnicalLogSummary: "error en worker",
+		Status:                  status,
+		RunnerHost:              host,
+		FailureReason:           reason,
+		OrchestrationWallTimeMs: 0,
+		ExitCode:                1,
+		TimedOut:                false,
+		CompileWallTimeMs:       0,
+		OutputSizeBytes:         0,
+		TechnicalLogSummary:     "error en worker",
 	}
-}
-
-func truncate(value string, max int) string {
-	if len(value) <= max {
-		return value
-	}
-	return value[:max]
 }
 
 func sha256Of(value string) string {

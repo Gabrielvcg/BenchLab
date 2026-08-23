@@ -39,6 +39,14 @@ VPS_PATH=/opt/benchlab/app
 VPS_PORT=22
 VPS_USER=vacaro
 WORKER_TEMP_PATH=/opt/benchlab/worker-tmp
+BENCHLAB_LIMITS_MAX_SOURCE_BYTES=65536
+BENCHLAB_LIMITS_MAX_TIMEOUT_MS=30000
+BENCHLAB_LIMITS_MAX_MEMORY_MB=512
+BENCHLAB_LIMITS_MAX_CPU_LIMIT=2.0
+BENCHLAB_LIMITS_MAX_ITERATIONS=10
+BENCHLAB_LIMITS_MAX_WARMUP_ITERATIONS=3
+BENCHLAB_LIMITS_MAX_DATASET_SIZE=25000000
+BENCHLAB_LIMITS_MAX_OUTSTANDING_RUNS_PER_USER=32
 ```
 
 Required secrets:
@@ -108,6 +116,12 @@ Keep backups in a folder mounted to persistent VPS storage.
 ## 7) Notes for the worker
 
 The worker container mounts `/var/run/docker.sock` and uses `WORKER_TEMP_PATH` for source files passed into short-lived runner containers. Keep `WORKER_TEMP_PATH` as an absolute path that exists both on the host and inside the worker container.
+
+Compose limits the worker service itself to 256 MB and 128 PIDs. Its readiness check calls `/health/ready` on port 8081 and becomes healthy only after RabbitMQ consumption is active. These worker-container limits are separate from the CPU/memory limits applied to each sibling runner container through the mounted Docker socket.
+
+The Docker socket gives the worker host-level Docker control. Restrict host access, image provenance, and deployment credentials accordingly; the service-container resource limit is not a security boundary for the Docker daemon.
+
+Queue publication/callback atomicity and bounded retry/DLQ behavior remain the next milestone. See [`/docs/architecture/queue-reliability-next.md`](../architecture/queue-reliability-next.md).
 
 ## 8) Web dashboard
 

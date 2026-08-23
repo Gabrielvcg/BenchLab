@@ -51,7 +51,11 @@ public class BenchmarksApiDelegateHandler implements BenchmarksApiDelegate {
             response
                 .points()
                 .stream()
-                .map(point -> new BenchmarkTimeseriesPoint().finishedAt(point.finishedAt()).wallTimeMs(point.wallTimeMs()))
+                .map(point ->
+                    new BenchmarkTimeseriesPoint()
+                        .finishedAt(point.finishedAt())
+                        .orchestrationWallTimeMs(point.orchestrationWallTimeMs())
+                )
                 .collect(Collectors.toList())
         );
         return ResponseEntity.ok(apiResponse);

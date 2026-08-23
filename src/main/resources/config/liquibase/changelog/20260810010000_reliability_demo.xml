@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20260810010000-1" author="codex">
+        <addColumn tableName="benchmark_run">
+            <column name="requested_by" type="varchar(255)" defaultValue="legacy">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="run_artifact">
+            <column name="stdout_was_truncated" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="stderr_was_truncated" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <createIndex tableName="benchmark_run" indexName="idx_benchmark_run_queued_at">
+            <column name="queued_at" descending="true"/>
+        </createIndex>
+        <createIndex tableName="benchmark_run" indexName="idx_benchmark_run_implementation_dataset_status">
+            <column name="implementation_id"/>
+            <column name="dataset_id"/>
+            <column name="status"/>
+        </createIndex>
+        <createIndex tableName="benchmark_run" indexName="idx_benchmark_run_implementation_status_finished">
+            <column name="implementation_id"/>
+            <column name="status"/>
+            <column name="finished_at"/>
+        </createIndex>
+        <createIndex tableName="benchmark_run" indexName="idx_benchmark_run_requester_status">
+            <column name="requested_by"/>
+            <column name="status"/>
+        </createIndex>
+        <createIndex tableName="implementation" indexName="idx_implementation_algorithm_language">
+            <column name="algorithm_id"/>
+            <column name="language"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

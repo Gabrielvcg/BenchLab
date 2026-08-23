@@ -21,7 +21,7 @@ public class ImplementationsApiDelegateHandler implements ImplementationsApiDele
         var saved = benchmarkService.createImplementation(
             new com.vacaro.benchlab.service.dto.benchmark.CreateImplementationRequest(
                 createImplementationRequest.getAlgorithmId(),
-                ImplementationLanguage.valueOf(createImplementationRequest.getLanguage()),
+                ImplementationLanguage.valueOf(createImplementationRequest.getLanguage().getValue()),
                 createImplementationRequest.getSourceCode(),
                 createImplementationRequest.getCompileConfig(),
                 createImplementationRequest.getRuntimeConfig()
