@@ -9,6 +9,8 @@
 # ===================================================================
 
 spring:
+  cache:
+    type: simple
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
     hikari:

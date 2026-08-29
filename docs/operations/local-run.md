@@ -16,9 +16,13 @@ This starts PostgreSQL, Redis, and RabbitMQ.
 
 The API listens on `http://localhost:8080` by default.
 
-On Windows hosts where repeated integration-test contexts exhaust loopback
-selectors, run Maven with `-Dbenchlab.redisson.netty-threads=2`. The property
-is optional and the application keeps Redisson's default when it is absent.
+On Windows hosts, integration tests use the Docker host together with the
+published PostgreSQL port. The general application integration suite uses an
+in-memory cache because those tests do not exercise Redis; this avoids opening
+Redisson selectors in every Spring context. Redis-specific test infrastructure
+remains available for focused tests, and uses the Docker host plus published
+port rather than the container's internal address. Production keeps its normal
+Redisson cache configuration.
 
 ## Worker
 

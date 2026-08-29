@@ -11,6 +11,7 @@ import org.springframework.test.context.ContextConfigurationAttributes;
 import org.springframework.test.context.ContextCustomizer;
 import org.springframework.test.context.ContextCustomizerFactory;
 import org.springframework.test.context.MergedContextConfiguration;
+import org.testcontainers.containers.GenericContainer;
 
 public class RedisTestContainersSpringContextCustomizerFactory implements ContextCustomizerFactory {
 
@@ -34,12 +35,7 @@ public class RedisTestContainersSpringContextCustomizerFactory implements Contex
                         beanFactory.registerSingleton(RedisTestContainer.class.getName(), redisBean);
                         // ((DefaultListableBeanFactory)beanFactory).registerDisposableBean(RedisTestContainer.class.getName(), redisBean);
                     }
-                    testValues = testValues.and(
-                        "jhipster.cache.redis.server=redis://" +
-                        redisBean.getRedisContainer().getContainerIpAddress() +
-                        ":" +
-                        redisBean.getRedisContainer().getMappedPort(6379)
-                    );
+                    testValues = testValues.and("jhipster.cache.redis.server=" + redisServerUrl(redisBean.getRedisContainer()));
                 }
                 testValues.applyTo(context);
             }
@@ -54,5 +50,9 @@ public class RedisTestContainersSpringContextCustomizerFactory implements Contex
                 return this.hashCode() == obj.hashCode();
             }
         };
+    }
+
+    static String redisServerUrl(GenericContainer<?> container) {
+        return "redis://" + container.getHost() + ":" + container.getMappedPort(6379);
     }
 }
