@@ -2,6 +2,9 @@
 
 ## 0.0.16
 
+- Fixed Windows Testcontainers integration by using the Docker host and
+  published port for Redis-specific tests and keeping the general integration
+  suite independent from unnecessary Redisson selectors.
 - Removed the generated TLS keystore and static JWT/default credentials before public release.
 - Made TLS, broker, worker, monitoring, and control-center credentials external configuration values.
 - Added public-release hygiene rules for credential files and documented secret-free local setup.
