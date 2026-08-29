@@ -1,0 +1,4 @@
+org.springframework.test.context.ContextCustomizerFactory = \
+    com.vacaro.benchlab.config.\
+    SqlTestContainersSpringContextCustomizerFactory,com.vacaro.benchlab.config.\
+    RedisTestContainersSpringContextCustomizerFactory

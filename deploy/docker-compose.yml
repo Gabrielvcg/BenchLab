@@ -1,0 +1,153 @@
+name: ${COMPOSE_PROJECT_NAME:-benchlab}
+
+services:
+  web:
+    image: ${BENCHLAB_WEB_IMAGE:?BENCHLAB_WEB_IMAGE must be set}
+    restart: unless-stopped
+    ports:
+      - '${WEB_HOST_PORT:-127.0.0.1:3003}:80'
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1/ >/dev/null || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - backend
+
+  api:
+    image: ${BENCHLAB_API_IMAGE:?BENCHLAB_API_IMAGE must be set}
+    restart: unless-stopped
+    environment:
+      _JAVA_OPTIONS: ${JAVA_OPTIONS:-"-Xmx768m -Xms256m"}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+      SPRING_DOCKER_COMPOSE_ENABLED: 'false'
+      SERVER_FORWARD_HEADERS_STRATEGY: ${SERVER_FORWARD_HEADERS_STRATEGY:-native}
+      MANAGEMENT_PROMETHEUS_METRICS_EXPORT_ENABLED: ${MANAGEMENT_PROMETHEUS_METRICS_EXPORT_ENABLED:-false}
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://postgresql:5432/benchLab}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-benchLab}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:?SPRING_DATASOURCE_PASSWORD must be set}
+      SPRING_LIQUIBASE_ENABLED: ${SPRING_LIQUIBASE_ENABLED:-true}
+      SPRING_LIQUIBASE_CONTEXTS: ${SPRING_LIQUIBASE_CONTEXTS:-prod}
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: '5672'
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER:-benchlab}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD must be set}
+      JHIPSTER_CACHE_REDIS_SERVER: redis://redis:6379
+      JHIPSTER_SECURITY_AUTHENTICATION_JWT_BASE64_SECRET: ${JHIPSTER_SECURITY_AUTHENTICATION_JWT_BASE64_SECRET:?JHIPSTER_SECURITY_AUTHENTICATION_JWT_BASE64_SECRET must be set}
+      JHIPSTER_MAIL_BASE_URL: ${JHIPSTER_MAIL_BASE_URL:-https://benchlab.example.com}
+      BENCHLAB_WORKER_TOKEN: ${BENCHLAB_WORKER_TOKEN:?BENCHLAB_WORKER_TOKEN must be set}
+      BENCHLAB_SECURITY_ADMIN_PASSWORD: ${BENCHLAB_SECURITY_ADMIN_PASSWORD:?BENCHLAB_SECURITY_ADMIN_PASSWORD must be set}
+      BENCHLAB_LIMITS_MAX_SOURCE_BYTES: ${BENCHLAB_LIMITS_MAX_SOURCE_BYTES:-65536}
+      BENCHLAB_LIMITS_MAX_TIMEOUT_MS: ${BENCHLAB_LIMITS_MAX_TIMEOUT_MS:-30000}
+      BENCHLAB_LIMITS_MAX_MEMORY_MB: ${BENCHLAB_LIMITS_MAX_MEMORY_MB:-512}
+      BENCHLAB_LIMITS_MAX_CPU_LIMIT: ${BENCHLAB_LIMITS_MAX_CPU_LIMIT:-2.0}
+      BENCHLAB_LIMITS_MAX_ITERATIONS: ${BENCHLAB_LIMITS_MAX_ITERATIONS:-10}
+      BENCHLAB_LIMITS_MAX_WARMUP_ITERATIONS: ${BENCHLAB_LIMITS_MAX_WARMUP_ITERATIONS:-3}
+      BENCHLAB_LIMITS_MAX_DATASET_SIZE: ${BENCHLAB_LIMITS_MAX_DATASET_SIZE:-25000000}
+      BENCHLAB_LIMITS_MAX_OUTSTANDING_RUNS_PER_USER: ${BENCHLAB_LIMITS_MAX_OUTSTANDING_RUNS_PER_USER:-32}
+    ports:
+      - '${APP_HOST_PORT:-127.0.0.1:8083}:8080'
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -fsS http://localhost:8080/management/health >/dev/null || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 45s
+    networks:
+      - backend
+
+  worker:
+    image: ${BENCHLAB_WORKER_IMAGE:?BENCHLAB_WORKER_IMAGE must be set}
+    restart: unless-stopped
+    environment:
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-benchlab}:${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD must be set}@rabbitmq:5672/
+      RUN_REQUESTED_QUEUE: ${RUN_REQUESTED_QUEUE:-benchlab.run.requested.q}
+      BENCHLAB_API_BASE_URL: http://api:8080
+      BENCHLAB_WORKER_TOKEN: ${BENCHLAB_WORKER_TOKEN:?BENCHLAB_WORKER_TOKEN must be set}
+      TMPDIR: ${WORKER_TEMP_PATH:-/opt/benchlab/worker-tmp}
+      WORKER_HEALTH_ADDRESS: ':8081'
+      RUNNER_IMAGE_PYTHON: ${RUNNER_IMAGE_PYTHON:-python:3.12-alpine@sha256:d09d15e60962ca365d1cd544a48773bac9d33f2fb1b00f2aa0deec78ade7dc31}
+      RUNNER_IMAGE_JAVA: ${RUNNER_IMAGE_JAVA:-eclipse-temurin:21-jdk@sha256:85f00967bcc624fc19fa9c2cf124ea426a5363898e267141726f31f358c2e14b}
+      RUNNER_IMAGE_GO: ${RUNNER_IMAGE_GO:-golang:1.22-alpine@sha256:1699c10032ca2582ec89a24a1312d986a3f094aed3d5c1147b19880afe40e052}
+      RUNNER_IMAGE_RUST: ${RUNNER_IMAGE_RUST:-rust:1.87-bookworm@sha256:251cec8da4689d180f124ef00024c2f83f79d9bf984e43c180a598119e326b84}
+      RUNNER_IMAGE_C: ${RUNNER_IMAGE_C:-gcc:14@sha256:468b5b959b5f4025724d8549f45550c6ad38a32474733cbf130f8f2c1bc80805}
+      RUNNER_IMAGE_CPP: ${RUNNER_IMAGE_CPP:-gcc:14@sha256:468b5b959b5f4025724d8549f45550c6ad38a32474733cbf130f8f2c1bc80805}
+      RUNNER_IMAGE_RUBY: ${RUNNER_IMAGE_RUBY:-ruby:3.3-alpine@sha256:2f763b37070564bb00b736f1d4dba6e8f8d203b5f93b94463879fd8d79966f28}
+    mem_limit: 256m
+    pids_limit: 128
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${DOCKER_AUTH_CONFIG_PATH:-/home/vacaro/.docker/config.json}:/root/.docker/config.json:ro
+      - ${WORKER_TEMP_PATH:-/opt/benchlab/worker-tmp}:${WORKER_TEMP_PATH:-/opt/benchlab/worker-tmp}
+    depends_on:
+      api:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://localhost:8081/health/ready >/dev/null || exit 1']
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 10s
+    networks:
+      - backend
+
+  postgresql:
+    image: postgres:17.4-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-benchLab}
+      POSTGRES_USER: ${POSTGRES_USER:-benchLab}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+    ports:
+      - '${POSTGRES_HOST_PORT:-127.0.0.1:5435}:5432'
+    volumes:
+      - postgresql_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - backend
+
+  redis:
+    image: redis:8.0.0-alpine
+    restart: unless-stopped
+    networks:
+      - backend
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-benchlab}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD must be set}
+    ports:
+      - '${RABBITMQ_MANAGEMENT_HOST_PORT:-127.0.0.1:15673}:15672'
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', '-q', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - backend
+
+volumes:
+  postgresql_data:
+
+networks:
+  backend:
+    driver: bridge

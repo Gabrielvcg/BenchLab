@@ -1,0 +1,24 @@
+# ===================================================================
+# Activate this profile to enable TLS and HTTP/2.
+#
+# TLS material is intentionally supplied outside the repository.
+# Configure the path and password only when this profile is enabled.
+# ===================================================================
+server:
+  ssl:
+    key-store: ${BENCHLAB_TLS_KEYSTORE_PATH:file:/run/secrets/benchlab-keystore.p12}
+    key-store-password: ${BENCHLAB_TLS_KEYSTORE_PASSWORD}
+    key-store-type: ${BENCHLAB_TLS_KEYSTORE_TYPE:PKCS12}
+    key-alias: ${BENCHLAB_TLS_KEY_ALIAS:selfsigned}
+    ciphers:
+      - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+      - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+      - TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA
+      - TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA
+      - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+      - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+      - TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA
+      - TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA
+    enabled-protocols: TLSv1.2
+  http2:
+    enabled: true
