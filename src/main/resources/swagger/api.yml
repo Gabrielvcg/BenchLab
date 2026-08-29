@@ -1,0 +1,433 @@
+openapi: '3.0.1'
+info:
+  title: 'benchLab'
+  version: 0.0.1
+servers:
+  - url: http://localhost:8080/api
+paths:
+  /algorithms:
+    get:
+      operationId: listAlgorithms
+      responses:
+        '200':
+          description: Algorithms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AlgorithmResponse'
+    post:
+      operationId: createAlgorithm
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAlgorithmRequest'
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlgorithmResponse'
+  /datasets:
+    get:
+      operationId: listDatasets
+      responses:
+        '200':
+          description: Datasets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DatasetResponse'
+    post:
+      operationId: createDataset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDatasetRequest'
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetResponse'
+  /implementations:
+    post:
+      operationId: createImplementation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateImplementationRequest'
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImplementationResponse'
+  /runs:
+    get:
+      operationId: listRecentRuns
+      responses:
+        '200':
+          description: Recent runs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RunSummaryResponse'
+    post:
+      operationId: createRun
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRunRequest'
+      responses:
+        '200':
+          description: Queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunResponse'
+  /runs/{id}:
+    get:
+      operationId: getRun
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Run details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunResponse'
+  /benchmarks/compare:
+    get:
+      operationId: compareBenchmarks
+      parameters:
+        - in: query
+          name: algorithmId
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: datasetId
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Comparison
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BenchmarkCompareResponse'
+  /benchmarks/timeseries:
+    get:
+      operationId: benchmarkTimeseries
+      parameters:
+        - in: query
+          name: algorithmId
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: language
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Timeseries
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BenchmarkTimeseriesResponse'
+  /benchmarks/complexity:
+    get:
+      operationId: benchmarkComplexity
+      parameters:
+        - in: query
+          name: algorithmId
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: metric
+          required: false
+          schema:
+            type: string
+            default: cpuTimeMs
+            enum: [cpuTimeMs, executionWallTimeMs, orchestrationWallTimeMs]
+      responses:
+        '200':
+          description: Complexity by dataset size and language
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BenchmarkComplexityResponse'
+
+components:
+  schemas:
+    CreateAlgorithmRequest:
+      type: object
+      required: [name, category, version, complexityDeclared]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 255 }
+        category: { type: string, minLength: 1, maxLength: 255 }
+        version: { type: string, minLength: 1, maxLength: 100 }
+        complexityDeclared: { type: string, minLength: 1, maxLength: 255 }
+    AlgorithmResponse:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        category: { type: string }
+        version: { type: string }
+        complexityDeclared: { type: string }
+    CreateDatasetRequest:
+      type: object
+      required: [type, sizeValue, checksum, datasetVersion]
+      properties:
+        type: { type: string, minLength: 1, maxLength: 255 }
+        sizeValue: { type: integer, format: int64, minimum: 1, maximum: 25000000 }
+        seed: { type: integer, format: int64 }
+        checksum: { type: string, minLength: 1, maxLength: 255 }
+        datasetVersion: { type: string, minLength: 1, maxLength: 100 }
+    DatasetResponse:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        type: { type: string }
+        sizeValue: { type: integer, format: int64 }
+        seed: { type: integer, format: int64 }
+        checksum: { type: string }
+        datasetVersion: { type: string }
+    CreateImplementationRequest:
+      type: object
+      required: [algorithmId, language, sourceCode]
+      properties:
+        algorithmId:
+          type: integer
+          format: int64
+          minimum: 1
+        language:
+          type: string
+          enum: [PYTHON, JAVA, C, GO, RUBY, RUST, ASSEMBLY]
+        sourceCode:
+          type: string
+          minLength: 1
+          maxLength: 65536
+        compileConfig:
+          type: string
+          maxLength: 1000
+        runtimeConfig:
+          type: string
+          maxLength: 1000
+    ImplementationResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        algorithmId:
+          type: integer
+          format: int64
+        language:
+          type: string
+        implementationHash:
+          type: string
+    CreateRunRequest:
+      type: object
+      required: [implementationId, datasetId]
+      properties:
+        implementationId:
+          type: integer
+          format: int64
+          minimum: 1
+        datasetId:
+          type: integer
+          format: int64
+          minimum: 1
+        timeoutMs:
+          type: integer
+          minimum: 100
+          maximum: 30000
+          default: 5000
+        memoryMb:
+          type: integer
+          minimum: 32
+          maximum: 512
+          default: 256
+        cpuLimit:
+          type: number
+          format: double
+          minimum: 0.1
+          maximum: 2.0
+          default: 1.0
+        iterations:
+          type: integer
+          minimum: 1
+          maximum: 10
+          default: 7
+        warmupIterations:
+          type: integer
+          minimum: 0
+          maximum: 3
+          default: 2
+    RunMetricResponse:
+      type: object
+      properties:
+        cpuTimeMs:
+          type: integer
+          format: int64
+          nullable: true
+          description: Median child-process user plus system CPU time; null when the runner cannot collect it.
+        orchestrationWallTimeMs:
+          type: integer
+          format: int64
+          description: Median Docker command wall time, including container and process startup.
+        executionWallTimeMs:
+          type: integer
+          format: int64
+          nullable: true
+          description: Median wall time measured inside the isolated container around the benchmark process; excludes Docker container startup.
+        peakMemoryMb:
+          type: number
+          format: double
+          nullable: true
+          description: Actual peak memory when measured; null in the current runner.
+        exitCode: { type: integer }
+        timedOut: { type: boolean }
+        compileWallTimeMs:
+          type: integer
+          format: int64
+          description: Docker compile-command wall time, including container startup.
+    RunArtifactResponse:
+      type: object
+      properties:
+        stdoutPreview: { type: string }
+        stderrPreview: { type: string }
+        stdoutTruncated: { type: boolean }
+        stderrTruncated: { type: boolean }
+        outputSizeBytes: { type: integer, format: int64 }
+        artifactChecksum: { type: string }
+        technicalLogSummary: { type: string }
+    RunResponse:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        status: { type: string }
+        traceId: { type: string }
+        queuedAt: { type: string }
+        startedAt: { type: string }
+        finishedAt: { type: string }
+        failureReason: { type: string }
+        metric:
+          $ref: '#/components/schemas/RunMetricResponse'
+        artifact:
+          $ref: '#/components/schemas/RunArtifactResponse'
+    RunSummaryResponse:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        status: { type: string }
+        language: { type: string }
+        algorithmId: { type: integer, format: int64 }
+        algorithmName: { type: string }
+        datasetId: { type: integer, format: int64 }
+        datasetSize: { type: integer, format: int64 }
+        queuedAt: { type: string }
+        finishedAt: { type: string }
+        cpuTimeMs: { type: integer, format: int64, nullable: true }
+        orchestrationWallTimeMs: { type: integer, format: int64 }
+        executionWallTimeMs: { type: integer, format: int64, nullable: true }
+    BenchmarkCompareRow:
+      type: object
+      properties:
+        language: { type: string }
+        avg: { type: number, format: double }
+        stddev: { type: number, format: double }
+        p50: { type: number, format: double }
+        p95: { type: number, format: double }
+        validSamples: { type: integer }
+    BenchmarkCompareResponse:
+      type: object
+      properties:
+        algorithmId: { type: integer, format: int64 }
+        datasetId: { type: integer, format: int64 }
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/BenchmarkCompareRow'
+    BenchmarkTimeseriesPoint:
+      type: object
+      properties:
+        finishedAt: { type: string }
+        orchestrationWallTimeMs: { type: integer, format: int64 }
+        executionWallTimeMs: { type: integer, format: int64, nullable: true }
+    BenchmarkTimeseriesResponse:
+      type: object
+      properties:
+        algorithmId: { type: integer, format: int64 }
+        language: { type: string }
+        points:
+          type: array
+          items:
+            $ref: '#/components/schemas/BenchmarkTimeseriesPoint'
+    BenchmarkComplexityPoint:
+      type: object
+      properties:
+        datasetId: { type: integer, format: int64 }
+        datasetSize: { type: integer, format: int64 }
+        avg: { type: number, format: double }
+        stddev: { type: number, format: double }
+        p50: { type: number, format: double }
+        p95: { type: number, format: double }
+        validSamples: { type: integer }
+    BenchmarkComplexitySeries:
+      type: object
+      properties:
+        language: { type: string }
+        points:
+          type: array
+          items:
+            $ref: '#/components/schemas/BenchmarkComplexityPoint'
+    BenchmarkComplexityResponse:
+      type: object
+      properties:
+        algorithmId: { type: integer, format: int64 }
+        metric: { type: string }
+        series:
+          type: array
+          items:
+            $ref: '#/components/schemas/BenchmarkComplexitySeries'
+  securitySchemes:
+    jwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - jwt: []

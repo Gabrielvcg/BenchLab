@@ -1,0 +1,11 @@
+# Pre-production profile
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/benchLab
+    username: benchLab
+    password:
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: benchlab
+    password: ${SPRING_RABBITMQ_PASSWORD:}

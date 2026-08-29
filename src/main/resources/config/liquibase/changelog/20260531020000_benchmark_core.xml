@@ -1,0 +1,85 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20260531020000-1" author="codex">
+        <createTable tableName="algorithm">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="category" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="complexity_declared" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="dataset">
+            <column name="id" type="bigint" autoIncrement="true"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="type" type="varchar(255)"><constraints nullable="false"/></column>
+            <column name="size_value" type="bigint"><constraints nullable="false"/></column>
+            <column name="seed" type="bigint"/>
+            <column name="checksum" type="varchar(255)"><constraints nullable="false"/></column>
+            <column name="dataset_version" type="varchar(100)"><constraints nullable="false"/></column>
+        </createTable>
+
+        <createTable tableName="implementation">
+            <column name="id" type="bigint" autoIncrement="true"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="algorithm_id" type="bigint"><constraints nullable="false"/></column>
+            <column name="language" type="varchar(50)"><constraints nullable="false"/></column>
+            <column name="source_code" type="clob"><constraints nullable="false"/></column>
+            <column name="compile_config" type="varchar(1000)"/>
+            <column name="runtime_config" type="varchar(1000)"/>
+            <column name="implementation_hash" type="varchar(255)"><constraints nullable="false"/></column>
+        </createTable>
+
+        <createTable tableName="benchmark_run">
+            <column name="id" type="bigint" autoIncrement="true"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="implementation_id" type="bigint"><constraints nullable="false"/></column>
+            <column name="dataset_id" type="bigint"><constraints nullable="false"/></column>
+            <column name="status" type="varchar(50)"><constraints nullable="false"/></column>
+            <column name="trace_id" type="varchar(100)"><constraints nullable="false" unique="true"/></column>
+            <column name="queued_at" type="timestamp"><constraints nullable="false"/></column>
+            <column name="started_at" type="timestamp"/>
+            <column name="finished_at" type="timestamp"/>
+            <column name="runner_host" type="varchar(255)"/>
+            <column name="failure_reason" type="varchar(2000)"/>
+        </createTable>
+
+        <createTable tableName="run_metric">
+            <column name="id" type="bigint" autoIncrement="true"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="benchmark_run_id" type="bigint"><constraints nullable="false" unique="true"/></column>
+            <column name="cpu_time_ms" type="bigint"/>
+            <column name="wall_time_ms" type="bigint"/>
+            <column name="peak_memory_mb" type="double precision"/>
+            <column name="exit_code" type="int"/>
+            <column name="timed_out" type="boolean"/>
+            <column name="compile_ms" type="bigint"/>
+        </createTable>
+
+        <createTable tableName="run_artifact">
+            <column name="id" type="bigint" autoIncrement="true"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="benchmark_run_id" type="bigint"><constraints nullable="false" unique="true"/></column>
+            <column name="stdout_truncated" type="clob"/>
+            <column name="stderr_truncated" type="clob"/>
+            <column name="output_size_bytes" type="bigint"/>
+            <column name="artifact_checksum" type="varchar(255)"/>
+            <column name="technical_log_summary" type="varchar(2000)"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="implementation" baseColumnNames="algorithm_id" referencedTableName="algorithm" referencedColumnNames="id" constraintName="fk_implementation_algorithm"/>
+        <addForeignKeyConstraint baseTableName="benchmark_run" baseColumnNames="implementation_id" referencedTableName="implementation" referencedColumnNames="id" constraintName="fk_benchmark_run_implementation"/>
+        <addForeignKeyConstraint baseTableName="benchmark_run" baseColumnNames="dataset_id" referencedTableName="dataset" referencedColumnNames="id" constraintName="fk_benchmark_run_dataset"/>
+        <addForeignKeyConstraint baseTableName="run_metric" baseColumnNames="benchmark_run_id" referencedTableName="benchmark_run" referencedColumnNames="id" constraintName="fk_run_metric_benchmark_run"/>
+        <addForeignKeyConstraint baseTableName="run_artifact" baseColumnNames="benchmark_run_id" referencedTableName="benchmark_run" referencedColumnNames="id" constraintName="fk_run_artifact_benchmark_run"/>
+    </changeSet>
+</databaseChangeLog>

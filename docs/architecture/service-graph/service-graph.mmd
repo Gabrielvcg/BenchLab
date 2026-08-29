@@ -1,0 +1,252 @@
+flowchart LR
+  n14["ApplicationProperties"]
+  n24["BenchLabConfiguration"]
+  n44["CacheConfiguration"]
+  n85["Liquibase"]
+  n103["ProductionAdminPasswordConfiguration"]
+  n114["SecurityJwtConfiguration"]
+  n126["WebConfigurer"]
+  n127["WebConfigurerTest"]
+  n1["AccountResource"]
+  n9["AccountResourceException"]
+  n10["AccountResourceIT"]
+  n16["AuthenticateController"]
+  n19["AuthenticateControllerIT"]
+  n21["AuthorityResource"]
+  n22["AuthorityResourceIT"]
+  n26["BenchmarkResource"]
+  n39["BenchmarkResourceIT"]
+  n84["JWTToken"]
+  n104["PublicUserResource"]
+  n106["PublicUserResourceIT"]
+  n122["UserResource"]
+  n123["UserResourceIT"]
+  n120[("UserMapperTest")]
+  n86[("LiquibaseConfiguration")]
+  n90[("Object")]
+  n117[("T")]
+  n118[("TestUtil")]
+  n62(["GET /api/account"])
+  n63(["GET /api/activate"])
+  n64(["GET /api/algorithms"])
+  n65(["GET /api/authenticate"])
+  n66(["GET /api/benchmarks/compare"])
+  n67(["GET /api/benchmarks/complexity"])
+  n68(["GET /api/benchmarks/timeseries"])
+  n69(["GET /api/datasets"])
+  n70(["GET /api/exception-translator-test/access-denied"])
+  n71(["GET /api/exception-translator-test/concurrency-failure"])
+  n72(["GET /api/exception-translator-test/internal-server-error"])
+  n73(["GET /api/exception-translator-test/missing-servlet-request-parameter"])
+  n74(["GET /api/exception-translator-test/missing-servlet-request-part"])
+  n75(["GET /api/exception-translator-test/response-status"])
+  n76(["GET /api/exception-translator-test/unauthorized"])
+  n77(["GET /api/runs"])
+  n78(["GET /api/runs/{id}"])
+  n79(["GET /api/test-cors"])
+  n80(["GET /api/users"])
+  n81(["GET /test/test-cors"])
+  n91(["POST /api/account"])
+  n92(["POST /api/account/change-password"])
+  n93(["POST /api/account/reset-password/finish"])
+  n94(["POST /api/account/reset-password/init"])
+  n95(["POST /api/algorithms"])
+  n96(["POST /api/authenticate"])
+  n97(["POST /api/datasets"])
+  n98(["POST /api/exception-translator-test/method-argument"])
+  n99(["POST /api/implementations"])
+  n100(["POST /api/internal/runs/{id}/result"])
+  n101(["POST /api/register"])
+  n102(["POST /api/runs"])
+  n12[["AlgorithmTemplate"]]
+  n15[["AuthResponse"]]
+  n45[["ChartHoverPoint"]]
+  n46[["ChartScale"]]
+  n47[["ComplexityPoint"]]
+  n48[["ComplexityResponse"]]
+  n49[["ComplexitySeries"]]
+  n89[["Main"]]
+  n112[["RunSummary"]]
+  n2["AccountResource.activateAccount"]
+  n3["AccountResource.changePassword"]
+  n4["AccountResource.finishPasswordReset"]
+  n5["AccountResource.getAccount"]
+  n6["AccountResource.registerAccount"]
+  n7["AccountResource.requestPasswordReset"]
+  n8["AccountResource.saveAccount"]
+  n13["AlgorithmsApiDelegateHandler"]
+  n17["AuthenticateController.authorize"]
+  n18["AuthenticateController.isAuthenticated"]
+  n23["BenchLabApp"]
+  n27["BenchmarkResource.compare"]
+  n28["BenchmarkResource.complexity"]
+  n29["BenchmarkResource.createAlgorithm"]
+  n30["BenchmarkResource.createDataset"]
+  n31["BenchmarkResource.createImplementation"]
+  n32["BenchmarkResource.createRun"]
+  n33["BenchmarkResource.getRun"]
+  n34["BenchmarkResource.listAlgorithms"]
+  n35["BenchmarkResource.listDatasets"]
+  n36["BenchmarkResource.listRecentRuns"]
+  n37["BenchmarkResource.registerResult"]
+  n38["BenchmarkResource.timeseries"]
+  n43["BenchmarksApiDelegateHandler"]
+  n51["DatasetsApiDelegateHandler"]
+  n54["ExceptionTranslatorTestController.accessdenied"]
+  n55["ExceptionTranslatorTestController.concurrencyFailure"]
+  n56["ExceptionTranslatorTestController.exceptionWithResponseStatus"]
+  n57["ExceptionTranslatorTestController.internalServerError"]
+  n58["ExceptionTranslatorTestController.methodArgument"]
+  n59["ExceptionTranslatorTestController.missingServletRequestParameterException"]
+  n60["ExceptionTranslatorTestController.missingServletRequestPartException"]
+  n61["ExceptionTranslatorTestController.unauthorized"]
+  n83["ImplementationsApiDelegateHandler"]
+  n105["PublicUserResource.getAllPublicUsers"]
+  n113["RunsApiDelegateHandler"]
+  n128["WebConfigurerTestController.testCorsOnApiPath"]
+  n129["WebConfigurerTestController.testCorsOnOtherPath"]
+  n25[("BenchLabProperties")]
+  n107[("Queue")]
+  n108[("RabbitMqConfiguration")]
+  n110[("RunEventPublisher")]
+  n130[("Worker")]
+  n11[("AlgorithmRepository")]
+  n20[("AuthorityRepository")]
+  n40[("BenchmarkRunRepository")]
+  n50[("DatasetRepository")]
+  n82[("ImplementationRepository")]
+  n109[("RunArtifactRepository")]
+  n111[("RunMetricRepository")]
+  n121[("UserRepository")]
+  n41{{"BenchmarkService"}}
+  n42{{"BenchmarkServiceImpl"}}
+  n52{{"DomainUserDetailsService"}}
+  n53{{"DomainUserDetailsServiceIT"}}
+  n87{{"MailService"}}
+  n88{{"MailServiceIT"}}
+  n115{{"SecurityMetersService"}}
+  n116{{"SecurityMetersServiceTests"}}
+  n119{{"UserMapper"}}
+  n124{{"UserService"}}
+  n125{{"UserServiceIT"}}
+  n101 -- routes to --> n6
+  n63 -- routes to --> n2
+  n62 -- routes to --> n5
+  n91 -- routes to --> n8
+  n92 -- routes to --> n3
+  n94 -- routes to --> n7
+  n93 -- routes to --> n4
+  n96 -- routes to --> n17
+  n65 -- routes to --> n18
+  n80 -- routes to --> n105
+  n99 -- routes to --> n31
+  n95 -- routes to --> n29
+  n64 -- routes to --> n34
+  n97 -- routes to --> n30
+  n69 -- routes to --> n35
+  n102 -- routes to --> n32
+  n78 -- routes to --> n33
+  n77 -- routes to --> n36
+  n100 -- routes to --> n37
+  n66 -- routes to --> n27
+  n68 -- routes to --> n38
+  n67 -- routes to --> n28
+  n79 -- routes to --> n128
+  n81 -- routes to --> n129
+  n71 -- routes to --> n55
+  n98 -- routes to --> n58
+  n74 -- routes to --> n60
+  n73 -- routes to --> n59
+  n70 -- routes to --> n54
+  n76 -- routes to --> n61
+  n75 -- routes to --> n56
+  n72 -- routes to --> n57
+  n47 -- reads from --> n90
+  n47 -- reads from --> n117
+  n49 -- reads from --> n90
+  n49 -- reads from --> n117
+  n48 -- reads from --> n90
+  n48 -- reads from --> n117
+  n46 -- reads from --> n90
+  n46 -- reads from --> n117
+  n45 -- reads from --> n90
+  n45 -- reads from --> n117
+  n112 -- reads from --> n90
+  n112 -- reads from --> n117
+  n15 -- reads from --> n90
+  n15 -- reads from --> n117
+  n12 -- reads from --> n90
+  n12 -- reads from --> n117
+  n89 -- reads from --> n90
+  n89 -- reads from --> n117
+  n23 -- uses client --> n89
+  n23 -- configured by --> n14
+  n24 -- depends on --> n25
+  n44 -- reads from --> n121
+  n44 -- reads from --> n90
+  n86 -- configured by --> n14
+  n86 -- configured by --> n85
+  n103 -- reads from --> n121
+  n108 -- depends on --> n25
+  n108 -- depends on --> n107
+  n114 -- depends on --> n115
+  n126 -- reads from --> n90
+  n52 -- reads from --> n121
+  n52 -- reads from --> n90
+  n124 -- reads from --> n20
+  n124 -- reads from --> n121
+  n42 -- reads from --> n11
+  n42 -- reads from --> n40
+  n42 -- reads from --> n50
+  n42 -- reads from --> n82
+  n42 -- reads from --> n109
+  n42 -- reads from --> n111
+  n42 -- depends on --> n41
+  n42 -- depends on --> n110
+  n110 -- depends on --> n25
+  n13 -- depends on --> n41
+  n43 -- depends on --> n41
+  n51 -- depends on --> n41
+  n83 -- depends on --> n41
+  n113 -- depends on --> n41
+  n1 -- reads from --> n121
+  n1 -- depends on --> n87
+  n1 -- depends on --> n124
+  n9 -- reads from --> n121
+  n9 -- depends on --> n87
+  n9 -- depends on --> n124
+  n16 -- calls --> n52
+  n16 -- reads from --> n90
+  n84 -- calls --> n52
+  n84 -- reads from --> n90
+  n21 -- reads from --> n20
+  n104 -- depends on --> n124
+  n122 -- reads from --> n121
+  n122 -- depends on --> n87
+  n122 -- depends on --> n124
+  n26 -- depends on --> n25
+  n26 -- depends on --> n130
+  n26 -- depends on --> n41
+  n127 -- configured by --> n126
+  n116 -- depends on --> n115
+  n53 -- reads from --> n121
+  n53 -- depends on --> n52
+  n53 -- depends on --> n124
+  n88 -- depends on --> n87
+  n125 -- reads from --> n121
+  n125 -- depends on --> n124
+  n120 -- depends on --> n119
+  n10 -- reads from --> n20
+  n10 -- reads from --> n121
+  n10 -- depends on --> n124
+  n19 -- reads from --> n121
+  n22 -- reads from --> n20
+  n106 -- reads from --> n121
+  n106 -- depends on --> n124
+  n123 -- reads from --> n121
+  n123 -- depends on --> n124
+  n123 -- depends on --> n119
+  n123 -- reads from --> n118
+  n39 -- depends on --> n130
+  n39 -- reads from --> n40
+  note["Mermaid overview truncated; service-graph.json is the source of truth (144 edges)."]

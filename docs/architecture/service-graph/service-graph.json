@@ -1,0 +1,3521 @@
+{
+  "metadata": {
+    "generated_at": "2026-06-22T19:11:08.452650+00:00",
+    "root": ".",
+    "analyzer_version": "0.1.0"
+  },
+  "nodes": [
+    {
+      "id": "AbstractAuditingEntity",
+      "type": "model",
+      "label": "AbstractAuditingEntity",
+      "file": "src/main/java/com/vacaro/benchlab/domain/AbstractAuditingEntity.java",
+      "line": 22,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/domain/AbstractAuditingEntity.java:22"]
+    },
+    {
+      "id": "AccountResource",
+      "type": "controller",
+      "label": "AccountResource",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java",
+      "line": 24,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:24"]
+    },
+    {
+      "id": "AccountResource.activateAccount",
+      "type": "handler",
+      "label": "AccountResource.activateAccount",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java",
+      "line": 73,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:73"]
+    },
+    {
+      "id": "AccountResource.changePassword",
+      "type": "handler",
+      "label": "AccountResource.changePassword",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java",
+      "line": 129,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:129"]
+    },
+    {
+      "id": "AccountResource.finishPasswordReset",
+      "type": "handler",
+      "label": "AccountResource.finishPasswordReset",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java",
+      "line": 161,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:161"]
+    },
+    {
+      "id": "AccountResource.getAccount",
+      "type": "handler",
+      "label": "AccountResource.getAccount",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java",
+      "line": 87,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:87"]
+    },
+    {
+      "id": "AccountResource.registerAccount",
+      "type": "handler",
+      "label": "AccountResource.registerAccount",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java",
+      "line": 57,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:57"]
+    },
+    {
+      "id": "AccountResource.requestPasswordReset",
+      "type": "handler",
+      "label": "AccountResource.requestPasswordReset",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java",
+      "line": 142,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:142"]
+    },
+    {
+      "id": "AccountResource.saveAccount",
+      "type": "handler",
+      "label": "AccountResource.saveAccount",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java",
+      "line": 102,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:102"]
+    },
+    {
+      "id": "AccountResourceException",
+      "type": "controller",
+      "label": "AccountResourceException",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java",
+      "line": 24,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:24"]
+    },
+    {
+      "id": "AccountResourceIT",
+      "type": "controller",
+      "label": "AccountResourceIT",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/AccountResourceIT.java",
+      "line": 41,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/AccountResourceIT.java:41"]
+    },
+    {
+      "id": "AdminUserDTO",
+      "type": "model",
+      "label": "AdminUserDTO",
+      "file": "src/main/java/com/vacaro/benchlab/service/dto/AdminUserDTO.java",
+      "line": 15,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/dto/AdminUserDTO.java:15"]
+    },
+    {
+      "id": "Algorithm",
+      "type": "model",
+      "label": "Algorithm",
+      "file": "src/main/java/com/vacaro/benchlab/domain/Algorithm.java",
+      "line": 12,
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/domain/Algorithm.java:12"]
+    },
+    {
+      "id": "AlgorithmRepository",
+      "type": "repository",
+      "label": "AlgorithmRepository",
+      "file": "src/main/java/com/vacaro/benchlab/repository/AlgorithmRepository.java",
+      "line": 5,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/repository/AlgorithmRepository.java:5"]
+    },
+    {
+      "id": "AlgorithmResponse",
+      "type": "unknown",
+      "label": "AlgorithmResponse",
+      "file": "src/main/java/com/vacaro/benchlab/service/dto/benchmark/AlgorithmResponse.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/dto/benchmark/AlgorithmResponse.java:3"]
+    },
+    {
+      "id": "AlgorithmTemplate",
+      "type": "external_client",
+      "label": "AlgorithmTemplate",
+      "file": "benchlab-web/src/main.tsx",
+      "line": 86,
+      "confidence": "high",
+      "evidence": ["benchlab-web/src/main.tsx:86"]
+    },
+    {
+      "id": "AlgorithmsApiDelegateHandler",
+      "type": "handler",
+      "label": "AlgorithmsApiDelegateHandler",
+      "file": "src/main/java/com/vacaro/benchlab/web/api/AlgorithmsApiDelegateHandler.java",
+      "line": 11,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/api/AlgorithmsApiDelegateHandler.java:11"]
+    },
+    {
+      "id": "ApplicationProperties",
+      "type": "config",
+      "label": "ApplicationProperties",
+      "file": "src/main/java/com/vacaro/benchlab/config/ApplicationProperties.java",
+      "line": 11,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/ApplicationProperties.java:11"]
+    },
+    {
+      "id": "ApplicationWebXml",
+      "type": "unknown",
+      "label": "ApplicationWebXml",
+      "file": "src/main/java/com/vacaro/benchlab/ApplicationWebXml.java",
+      "line": 11,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/ApplicationWebXml.java:11"]
+    },
+    {
+      "id": "AssertUtils",
+      "type": "unknown",
+      "label": "AssertUtils",
+      "file": "src/test/java/com/vacaro/benchlab/domain/AssertUtils.java",
+      "line": 8,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/domain/AssertUtils.java:8"]
+    },
+    {
+      "id": "AsyncConfiguration",
+      "type": "queue",
+      "label": "AsyncConfiguration",
+      "file": "src/main/java/com/vacaro/benchlab/config/AsyncConfiguration.java",
+      "line": 39,
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/AsyncConfiguration.java:39"]
+    },
+    {
+      "id": "AsyncSyncConfiguration",
+      "type": "config",
+      "label": "AsyncSyncConfiguration",
+      "file": "src/test/java/com/vacaro/benchlab/config/AsyncSyncConfiguration.java",
+      "line": 8,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/config/AsyncSyncConfiguration.java:8"]
+    },
+    {
+      "id": "AuthResponse",
+      "type": "external_client",
+      "label": "AuthResponse",
+      "file": "benchlab-web/src/main.tsx",
+      "line": 86,
+      "confidence": "high",
+      "evidence": ["benchlab-web/src/main.tsx:86"]
+    },
+    {
+      "id": "AuthenticateController",
+      "type": "controller",
+      "label": "AuthenticateController",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/AuthenticateController.java",
+      "line": 35,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AuthenticateController.java:35"]
+    },
+    {
+      "id": "AuthenticateController.authorize",
+      "type": "handler",
+      "label": "AuthenticateController.authorize",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/AuthenticateController.java",
+      "line": 56,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AuthenticateController.java:56"]
+    },
+    {
+      "id": "AuthenticateController.isAuthenticated",
+      "type": "handler",
+      "label": "AuthenticateController.isAuthenticated",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/AuthenticateController.java",
+      "line": 77,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AuthenticateController.java:77"]
+    },
+    {
+      "id": "AuthenticateControllerIT",
+      "type": "controller",
+      "label": "AuthenticateControllerIT",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/AuthenticateControllerIT.java",
+      "line": 30,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/AuthenticateControllerIT.java:30"]
+    },
+    {
+      "id": "AuthenticationIntegrationTest",
+      "type": "unknown",
+      "label": "AuthenticationIntegrationTest",
+      "file": "src/test/java/com/vacaro/benchlab/security/jwt/AuthenticationIntegrationTest.java",
+      "line": 32,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/security/jwt/AuthenticationIntegrationTest.java:32"]
+    },
+    {
+      "id": "AuthoritiesConstants",
+      "type": "unknown",
+      "label": "AuthoritiesConstants",
+      "file": "src/main/java/com/vacaro/benchlab/security/AuthoritiesConstants.java",
+      "line": 6,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/security/AuthoritiesConstants.java:6"]
+    },
+    {
+      "id": "Authority",
+      "type": "model",
+      "label": "Authority",
+      "file": "src/main/java/com/vacaro/benchlab/domain/Authority.java",
+      "line": 13,
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/domain/Authority.java:13"]
+    },
+    {
+      "id": "AuthorityAsserts",
+      "type": "unknown",
+      "label": "AuthorityAsserts",
+      "file": "src/test/java/com/vacaro/benchlab/domain/AuthorityAsserts.java",
+      "line": 5,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/domain/AuthorityAsserts.java:5"]
+    },
+    {
+      "id": "AuthorityRepository",
+      "type": "repository",
+      "label": "AuthorityRepository",
+      "file": "src/main/java/com/vacaro/benchlab/repository/AuthorityRepository.java",
+      "line": 11,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/repository/AuthorityRepository.java:11"]
+    },
+    {
+      "id": "AuthorityResource",
+      "type": "controller",
+      "label": "AuthorityResource",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/AuthorityResource.java",
+      "line": 24,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AuthorityResource.java:24"]
+    },
+    {
+      "id": "AuthorityResourceIT",
+      "type": "controller",
+      "label": "AuthorityResourceIT",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/AuthorityResourceIT.java",
+      "line": 31,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/AuthorityResourceIT.java:31"]
+    },
+    {
+      "id": "AuthorityTest",
+      "type": "unknown",
+      "label": "AuthorityTest",
+      "file": "src/test/java/com/vacaro/benchlab/domain/AuthorityTest.java",
+      "line": 9,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/domain/AuthorityTest.java:9"]
+    },
+    {
+      "id": "AuthorityTestSamples",
+      "type": "unknown",
+      "label": "AuthorityTestSamples",
+      "file": "src/test/java/com/vacaro/benchlab/domain/AuthorityTestSamples.java",
+      "line": 5,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/domain/AuthorityTestSamples.java:5"]
+    },
+    {
+      "id": "BadRequestAlertException",
+      "type": "unknown",
+      "label": "BadRequestAlertException",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/errors/BadRequestAlertException.java",
+      "line": 10,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/errors/BadRequestAlertException.java:10"]
+    },
+    {
+      "id": "BenchLabApp",
+      "type": "handler",
+      "label": "BenchLabApp",
+      "file": "src/main/java/com/vacaro/benchlab/BenchLabApp.java",
+      "line": 70,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/BenchLabApp.java:70"]
+    },
+    {
+      "id": "BenchLabConfiguration",
+      "type": "config",
+      "label": "BenchLabConfiguration",
+      "file": "src/main/java/com/vacaro/benchlab/config/BenchLabConfiguration.java",
+      "line": 6,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/BenchLabConfiguration.java:6"]
+    },
+    {
+      "id": "BenchLabProperties",
+      "type": "queue",
+      "label": "BenchLabProperties",
+      "file": "src/main/java/com/vacaro/benchlab/config/BenchLabProperties.java",
+      "line": 8,
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/BenchLabProperties.java:8"]
+    },
+    {
+      "id": "BenchmarkCompareResponse",
+      "type": "unknown",
+      "label": "BenchmarkCompareResponse",
+      "file": "src/main/java/com/vacaro/benchlab/service/dto/benchmark/BenchmarkCompareResponse.java",
+      "line": 5,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/dto/benchmark/BenchmarkCompareResponse.java:5"]
+    },
+    {
+      "id": "BenchmarkCompareRow",
+      "type": "unknown",
+      "label": "BenchmarkCompareRow",
+      "file": "src/main/java/com/vacaro/benchlab/service/dto/benchmark/BenchmarkCompareRow.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/dto/benchmark/BenchmarkCompareRow.java:3"]
+    },
+    {
+      "id": "BenchmarkComplexityPoint",
+      "type": "unknown",
+      "label": "BenchmarkComplexityPoint",
+      "file": "src/main/java/com/vacaro/benchlab/service/dto/benchmark/BenchmarkComplexityPoint.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/dto/benchmark/BenchmarkComplexityPoint.java:3"]
+    },
+    {
+      "id": "BenchmarkComplexityResponse",
+      "type": "unknown",
+      "label": "BenchmarkComplexityResponse",
+      "file": "src/main/java/com/vacaro/benchlab/service/dto/benchmark/BenchmarkComplexityResponse.java",
+      "line": 5,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/dto/benchmark/BenchmarkComplexityResponse.java:5"]
+    },
+    {
+      "id": "BenchmarkComplexitySeries",
+      "type": "unknown",
+      "label": "BenchmarkComplexitySeries",
+      "file": "src/main/java/com/vacaro/benchlab/service/dto/benchmark/BenchmarkComplexitySeries.java",
+      "line": 5,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/dto/benchmark/BenchmarkComplexitySeries.java:5"]
+    },
+    {
+      "id": "BenchmarkResource",
+      "type": "controller",
+      "label": "BenchmarkResource",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 30,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:30"]
+    },
+    {
+      "id": "BenchmarkResource.compare",
+      "type": "handler",
+      "label": "BenchmarkResource.compare",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 95,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:95"]
+    },
+    {
+      "id": "BenchmarkResource.complexity",
+      "type": "handler",
+      "label": "BenchmarkResource.complexity",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 105,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:105"]
+    },
+    {
+      "id": "BenchmarkResource.createAlgorithm",
+      "type": "handler",
+      "label": "BenchmarkResource.createAlgorithm",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 47,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:47"]
+    },
+    {
+      "id": "BenchmarkResource.createDataset",
+      "type": "handler",
+      "label": "BenchmarkResource.createDataset",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 57,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:57"]
+    },
+    {
+      "id": "BenchmarkResource.createImplementation",
+      "type": "handler",
+      "label": "BenchmarkResource.createImplementation",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 42,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:42"]
+    },
+    {
+      "id": "BenchmarkResource.createRun",
+      "type": "handler",
+      "label": "BenchmarkResource.createRun",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 67,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:67"]
+    },
+    {
+      "id": "BenchmarkResource.getRun",
+      "type": "handler",
+      "label": "BenchmarkResource.getRun",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 72,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:72"]
+    },
+    {
+      "id": "BenchmarkResource.listAlgorithms",
+      "type": "handler",
+      "label": "BenchmarkResource.listAlgorithms",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 52,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:52"]
+    },
+    {
+      "id": "BenchmarkResource.listDatasets",
+      "type": "handler",
+      "label": "BenchmarkResource.listDatasets",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 62,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:62"]
+    },
+    {
+      "id": "BenchmarkResource.listRecentRuns",
+      "type": "handler",
+      "label": "BenchmarkResource.listRecentRuns",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 77,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:77"]
+    },
+    {
+      "id": "BenchmarkResource.registerResult",
+      "type": "handler",
+      "label": "BenchmarkResource.registerResult",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 82,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:82"]
+    },
+    {
+      "id": "BenchmarkResource.timeseries",
+      "type": "handler",
+      "label": "BenchmarkResource.timeseries",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 100,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:100"]
+    },
+    {
+      "id": "BenchmarkResourceIT",
+      "type": "controller",
+      "label": "BenchmarkResourceIT",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResourceIT.java",
+      "line": 29,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResourceIT.java:29"]
+    },
+    {
+      "id": "BenchmarkRun",
+      "type": "model",
+      "label": "BenchmarkRun",
+      "file": "src/main/java/com/vacaro/benchlab/domain/BenchmarkRun.java",
+      "line": 16,
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/domain/BenchmarkRun.java:16"]
+    },
+    {
+      "id": "BenchmarkRunRepository",
+      "type": "repository",
+      "label": "BenchmarkRunRepository",
+      "file": "src/main/java/com/vacaro/benchlab/repository/BenchmarkRunRepository.java",
+      "line": 6,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/repository/BenchmarkRunRepository.java:6"]
+    },
+    {
+      "id": "BenchmarkRunStatus",
+      "type": "unknown",
+      "label": "BenchmarkRunStatus",
+      "file": "src/main/java/com/vacaro/benchlab/domain/BenchmarkRunStatus.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/domain/BenchmarkRunStatus.java:3"]
+    },
+    {
+      "id": "BenchmarkService",
+      "type": "service",
+      "label": "BenchmarkService",
+      "file": "src/main/java/com/vacaro/benchlab/service/BenchmarkService.java",
+      "line": 18,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/BenchmarkService.java:18"]
+    },
+    {
+      "id": "BenchmarkServiceImpl",
+      "type": "service",
+      "label": "BenchmarkServiceImpl",
+      "file": "src/main/java/com/vacaro/benchlab/service/impl/BenchmarkServiceImpl.java",
+      "line": 55,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/impl/BenchmarkServiceImpl.java:55"]
+    },
+    {
+      "id": "BenchmarkTimeseriesPoint",
+      "type": "unknown",
+      "label": "BenchmarkTimeseriesPoint",
+      "file": "src/main/java/com/vacaro/benchlab/service/dto/benchmark/BenchmarkTimeseriesPoint.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/dto/benchmark/BenchmarkTimeseriesPoint.java:3"]
+    },
+    {
+      "id": "BenchmarkTimeseriesResponse",
+      "type": "unknown",
+      "label": "BenchmarkTimeseriesResponse",
+      "file": "src/main/java/com/vacaro/benchlab/service/dto/benchmark/BenchmarkTimeseriesResponse.java",
+      "line": 5,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/dto/benchmark/BenchmarkTimeseriesResponse.java:5"]
+    },
+    {
+      "id": "BenchmarksApiDelegateHandler",
+      "type": "handler",
+      "label": "BenchmarksApiDelegateHandler",
+      "file": "src/main/java/com/vacaro/benchlab/web/api/BenchmarksApiDelegateHandler.java",
+      "line": 16,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/api/BenchmarksApiDelegateHandler.java:16"]
+    },
+    {
+      "id": "CRLFLogConverter",
+      "type": "unknown",
+      "label": "CRLFLogConverter",
+      "file": "src/main/java/com/vacaro/benchlab/config/CRLFLogConverter.java",
+      "line": 23,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/CRLFLogConverter.java:23"]
+    },
+    {
+      "id": "CRLFLogConverterTest",
+      "type": "handler",
+      "label": "CRLFLogConverterTest",
+      "file": "src/test/java/com/vacaro/benchlab/config/CRLFLogConverterTest.java",
+      "line": 78,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/config/CRLFLogConverterTest.java:78"]
+    },
+    {
+      "id": "CacheConfiguration",
+      "type": "config",
+      "label": "CacheConfiguration",
+      "file": "src/main/java/com/vacaro/benchlab/config/CacheConfiguration.java",
+      "line": 25,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/CacheConfiguration.java:25"]
+    },
+    {
+      "id": "ChartHoverPoint",
+      "type": "external_client",
+      "label": "ChartHoverPoint",
+      "file": "benchlab-web/src/main.tsx",
+      "line": 86,
+      "confidence": "high",
+      "evidence": ["benchlab-web/src/main.tsx:86"]
+    },
+    {
+      "id": "ChartScale",
+      "type": "external_client",
+      "label": "ChartScale",
+      "file": "benchlab-web/src/main.tsx",
+      "line": 86,
+      "confidence": "high",
+      "evidence": ["benchlab-web/src/main.tsx:86"]
+    },
+    {
+      "id": "ComplexityPoint",
+      "type": "external_client",
+      "label": "ComplexityPoint",
+      "file": "benchlab-web/src/main.tsx",
+      "line": 86,
+      "confidence": "high",
+      "evidence": ["benchlab-web/src/main.tsx:86"]
+    },
+    {
+      "id": "ComplexityResponse",
+      "type": "external_client",
+      "label": "ComplexityResponse",
+      "file": "benchlab-web/src/main.tsx",
+      "line": 86,
+      "confidence": "high",
+      "evidence": ["benchlab-web/src/main.tsx:86"]
+    },
+    {
+      "id": "ComplexitySeries",
+      "type": "external_client",
+      "label": "ComplexitySeries",
+      "file": "benchlab-web/src/main.tsx",
+      "line": 86,
+      "confidence": "high",
+      "evidence": ["benchlab-web/src/main.tsx:86"]
+    },
+    {
+      "id": "Constants",
+      "type": "unknown",
+      "label": "Constants",
+      "file": "src/main/java/com/vacaro/benchlab/config/Constants.java",
+      "line": 6,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/Constants.java:6"]
+    },
+    {
+      "id": "CreateAlgorithmRequest",
+      "type": "unknown",
+      "label": "CreateAlgorithmRequest",
+      "file": "src/main/java/com/vacaro/benchlab/service/dto/benchmark/CreateAlgorithmRequest.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/dto/benchmark/CreateAlgorithmRequest.java:3"]
+    },
+    {
+      "id": "CreateDatasetRequest",
+      "type": "unknown",
+      "label": "CreateDatasetRequest",
+      "file": "src/main/java/com/vacaro/benchlab/service/dto/benchmark/CreateDatasetRequest.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/dto/benchmark/CreateDatasetRequest.java:3"]
+    },
+    {
+      "id": "CreateImplementationRequest",
+      "type": "unknown",
+      "label": "CreateImplementationRequest",
+      "file": "src/main/java/com/vacaro/benchlab/service/dto/benchmark/CreateImplementationRequest.java",
+      "line": 5,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/dto/benchmark/CreateImplementationRequest.java:5"]
+    },
+    {
+      "id": "CreateRunRequest",
+      "type": "unknown",
+      "label": "CreateRunRequest",
+      "file": "src/main/java/com/vacaro/benchlab/service/dto/benchmark/CreateRunRequest.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/dto/benchmark/CreateRunRequest.java:3"]
+    },
+    {
+      "id": "DatabaseConfiguration",
+      "type": "database",
+      "label": "DatabaseConfiguration",
+      "file": "src/main/java/com/vacaro/benchlab/config/DatabaseConfiguration.java",
+      "line": 12,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/DatabaseConfiguration.java:12"]
+    },
+    {
+      "id": "Dataset",
+      "type": "model",
+      "label": "Dataset",
+      "file": "src/main/java/com/vacaro/benchlab/domain/Dataset.java",
+      "line": 12,
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/domain/Dataset.java:12"]
+    },
+    {
+      "id": "DatasetRepository",
+      "type": "repository",
+      "label": "DatasetRepository",
+      "file": "src/main/java/com/vacaro/benchlab/repository/DatasetRepository.java",
+      "line": 4,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/repository/DatasetRepository.java:4"]
+    },
+    {
+      "id": "DatasetResponse",
+      "type": "unknown",
+      "label": "DatasetResponse",
+      "file": "src/main/java/com/vacaro/benchlab/service/dto/benchmark/DatasetResponse.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/dto/benchmark/DatasetResponse.java:3"]
+    },
+    {
+      "id": "DatasetsApiDelegateHandler",
+      "type": "handler",
+      "label": "DatasetsApiDelegateHandler",
+      "file": "src/main/java/com/vacaro/benchlab/web/api/DatasetsApiDelegateHandler.java",
+      "line": 11,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/api/DatasetsApiDelegateHandler.java:11"]
+    },
+    {
+      "id": "DateTimeFormatConfiguration",
+      "type": "config",
+      "label": "DateTimeFormatConfiguration",
+      "file": "src/main/java/com/vacaro/benchlab/config/DateTimeFormatConfiguration.java",
+      "line": 11,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/DateTimeFormatConfiguration.java:11"]
+    },
+    {
+      "id": "DateTimeWrapper",
+      "type": "model",
+      "label": "DateTimeWrapper",
+      "file": "src/test/java/com/vacaro/benchlab/repository/timezone/DateTimeWrapper.java",
+      "line": 8,
+      "confidence": "medium",
+      "evidence": ["src/test/java/com/vacaro/benchlab/repository/timezone/DateTimeWrapper.java:8"]
+    },
+    {
+      "id": "DateTimeWrapperRepository",
+      "type": "repository",
+      "label": "DateTimeWrapperRepository",
+      "file": "src/test/java/com/vacaro/benchlab/repository/timezone/DateTimeWrapperRepository.java",
+      "line": 3,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/repository/timezone/DateTimeWrapperRepository.java:3"]
+    },
+    {
+      "id": "DomainUserDetailsService",
+      "type": "service",
+      "label": "DomainUserDetailsService",
+      "file": "src/main/java/com/vacaro/benchlab/security/DomainUserDetailsService.java",
+      "line": 22,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/security/DomainUserDetailsService.java:22"]
+    },
+    {
+      "id": "DomainUserDetailsServiceIT",
+      "type": "service",
+      "label": "DomainUserDetailsServiceIT",
+      "file": "src/test/java/com/vacaro/benchlab/security/DomainUserDetailsServiceIT.java",
+      "line": 26,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/security/DomainUserDetailsServiceIT.java:26"]
+    },
+    {
+      "id": "EmailAlreadyUsedException",
+      "type": "unknown",
+      "label": "EmailAlreadyUsedException",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/errors/EmailAlreadyUsedException.java",
+      "line": 4,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/errors/EmailAlreadyUsedException.java:4"]
+    },
+    {
+      "id": "EmbeddedRedis",
+      "type": "unknown",
+      "label": "EmbeddedRedis",
+      "file": "src/test/java/com/vacaro/benchlab/config/EmbeddedRedis.java",
+      "line": 10,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/config/EmbeddedRedis.java:10"]
+    },
+    {
+      "id": "EmbeddedSQL",
+      "type": "unknown",
+      "label": "EmbeddedSQL",
+      "file": "src/test/java/com/vacaro/benchlab/config/EmbeddedSQL.java",
+      "line": 10,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/config/EmbeddedSQL.java:10"]
+    },
+    {
+      "id": "ErrorConstants",
+      "type": "unknown",
+      "label": "ErrorConstants",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/errors/ErrorConstants.java",
+      "line": 5,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/errors/ErrorConstants.java:5"]
+    },
+    {
+      "id": "ExceptionTranslator",
+      "type": "unknown",
+      "label": "ExceptionTranslator",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslator.java",
+      "line": 46,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslator.java:46"]
+    },
+    {
+      "id": "ExceptionTranslatorIT",
+      "type": "unknown",
+      "label": "ExceptionTranslatorIT",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorIT.java",
+      "line": 23,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorIT.java:23"]
+    },
+    {
+      "id": "ExceptionTranslatorTestController",
+      "type": "controller",
+      "label": "ExceptionTranslatorTestController",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java",
+      "line": 11,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:11"]
+    },
+    {
+      "id": "ExceptionTranslatorTestController.accessdenied",
+      "type": "handler",
+      "label": "ExceptionTranslatorTestController.accessdenied",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java",
+      "line": 35,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:35"]
+    },
+    {
+      "id": "ExceptionTranslatorTestController.concurrencyFailure",
+      "type": "handler",
+      "label": "ExceptionTranslatorTestController.concurrencyFailure",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java",
+      "line": 15,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:15"]
+    },
+    {
+      "id": "ExceptionTranslatorTestController.exceptionWithResponseStatus",
+      "type": "handler",
+      "label": "ExceptionTranslatorTestController.exceptionWithResponseStatus",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java",
+      "line": 45,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:45"]
+    },
+    {
+      "id": "ExceptionTranslatorTestController.internalServerError",
+      "type": "handler",
+      "label": "ExceptionTranslatorTestController.internalServerError",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java",
+      "line": 50,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:50"]
+    },
+    {
+      "id": "ExceptionTranslatorTestController.methodArgument",
+      "type": "handler",
+      "label": "ExceptionTranslatorTestController.methodArgument",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java",
+      "line": 20,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:20"]
+    },
+    {
+      "id": "ExceptionTranslatorTestController.missingServletRequestParameterException",
+      "type": "handler",
+      "label": "ExceptionTranslatorTestController.missingServletRequestParameterException",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java",
+      "line": 30,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:30"]
+    },
+    {
+      "id": "ExceptionTranslatorTestController.missingServletRequestPartException",
+      "type": "handler",
+      "label": "ExceptionTranslatorTestController.missingServletRequestPartException",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java",
+      "line": 25,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:25"]
+    },
+    {
+      "id": "ExceptionTranslatorTestController.unauthorized",
+      "type": "handler",
+      "label": "ExceptionTranslatorTestController.unauthorized",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java",
+      "line": 40,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:40"]
+    },
+    {
+      "id": "Factory",
+      "type": "unknown",
+      "label": "Factory",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/WithUnauthenticatedMockUser.java",
+      "line": 14,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/WithUnauthenticatedMockUser.java:14"]
+    },
+    {
+      "id": "FieldErrorVM",
+      "type": "model",
+      "label": "FieldErrorVM",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/errors/FieldErrorVM.java",
+      "line": 5,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/errors/FieldErrorVM.java:5"]
+    },
+    {
+      "id": "GET /api/account",
+      "type": "endpoint",
+      "label": "GET /api/account",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java",
+      "line": 87,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:87"]
+    },
+    {
+      "id": "GET /api/activate",
+      "type": "endpoint",
+      "label": "GET /api/activate",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java",
+      "line": 73,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:73"]
+    },
+    {
+      "id": "GET /api/algorithms",
+      "type": "endpoint",
+      "label": "GET /api/algorithms",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 52,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:52"]
+    },
+    {
+      "id": "GET /api/authenticate",
+      "type": "endpoint",
+      "label": "GET /api/authenticate",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/AuthenticateController.java",
+      "line": 77,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AuthenticateController.java:77"]
+    },
+    {
+      "id": "GET /api/benchmarks/compare",
+      "type": "endpoint",
+      "label": "GET /api/benchmarks/compare",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 95,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:95"]
+    },
+    {
+      "id": "GET /api/benchmarks/complexity",
+      "type": "endpoint",
+      "label": "GET /api/benchmarks/complexity",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 105,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:105"]
+    },
+    {
+      "id": "GET /api/benchmarks/timeseries",
+      "type": "endpoint",
+      "label": "GET /api/benchmarks/timeseries",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 100,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:100"]
+    },
+    {
+      "id": "GET /api/datasets",
+      "type": "endpoint",
+      "label": "GET /api/datasets",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 62,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:62"]
+    },
+    {
+      "id": "GET /api/exception-translator-test/access-denied",
+      "type": "endpoint",
+      "label": "GET /api/exception-translator-test/access-denied",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java",
+      "line": 35,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:35"]
+    },
+    {
+      "id": "GET /api/exception-translator-test/concurrency-failure",
+      "type": "endpoint",
+      "label": "GET /api/exception-translator-test/concurrency-failure",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java",
+      "line": 15,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:15"]
+    },
+    {
+      "id": "GET /api/exception-translator-test/internal-server-error",
+      "type": "endpoint",
+      "label": "GET /api/exception-translator-test/internal-server-error",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java",
+      "line": 50,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:50"]
+    },
+    {
+      "id": "GET /api/exception-translator-test/missing-servlet-request-parameter",
+      "type": "endpoint",
+      "label": "GET /api/exception-translator-test/missing-servlet-request-parameter",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java",
+      "line": 30,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:30"]
+    },
+    {
+      "id": "GET /api/exception-translator-test/missing-servlet-request-part",
+      "type": "endpoint",
+      "label": "GET /api/exception-translator-test/missing-servlet-request-part",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java",
+      "line": 25,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:25"]
+    },
+    {
+      "id": "GET /api/exception-translator-test/response-status",
+      "type": "endpoint",
+      "label": "GET /api/exception-translator-test/response-status",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java",
+      "line": 45,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:45"]
+    },
+    {
+      "id": "GET /api/exception-translator-test/unauthorized",
+      "type": "endpoint",
+      "label": "GET /api/exception-translator-test/unauthorized",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java",
+      "line": 40,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:40"]
+    },
+    {
+      "id": "GET /api/runs",
+      "type": "endpoint",
+      "label": "GET /api/runs",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 77,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:77"]
+    },
+    {
+      "id": "GET /api/runs/{id}",
+      "type": "endpoint",
+      "label": "GET /api/runs/{id}",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 72,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:72"]
+    },
+    {
+      "id": "GET /api/test-cors",
+      "type": "endpoint",
+      "label": "GET /api/test-cors",
+      "file": "src/test/java/com/vacaro/benchlab/config/WebConfigurerTestController.java",
+      "line": 9,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/config/WebConfigurerTestController.java:9"]
+    },
+    {
+      "id": "GET /api/users",
+      "type": "endpoint",
+      "label": "GET /api/users",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/PublicUserResource.java",
+      "line": 40,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/PublicUserResource.java:40"]
+    },
+    {
+      "id": "GET /test/test-cors",
+      "type": "endpoint",
+      "label": "GET /test/test-cors",
+      "file": "src/test/java/com/vacaro/benchlab/config/WebConfigurerTestController.java",
+      "line": 14,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/config/WebConfigurerTestController.java:14"]
+    },
+    {
+      "id": "GeneratedByJHipster",
+      "type": "unknown",
+      "label": "GeneratedByJHipster",
+      "file": "src/main/java/com/vacaro/benchlab/GeneratedByJHipster.java",
+      "line": 12,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/GeneratedByJHipster.java:12"]
+    },
+    {
+      "id": "HibernateTimeZoneIT",
+      "type": "unknown",
+      "label": "HibernateTimeZoneIT",
+      "file": "src/test/java/com/vacaro/benchlab/config/timezone/HibernateTimeZoneIT.java",
+      "line": 29,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/config/timezone/HibernateTimeZoneIT.java:29"]
+    },
+    {
+      "id": "Implementation",
+      "type": "model",
+      "label": "Implementation",
+      "file": "src/main/java/com/vacaro/benchlab/domain/Implementation.java",
+      "line": 17,
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/domain/Implementation.java:17"]
+    },
+    {
+      "id": "ImplementationLanguage",
+      "type": "unknown",
+      "label": "ImplementationLanguage",
+      "file": "src/main/java/com/vacaro/benchlab/domain/ImplementationLanguage.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/domain/ImplementationLanguage.java:3"]
+    },
+    {
+      "id": "ImplementationRepository",
+      "type": "repository",
+      "label": "ImplementationRepository",
+      "file": "src/main/java/com/vacaro/benchlab/repository/ImplementationRepository.java",
+      "line": 4,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/repository/ImplementationRepository.java:4"]
+    },
+    {
+      "id": "ImplementationResponse",
+      "type": "unknown",
+      "label": "ImplementationResponse",
+      "file": "src/main/java/com/vacaro/benchlab/service/dto/benchmark/ImplementationResponse.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/dto/benchmark/ImplementationResponse.java:3"]
+    },
+    {
+      "id": "ImplementationsApiDelegateHandler",
+      "type": "handler",
+      "label": "ImplementationsApiDelegateHandler",
+      "file": "src/main/java/com/vacaro/benchlab/web/api/ImplementationsApiDelegateHandler.java",
+      "line": 11,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/api/ImplementationsApiDelegateHandler.java:11"]
+    },
+    {
+      "id": "IntegrationTest",
+      "type": "unknown",
+      "label": "IntegrationTest",
+      "file": "src/test/java/com/vacaro/benchlab/IntegrationTest.java",
+      "line": 21,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/IntegrationTest.java:21"]
+    },
+    {
+      "id": "InvalidPasswordException",
+      "type": "unknown",
+      "label": "InvalidPasswordException",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/errors/InvalidPasswordException.java",
+      "line": 8,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/errors/InvalidPasswordException.java:8"]
+    },
+    {
+      "id": "JWTToken",
+      "type": "controller",
+      "label": "JWTToken",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/AuthenticateController.java",
+      "line": 35,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AuthenticateController.java:35"]
+    },
+    {
+      "id": "JacksonConfiguration",
+      "type": "config",
+      "label": "JacksonConfiguration",
+      "file": "src/main/java/com/vacaro/benchlab/config/JacksonConfiguration.java",
+      "line": 15,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/JacksonConfiguration.java:15"]
+    },
+    {
+      "id": "JwtAuthenticationTestUtils",
+      "type": "config",
+      "label": "JwtAuthenticationTestUtils",
+      "file": "src/test/java/com/vacaro/benchlab/security/jwt/JwtAuthenticationTestUtils.java",
+      "line": 29,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/security/jwt/JwtAuthenticationTestUtils.java:29"]
+    },
+    {
+      "id": "KeyAndPasswordVM",
+      "type": "model",
+      "label": "KeyAndPasswordVM",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/vm/KeyAndPasswordVM.java",
+      "line": 6,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/vm/KeyAndPasswordVM.java:6"]
+    },
+    {
+      "id": "Liquibase",
+      "type": "config",
+      "label": "Liquibase",
+      "file": "src/main/java/com/vacaro/benchlab/config/ApplicationProperties.java",
+      "line": 11,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/ApplicationProperties.java:11"]
+    },
+    {
+      "id": "LiquibaseConfiguration",
+      "type": "database",
+      "label": "LiquibaseConfiguration",
+      "file": "src/main/java/com/vacaro/benchlab/config/LiquibaseConfiguration.java",
+      "line": 4,
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/LiquibaseConfiguration.java:4"]
+    },
+    {
+      "id": "LoggingAspect",
+      "type": "unknown",
+      "label": "LoggingAspect",
+      "file": "src/main/java/com/vacaro/benchlab/aop/logging/LoggingAspect.java",
+      "line": 22,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/aop/logging/LoggingAspect.java:22"]
+    },
+    {
+      "id": "LoggingAspectConfiguration",
+      "type": "config",
+      "label": "LoggingAspectConfiguration",
+      "file": "src/main/java/com/vacaro/benchlab/config/LoggingAspectConfiguration.java",
+      "line": 8,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/LoggingAspectConfiguration.java:8"]
+    },
+    {
+      "id": "LoggingConfiguration",
+      "type": "config",
+      "label": "LoggingConfiguration",
+      "file": "src/main/java/com/vacaro/benchlab/config/LoggingConfiguration.java",
+      "line": 18,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/LoggingConfiguration.java:18"]
+    },
+    {
+      "id": "LoginAlreadyUsedException",
+      "type": "unknown",
+      "label": "LoginAlreadyUsedException",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/errors/LoginAlreadyUsedException.java",
+      "line": 4,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/errors/LoginAlreadyUsedException.java:4"]
+    },
+    {
+      "id": "LoginVM",
+      "type": "model",
+      "label": "LoginVM",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/vm/LoginVM.java",
+      "line": 9,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/vm/LoginVM.java:9"]
+    },
+    {
+      "id": "MailService",
+      "type": "service",
+      "label": "MailService",
+      "file": "src/main/java/com/vacaro/benchlab/service/MailService.java",
+      "line": 25,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/MailService.java:25"]
+    },
+    {
+      "id": "MailServiceIT",
+      "type": "service",
+      "label": "MailServiceIT",
+      "file": "src/test/java/com/vacaro/benchlab/service/MailServiceIT.java",
+      "line": 38,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/service/MailServiceIT.java:38"]
+    },
+    {
+      "id": "Main",
+      "type": "external_client",
+      "label": "Main",
+      "file": "benchlab-web/src/main.tsx",
+      "line": 86,
+      "confidence": "high",
+      "evidence": ["benchlab-web/src/main.tsx:86"]
+    },
+    {
+      "id": "ManagedUserVM",
+      "type": "model",
+      "label": "ManagedUserVM",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/vm/ManagedUserVM.java",
+      "line": 9,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/vm/ManagedUserVM.java:9"]
+    },
+    {
+      "id": "NumberMatcher",
+      "type": "database",
+      "label": "NumberMatcher",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/TestUtil.java",
+      "line": 5,
+      "confidence": "medium",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/TestUtil.java:5"]
+    },
+    {
+      "id": "Object",
+      "type": "database",
+      "label": "Object",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/TestUtil.java",
+      "line": 5,
+      "confidence": "medium",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/TestUtil.java:5"]
+    },
+    {
+      "id": "OpenApiConfiguration",
+      "type": "config",
+      "label": "OpenApiConfiguration",
+      "file": "src/main/java/com/vacaro/benchlab/config/OpenApiConfiguration.java",
+      "line": 12,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/OpenApiConfiguration.java:12"]
+    },
+    {
+      "id": "POST /api/account",
+      "type": "endpoint",
+      "label": "POST /api/account",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java",
+      "line": 102,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:102"]
+    },
+    {
+      "id": "POST /api/account/change-password",
+      "type": "endpoint",
+      "label": "POST /api/account/change-password",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java",
+      "line": 129,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:129"]
+    },
+    {
+      "id": "POST /api/account/reset-password/finish",
+      "type": "endpoint",
+      "label": "POST /api/account/reset-password/finish",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java",
+      "line": 161,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:161"]
+    },
+    {
+      "id": "POST /api/account/reset-password/init",
+      "type": "endpoint",
+      "label": "POST /api/account/reset-password/init",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java",
+      "line": 142,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:142"]
+    },
+    {
+      "id": "POST /api/algorithms",
+      "type": "endpoint",
+      "label": "POST /api/algorithms",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 47,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:47"]
+    },
+    {
+      "id": "POST /api/authenticate",
+      "type": "endpoint",
+      "label": "POST /api/authenticate",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/AuthenticateController.java",
+      "line": 56,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AuthenticateController.java:56"]
+    },
+    {
+      "id": "POST /api/datasets",
+      "type": "endpoint",
+      "label": "POST /api/datasets",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 57,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:57"]
+    },
+    {
+      "id": "POST /api/exception-translator-test/method-argument",
+      "type": "endpoint",
+      "label": "POST /api/exception-translator-test/method-argument",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java",
+      "line": 20,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:20"]
+    },
+    {
+      "id": "POST /api/implementations",
+      "type": "endpoint",
+      "label": "POST /api/implementations",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 42,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:42"]
+    },
+    {
+      "id": "POST /api/internal/runs/{id}/result",
+      "type": "endpoint",
+      "label": "POST /api/internal/runs/{id}/result",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 82,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:82"]
+    },
+    {
+      "id": "POST /api/register",
+      "type": "endpoint",
+      "label": "POST /api/register",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java",
+      "line": 57,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:57"]
+    },
+    {
+      "id": "POST /api/runs",
+      "type": "endpoint",
+      "label": "POST /api/runs",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 67,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:67"]
+    },
+    {
+      "id": "PasswordChangeDTO",
+      "type": "model",
+      "label": "PasswordChangeDTO",
+      "file": "src/main/java/com/vacaro/benchlab/service/dto/PasswordChangeDTO.java",
+      "line": 8,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/dto/PasswordChangeDTO.java:8"]
+    },
+    {
+      "id": "PostgreSqlTestContainer",
+      "type": "unknown",
+      "label": "PostgreSqlTestContainer",
+      "file": "src/test/java/com/vacaro/benchlab/config/PostgreSqlTestContainer.java",
+      "line": 10,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/config/PostgreSqlTestContainer.java:10"]
+    },
+    {
+      "id": "ProductionAdminPasswordConfiguration",
+      "type": "config",
+      "label": "ProductionAdminPasswordConfiguration",
+      "file": "src/main/java/com/vacaro/benchlab/config/ProductionAdminPasswordConfiguration.java",
+      "line": 16,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/ProductionAdminPasswordConfiguration.java:16"]
+    },
+    {
+      "id": "PublicUserResource",
+      "type": "controller",
+      "label": "PublicUserResource",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/PublicUserResource.java",
+      "line": 18,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/PublicUserResource.java:18"]
+    },
+    {
+      "id": "PublicUserResource.getAllPublicUsers",
+      "type": "handler",
+      "label": "PublicUserResource.getAllPublicUsers",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/PublicUserResource.java",
+      "line": 40,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/PublicUserResource.java:40"]
+    },
+    {
+      "id": "PublicUserResourceIT",
+      "type": "controller",
+      "label": "PublicUserResourceIT",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/PublicUserResourceIT.java",
+      "line": 32,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/PublicUserResourceIT.java:32"]
+    },
+    {
+      "id": "Queue",
+      "type": "queue",
+      "label": "Queue",
+      "file": "src/main/java/com/vacaro/benchlab/config/BenchLabProperties.java",
+      "line": 8,
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/BenchLabProperties.java:8"]
+    },
+    {
+      "id": "RabbitMqConfiguration",
+      "type": "queue",
+      "label": "RabbitMqConfiguration",
+      "file": "src/main/java/com/vacaro/benchlab/config/RabbitMqConfiguration.java",
+      "line": 6,
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/RabbitMqConfiguration.java:6"]
+    },
+    {
+      "id": "RedisTestContainer",
+      "type": "unknown",
+      "label": "RedisTestContainer",
+      "file": "src/test/java/com/vacaro/benchlab/config/RedisTestContainer.java",
+      "line": 10,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/config/RedisTestContainer.java:10"]
+    },
+    {
+      "id": "RedisTestContainersSpringContextCustomizerFactory",
+      "type": "unknown",
+      "label": "RedisTestContainersSpringContextCustomizerFactory",
+      "file": "src/test/java/com/vacaro/benchlab/config/RedisTestContainersSpringContextCustomizerFactory.java",
+      "line": 15,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/config/RedisTestContainersSpringContextCustomizerFactory.java:15"]
+    },
+    {
+      "id": "RunArtifact",
+      "type": "model",
+      "label": "RunArtifact",
+      "file": "src/main/java/com/vacaro/benchlab/domain/RunArtifact.java",
+      "line": 13,
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/domain/RunArtifact.java:13"]
+    },
+    {
+      "id": "RunArtifactRepository",
+      "type": "repository",
+      "label": "RunArtifactRepository",
+      "file": "src/main/java/com/vacaro/benchlab/repository/RunArtifactRepository.java",
+      "line": 5,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/repository/RunArtifactRepository.java:5"]
+    },
+    {
+      "id": "RunArtifactResponse",
+      "type": "unknown",
+      "label": "RunArtifactResponse",
+      "file": "src/main/java/com/vacaro/benchlab/service/dto/benchmark/RunArtifactResponse.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/dto/benchmark/RunArtifactResponse.java:3"]
+    },
+    {
+      "id": "RunEventPublisher",
+      "type": "queue",
+      "label": "RunEventPublisher",
+      "file": "src/main/java/com/vacaro/benchlab/service/messaging/RunEventPublisher.java",
+      "line": 6,
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/messaging/RunEventPublisher.java:6"]
+    },
+    {
+      "id": "RunMetric",
+      "type": "model",
+      "label": "RunMetric",
+      "file": "src/main/java/com/vacaro/benchlab/domain/RunMetric.java",
+      "line": 13,
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/domain/RunMetric.java:13"]
+    },
+    {
+      "id": "RunMetricRepository",
+      "type": "repository",
+      "label": "RunMetricRepository",
+      "file": "src/main/java/com/vacaro/benchlab/repository/RunMetricRepository.java",
+      "line": 5,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/repository/RunMetricRepository.java:5"]
+    },
+    {
+      "id": "RunMetricResponse",
+      "type": "unknown",
+      "label": "RunMetricResponse",
+      "file": "src/main/java/com/vacaro/benchlab/service/dto/benchmark/RunMetricResponse.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/dto/benchmark/RunMetricResponse.java:3"]
+    },
+    {
+      "id": "RunRequestedEvent",
+      "type": "unknown",
+      "label": "RunRequestedEvent",
+      "file": "src/main/java/com/vacaro/benchlab/service/messaging/RunRequestedEvent.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/messaging/RunRequestedEvent.java:3"]
+    },
+    {
+      "id": "RunResponse",
+      "type": "unknown",
+      "label": "RunResponse",
+      "file": "src/main/java/com/vacaro/benchlab/service/dto/benchmark/RunResponse.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/dto/benchmark/RunResponse.java:3"]
+    },
+    {
+      "id": "RunResultCallbackRequest",
+      "type": "unknown",
+      "label": "RunResultCallbackRequest",
+      "file": "src/main/java/com/vacaro/benchlab/service/dto/benchmark/RunResultCallbackRequest.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/dto/benchmark/RunResultCallbackRequest.java:3"]
+    },
+    {
+      "id": "RunSummary",
+      "type": "external_client",
+      "label": "RunSummary",
+      "file": "benchlab-web/src/main.tsx",
+      "line": 86,
+      "confidence": "high",
+      "evidence": ["benchlab-web/src/main.tsx:86"]
+    },
+    {
+      "id": "RunSummaryResponse",
+      "type": "unknown",
+      "label": "RunSummaryResponse",
+      "file": "src/main/java/com/vacaro/benchlab/service/dto/benchmark/RunSummaryResponse.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/dto/benchmark/RunSummaryResponse.java:3"]
+    },
+    {
+      "id": "RunsApiDelegateHandler",
+      "type": "handler",
+      "label": "RunsApiDelegateHandler",
+      "file": "src/main/java/com/vacaro/benchlab/web/api/RunsApiDelegateHandler.java",
+      "line": 14,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/api/RunsApiDelegateHandler.java:14"]
+    },
+    {
+      "id": "SecurityConfiguration",
+      "type": "config",
+      "label": "SecurityConfiguration",
+      "file": "src/main/java/com/vacaro/benchlab/config/SecurityConfiguration.java",
+      "line": 21,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/SecurityConfiguration.java:21"]
+    },
+    {
+      "id": "SecurityJwtConfiguration",
+      "type": "config",
+      "label": "SecurityJwtConfiguration",
+      "file": "src/main/java/com/vacaro/benchlab/config/SecurityJwtConfiguration.java",
+      "line": 20,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/SecurityJwtConfiguration.java:20"]
+    },
+    {
+      "id": "SecurityMetersService",
+      "type": "service",
+      "label": "SecurityMetersService",
+      "file": "src/main/java/com/vacaro/benchlab/management/SecurityMetersService.java",
+      "line": 7,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/management/SecurityMetersService.java:7"]
+    },
+    {
+      "id": "SecurityMetersServiceTests",
+      "type": "service",
+      "label": "SecurityMetersServiceTests",
+      "file": "src/test/java/com/vacaro/benchlab/management/SecurityMetersServiceTests.java",
+      "line": 12,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/management/SecurityMetersServiceTests.java:12"]
+    },
+    {
+      "id": "SecurityUtils",
+      "type": "unknown",
+      "label": "SecurityUtils",
+      "file": "src/main/java/com/vacaro/benchlab/security/SecurityUtils.java",
+      "line": 18,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/security/SecurityUtils.java:18"]
+    },
+    {
+      "id": "SecurityUtilsUnitTest",
+      "type": "unknown",
+      "label": "SecurityUtilsUnitTest",
+      "file": "src/test/java/com/vacaro/benchlab/security/SecurityUtilsUnitTest.java",
+      "line": 21,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/security/SecurityUtilsUnitTest.java:21"]
+    },
+    {
+      "id": "SpringBootTestClassOrderer",
+      "type": "unknown",
+      "label": "SpringBootTestClassOrderer",
+      "file": "src/test/java/com/vacaro/benchlab/config/SpringBootTestClassOrderer.java",
+      "line": 9,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/config/SpringBootTestClassOrderer.java:9"]
+    },
+    {
+      "id": "SpringSecurityAuditorAware",
+      "type": "unknown",
+      "label": "SpringSecurityAuditorAware",
+      "file": "src/main/java/com/vacaro/benchlab/security/SpringSecurityAuditorAware.java",
+      "line": 12,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/security/SpringSecurityAuditorAware.java:12"]
+    },
+    {
+      "id": "SqlTestContainer",
+      "type": "unknown",
+      "label": "SqlTestContainer",
+      "file": "src/test/java/com/vacaro/benchlab/config/SqlTestContainer.java",
+      "line": 7,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/config/SqlTestContainer.java:7"]
+    },
+    {
+      "id": "SqlTestContainersSpringContextCustomizerFactory",
+      "type": "unknown",
+      "label": "SqlTestContainersSpringContextCustomizerFactory",
+      "file": "src/test/java/com/vacaro/benchlab/config/SqlTestContainersSpringContextCustomizerFactory.java",
+      "line": 15,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/config/SqlTestContainersSpringContextCustomizerFactory.java:15"]
+    },
+    {
+      "id": "T",
+      "type": "database",
+      "label": "T",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/TestUtil.java",
+      "line": 5,
+      "confidence": "medium",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/TestUtil.java:5"]
+    },
+    {
+      "id": "TechnicalStructureTest",
+      "type": "unknown",
+      "label": "TechnicalStructureTest",
+      "file": "src/test/java/com/vacaro/benchlab/TechnicalStructureTest.java",
+      "line": 13,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/TechnicalStructureTest.java:13"]
+    },
+    {
+      "id": "TestDTO",
+      "type": "controller",
+      "label": "TestDTO",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java",
+      "line": 11,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:11"]
+    },
+    {
+      "id": "TestPrepareRunnerSpecRustUsesCompilerImage",
+      "type": "unknown",
+      "label": "TestPrepareRunnerSpecRustUsesCompilerImage",
+      "file": "runner-worker/main_test.go",
+      "line": 9,
+      "confidence": "low",
+      "evidence": ["runner-worker/main_test.go:9"]
+    },
+    {
+      "id": "TestResponseStatusException",
+      "type": "controller",
+      "label": "TestResponseStatusException",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java",
+      "line": 11,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:11"]
+    },
+    {
+      "id": "TestSummarizeDurationsHandlesEvenSamples",
+      "type": "unknown",
+      "label": "TestSummarizeDurationsHandlesEvenSamples",
+      "file": "runner-worker/main_test.go",
+      "line": 62,
+      "confidence": "low",
+      "evidence": ["runner-worker/main_test.go:62"]
+    },
+    {
+      "id": "TestSummarizeDurationsUsesMedianAndKeepsContext",
+      "type": "unknown",
+      "label": "TestSummarizeDurationsUsesMedianAndKeepsContext",
+      "file": "runner-worker/main_test.go",
+      "line": 42,
+      "confidence": "low",
+      "evidence": ["runner-worker/main_test.go:42"]
+    },
+    {
+      "id": "TestUtil",
+      "type": "database",
+      "label": "TestUtil",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/TestUtil.java",
+      "line": 5,
+      "confidence": "medium",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/TestUtil.java:5"]
+    },
+    {
+      "id": "TokenAuthenticationIT",
+      "type": "unknown",
+      "label": "TokenAuthenticationIT",
+      "file": "src/test/java/com/vacaro/benchlab/security/jwt/TokenAuthenticationIT.java",
+      "line": 16,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/security/jwt/TokenAuthenticationIT.java:16"]
+    },
+    {
+      "id": "TokenAuthenticationSecurityMetersIT",
+      "type": "unknown",
+      "label": "TokenAuthenticationSecurityMetersIT",
+      "file": "src/test/java/com/vacaro/benchlab/security/jwt/TokenAuthenticationSecurityMetersIT.java",
+      "line": 19,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/security/jwt/TokenAuthenticationSecurityMetersIT.java:19"]
+    },
+    {
+      "id": "User",
+      "type": "model",
+      "label": "User",
+      "file": "src/main/java/com/vacaro/benchlab/domain/User.java",
+      "line": 21,
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/domain/User.java:21"]
+    },
+    {
+      "id": "UserDTO",
+      "type": "model",
+      "label": "UserDTO",
+      "file": "src/main/java/com/vacaro/benchlab/service/dto/UserDTO.java",
+      "line": 10,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/dto/UserDTO.java:10"]
+    },
+    {
+      "id": "UserMapper",
+      "type": "service",
+      "label": "UserMapper",
+      "file": "src/main/java/com/vacaro/benchlab/service/mapper/UserMapper.java",
+      "line": 20,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/mapper/UserMapper.java:20"]
+    },
+    {
+      "id": "UserMapperTest",
+      "type": "dao",
+      "label": "UserMapperTest",
+      "file": "src/test/java/com/vacaro/benchlab/service/mapper/UserMapperTest.java",
+      "line": 22,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/service/mapper/UserMapperTest.java:22"]
+    },
+    {
+      "id": "UserNotActivatedException",
+      "type": "unknown",
+      "label": "UserNotActivatedException",
+      "file": "src/main/java/com/vacaro/benchlab/security/UserNotActivatedException.java",
+      "line": 8,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/security/UserNotActivatedException.java:8"]
+    },
+    {
+      "id": "UserRepository",
+      "type": "repository",
+      "label": "UserRepository",
+      "file": "src/main/java/com/vacaro/benchlab/repository/UserRepository.java",
+      "line": 10,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/repository/UserRepository.java:10"]
+    },
+    {
+      "id": "UserResource",
+      "type": "controller",
+      "label": "UserResource",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/UserResource.java",
+      "line": 58,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/UserResource.java:58"]
+    },
+    {
+      "id": "UserResourceIT",
+      "type": "controller",
+      "label": "UserResourceIT",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/UserResourceIT.java",
+      "line": 38,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/UserResourceIT.java:38"]
+    },
+    {
+      "id": "UserService",
+      "type": "service",
+      "label": "UserService",
+      "file": "src/main/java/com/vacaro/benchlab/service/UserService.java",
+      "line": 30,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/UserService.java:30"]
+    },
+    {
+      "id": "UserServiceIT",
+      "type": "service",
+      "label": "UserServiceIT",
+      "file": "src/test/java/com/vacaro/benchlab/service/UserServiceIT.java",
+      "line": 33,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/service/UserServiceIT.java:33"]
+    },
+    {
+      "id": "UserWithId",
+      "type": "unknown",
+      "label": "UserWithId",
+      "file": "src/main/java/com/vacaro/benchlab/security/DomainUserDetailsService.java",
+      "line": 55,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/security/DomainUserDetailsService.java:55"]
+    },
+    {
+      "id": "UsernameAlreadyUsedException",
+      "type": "unknown",
+      "label": "UsernameAlreadyUsedException",
+      "file": "src/main/java/com/vacaro/benchlab/service/UsernameAlreadyUsedException.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/UsernameAlreadyUsedException.java:3"]
+    },
+    {
+      "id": "WebConfigurer",
+      "type": "config",
+      "label": "WebConfigurer",
+      "file": "src/main/java/com/vacaro/benchlab/config/WebConfigurer.java",
+      "line": 20,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/WebConfigurer.java:20"]
+    },
+    {
+      "id": "WebConfigurerTest",
+      "type": "config",
+      "label": "WebConfigurerTest",
+      "file": "src/test/java/com/vacaro/benchlab/config/WebConfigurerTest.java",
+      "line": 23,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/config/WebConfigurerTest.java:23"]
+    },
+    {
+      "id": "WebConfigurerTestController",
+      "type": "controller",
+      "label": "WebConfigurerTestController",
+      "file": "src/test/java/com/vacaro/benchlab/config/WebConfigurerTestController.java",
+      "line": 6,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/config/WebConfigurerTestController.java:6"]
+    },
+    {
+      "id": "WebConfigurerTestController.testCorsOnApiPath",
+      "type": "handler",
+      "label": "WebConfigurerTestController.testCorsOnApiPath",
+      "file": "src/test/java/com/vacaro/benchlab/config/WebConfigurerTestController.java",
+      "line": 9,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/config/WebConfigurerTestController.java:9"]
+    },
+    {
+      "id": "WebConfigurerTestController.testCorsOnOtherPath",
+      "type": "handler",
+      "label": "WebConfigurerTestController.testCorsOnOtherPath",
+      "file": "src/test/java/com/vacaro/benchlab/config/WebConfigurerTestController.java",
+      "line": 14,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/config/WebConfigurerTestController.java:14"]
+    },
+    {
+      "id": "WithUnauthenticatedMockUser",
+      "type": "unknown",
+      "label": "WithUnauthenticatedMockUser",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/WithUnauthenticatedMockUser.java",
+      "line": 14,
+      "confidence": "low",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/WithUnauthenticatedMockUser.java:14"]
+    },
+    {
+      "id": "Worker",
+      "type": "queue",
+      "label": "Worker",
+      "file": "src/main/java/com/vacaro/benchlab/config/BenchLabProperties.java",
+      "line": 8,
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/BenchLabProperties.java:8"]
+    },
+    {
+      "id": "ZonedDateTimeMatcher",
+      "type": "database",
+      "label": "ZonedDateTimeMatcher",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/TestUtil.java",
+      "line": 5,
+      "confidence": "medium",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/TestUtil.java:5"]
+    }
+  ],
+  "edges": [
+    {
+      "from": "AccountResource",
+      "to": "MailService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:6"]
+    },
+    {
+      "from": "AccountResource",
+      "to": "UserRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:4"]
+    },
+    {
+      "from": "AccountResource",
+      "to": "UserService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:7"]
+    },
+    {
+      "from": "AccountResourceException",
+      "to": "MailService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:6"]
+    },
+    {
+      "from": "AccountResourceException",
+      "to": "UserRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:4"]
+    },
+    {
+      "from": "AccountResourceException",
+      "to": "UserService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:7"]
+    },
+    {
+      "from": "AccountResourceIT",
+      "to": "AuthorityRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/AccountResourceIT.java:11"]
+    },
+    {
+      "from": "AccountResourceIT",
+      "to": "UserRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/AccountResourceIT.java:12"]
+    },
+    {
+      "from": "AccountResourceIT",
+      "to": "UserService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/AccountResourceIT.java:14"]
+    },
+    {
+      "from": "AlgorithmTemplate",
+      "to": "Object",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["benchlab-web/src/main.tsx:373"]
+    },
+    {
+      "from": "AlgorithmTemplate",
+      "to": "T",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["benchlab-web/src/main.tsx:182"]
+    },
+    {
+      "from": "AlgorithmsApiDelegateHandler",
+      "to": "BenchmarkService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/api/AlgorithmsApiDelegateHandler.java:3"]
+    },
+    {
+      "from": "AuthResponse",
+      "to": "Object",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["benchlab-web/src/main.tsx:373"]
+    },
+    {
+      "from": "AuthResponse",
+      "to": "T",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["benchlab-web/src/main.tsx:182"]
+    },
+    {
+      "from": "AuthenticateController",
+      "to": "DomainUserDetailsService",
+      "type": "calls",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AuthenticateController.java:8"]
+    },
+    {
+      "from": "AuthenticateController",
+      "to": "Object",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AuthenticateController.java:109"]
+    },
+    {
+      "from": "AuthenticateControllerIT",
+      "to": "UserRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/AuthenticateControllerIT.java:15"]
+    },
+    {
+      "from": "AuthorityResource",
+      "to": "AuthorityRepository",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "src/main/java/com/vacaro/benchlab/web/rest/AuthorityResource.java:24",
+        "src/main/java/com/vacaro/benchlab/repository/AuthorityRepository.java:11"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "AuthorityResource",
+      "to": "AuthorityRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AuthorityResource.java:4"]
+    },
+    {
+      "from": "AuthorityResourceIT",
+      "to": "AuthorityRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/AuthorityResourceIT.java:12"]
+    },
+    {
+      "from": "BenchLabApp",
+      "to": "ApplicationProperties",
+      "type": "configured_by",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/BenchLabApp.java:3"]
+    },
+    {
+      "from": "BenchLabApp",
+      "to": "Main",
+      "type": "uses_client",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/BenchLabApp.java:63"]
+    },
+    {
+      "from": "BenchLabConfiguration",
+      "to": "BenchLabProperties",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/BenchLabConfiguration.java:7"]
+    },
+    {
+      "from": "BenchmarkResource",
+      "to": "BenchLabProperties",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:3"]
+    },
+    {
+      "from": "BenchmarkResource",
+      "to": "BenchmarkRunRepository",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:30",
+        "src/main/java/com/vacaro/benchlab/repository/BenchmarkRunRepository.java:6"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "BenchmarkResource",
+      "to": "BenchmarkService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:4"]
+    },
+    {
+      "from": "BenchmarkResource",
+      "to": "BenchmarkService",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:30",
+        "src/main/java/com/vacaro/benchlab/service/BenchmarkService.java:18"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "BenchmarkResource",
+      "to": "BenchmarkServiceImpl",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "src/main/java/com/vacaro/benchlab/service/impl/BenchmarkServiceImpl.java:55",
+        "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:30"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "BenchmarkResource",
+      "to": "Worker",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:86"]
+    },
+    {
+      "from": "BenchmarkResourceIT",
+      "to": "BenchmarkRunRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResourceIT.java:14"]
+    },
+    {
+      "from": "BenchmarkResourceIT",
+      "to": "RunEventPublisher",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResourceIT.java:15"]
+    },
+    {
+      "from": "BenchmarkResourceIT",
+      "to": "Worker",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResourceIT.java:217"]
+    },
+    {
+      "from": "BenchmarkService",
+      "to": "BenchmarkRunRepository",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "src/main/java/com/vacaro/benchlab/repository/BenchmarkRunRepository.java:6",
+        "src/main/java/com/vacaro/benchlab/service/BenchmarkService.java:18"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "BenchmarkService",
+      "to": "BenchmarkServiceImpl",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "src/main/java/com/vacaro/benchlab/service/impl/BenchmarkServiceImpl.java:55",
+        "src/main/java/com/vacaro/benchlab/service/BenchmarkService.java:18"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "BenchmarkServiceImpl",
+      "to": "AlgorithmRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/impl/BenchmarkServiceImpl.java:10"]
+    },
+    {
+      "from": "BenchmarkServiceImpl",
+      "to": "BenchmarkRunRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/impl/BenchmarkServiceImpl.java:11"]
+    },
+    {
+      "from": "BenchmarkServiceImpl",
+      "to": "BenchmarkService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/impl/BenchmarkServiceImpl.java:16"]
+    },
+    {
+      "from": "BenchmarkServiceImpl",
+      "to": "DatasetRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/impl/BenchmarkServiceImpl.java:12"]
+    },
+    {
+      "from": "BenchmarkServiceImpl",
+      "to": "ImplementationRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/impl/BenchmarkServiceImpl.java:13"]
+    },
+    {
+      "from": "BenchmarkServiceImpl",
+      "to": "RunArtifactRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/impl/BenchmarkServiceImpl.java:14"]
+    },
+    {
+      "from": "BenchmarkServiceImpl",
+      "to": "RunEventPublisher",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/impl/BenchmarkServiceImpl.java:36"]
+    },
+    {
+      "from": "BenchmarkServiceImpl",
+      "to": "RunMetricRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/impl/BenchmarkServiceImpl.java:15"]
+    },
+    {
+      "from": "BenchmarksApiDelegateHandler",
+      "to": "BenchmarkService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/api/BenchmarksApiDelegateHandler.java:3"]
+    },
+    {
+      "from": "CacheConfiguration",
+      "to": "Object",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/CacheConfiguration.java:33"]
+    },
+    {
+      "from": "CacheConfiguration",
+      "to": "UserRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/CacheConfiguration.java:74"]
+    },
+    {
+      "from": "ChartHoverPoint",
+      "to": "Object",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["benchlab-web/src/main.tsx:373"]
+    },
+    {
+      "from": "ChartHoverPoint",
+      "to": "T",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["benchlab-web/src/main.tsx:182"]
+    },
+    {
+      "from": "ChartScale",
+      "to": "Object",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["benchlab-web/src/main.tsx:373"]
+    },
+    {
+      "from": "ChartScale",
+      "to": "T",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["benchlab-web/src/main.tsx:182"]
+    },
+    {
+      "from": "ComplexityPoint",
+      "to": "Object",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["benchlab-web/src/main.tsx:373"]
+    },
+    {
+      "from": "ComplexityPoint",
+      "to": "T",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["benchlab-web/src/main.tsx:182"]
+    },
+    {
+      "from": "ComplexityResponse",
+      "to": "Object",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["benchlab-web/src/main.tsx:373"]
+    },
+    {
+      "from": "ComplexityResponse",
+      "to": "T",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["benchlab-web/src/main.tsx:182"]
+    },
+    {
+      "from": "ComplexitySeries",
+      "to": "Object",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["benchlab-web/src/main.tsx:373"]
+    },
+    {
+      "from": "ComplexitySeries",
+      "to": "T",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["benchlab-web/src/main.tsx:182"]
+    },
+    {
+      "from": "DatasetsApiDelegateHandler",
+      "to": "BenchmarkService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/api/DatasetsApiDelegateHandler.java:3"]
+    },
+    {
+      "from": "DomainUserDetailsService",
+      "to": "DomainUserDetailsServiceIT",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "src/main/java/com/vacaro/benchlab/security/DomainUserDetailsService.java:22",
+        "src/test/java/com/vacaro/benchlab/security/DomainUserDetailsServiceIT.java:26"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "DomainUserDetailsService",
+      "to": "Object",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/security/DomainUserDetailsService.java:72"]
+    },
+    {
+      "from": "DomainUserDetailsService",
+      "to": "UserRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/security/DomainUserDetailsService.java:5"]
+    },
+    {
+      "from": "DomainUserDetailsServiceIT",
+      "to": "DomainUserDetailsService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/test/java/com/vacaro/benchlab/security/DomainUserDetailsServiceIT.java:22"]
+    },
+    {
+      "from": "DomainUserDetailsServiceIT",
+      "to": "UserRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["src/test/java/com/vacaro/benchlab/security/DomainUserDetailsServiceIT.java:8"]
+    },
+    {
+      "from": "DomainUserDetailsServiceIT",
+      "to": "UserService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/test/java/com/vacaro/benchlab/security/DomainUserDetailsServiceIT.java:9"]
+    },
+    {
+      "from": "GET /api/account",
+      "to": "AccountResource.getAccount",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:87"]
+    },
+    {
+      "from": "GET /api/activate",
+      "to": "AccountResource.activateAccount",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:73"]
+    },
+    {
+      "from": "GET /api/algorithms",
+      "to": "BenchmarkResource.listAlgorithms",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:52"]
+    },
+    {
+      "from": "GET /api/authenticate",
+      "to": "AuthenticateController.isAuthenticated",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AuthenticateController.java:77"]
+    },
+    {
+      "from": "GET /api/benchmarks/compare",
+      "to": "BenchmarkResource.compare",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:95"]
+    },
+    {
+      "from": "GET /api/benchmarks/complexity",
+      "to": "BenchmarkResource.complexity",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:105"]
+    },
+    {
+      "from": "GET /api/benchmarks/timeseries",
+      "to": "BenchmarkResource.timeseries",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:100"]
+    },
+    {
+      "from": "GET /api/datasets",
+      "to": "BenchmarkResource.listDatasets",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:62"]
+    },
+    {
+      "from": "GET /api/exception-translator-test/access-denied",
+      "to": "ExceptionTranslatorTestController.accessdenied",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:35"]
+    },
+    {
+      "from": "GET /api/exception-translator-test/concurrency-failure",
+      "to": "ExceptionTranslatorTestController.concurrencyFailure",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:15"]
+    },
+    {
+      "from": "GET /api/exception-translator-test/internal-server-error",
+      "to": "ExceptionTranslatorTestController.internalServerError",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:50"]
+    },
+    {
+      "from": "GET /api/exception-translator-test/missing-servlet-request-parameter",
+      "to": "ExceptionTranslatorTestController.missingServletRequestParameterException",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:30"]
+    },
+    {
+      "from": "GET /api/exception-translator-test/missing-servlet-request-part",
+      "to": "ExceptionTranslatorTestController.missingServletRequestPartException",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:25"]
+    },
+    {
+      "from": "GET /api/exception-translator-test/response-status",
+      "to": "ExceptionTranslatorTestController.exceptionWithResponseStatus",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:45"]
+    },
+    {
+      "from": "GET /api/exception-translator-test/unauthorized",
+      "to": "ExceptionTranslatorTestController.unauthorized",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:40"]
+    },
+    {
+      "from": "GET /api/runs",
+      "to": "BenchmarkResource.listRecentRuns",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:77"]
+    },
+    {
+      "from": "GET /api/runs/{id}",
+      "to": "BenchmarkResource.getRun",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:72"]
+    },
+    {
+      "from": "GET /api/test-cors",
+      "to": "WebConfigurerTestController.testCorsOnApiPath",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/config/WebConfigurerTestController.java:9"]
+    },
+    {
+      "from": "GET /api/users",
+      "to": "PublicUserResource.getAllPublicUsers",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/PublicUserResource.java:40"]
+    },
+    {
+      "from": "GET /test/test-cors",
+      "to": "WebConfigurerTestController.testCorsOnOtherPath",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/config/WebConfigurerTestController.java:14"]
+    },
+    {
+      "from": "ImplementationsApiDelegateHandler",
+      "to": "BenchmarkService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/api/ImplementationsApiDelegateHandler.java:4"]
+    },
+    {
+      "from": "JWTToken",
+      "to": "DomainUserDetailsService",
+      "type": "calls",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AuthenticateController.java:8"]
+    },
+    {
+      "from": "JWTToken",
+      "to": "Object",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AuthenticateController.java:109"]
+    },
+    {
+      "from": "LiquibaseConfiguration",
+      "to": "ApplicationProperties",
+      "type": "configured_by",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/LiquibaseConfiguration.java:38"]
+    },
+    {
+      "from": "LiquibaseConfiguration",
+      "to": "Liquibase",
+      "type": "configured_by",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/LiquibaseConfiguration.java:79"]
+    },
+    {
+      "from": "MailService",
+      "to": "MailServiceIT",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "src/main/java/com/vacaro/benchlab/service/MailService.java:25",
+        "src/test/java/com/vacaro/benchlab/service/MailServiceIT.java:38"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "MailServiceIT",
+      "to": "MailService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/test/java/com/vacaro/benchlab/service/MailServiceIT.java:35"]
+    },
+    {
+      "from": "Main",
+      "to": "Object",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["benchlab-web/src/main.tsx:373"]
+    },
+    {
+      "from": "Main",
+      "to": "T",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["benchlab-web/src/main.tsx:182"]
+    },
+    {
+      "from": "POST /api/account",
+      "to": "AccountResource.saveAccount",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:102"]
+    },
+    {
+      "from": "POST /api/account/change-password",
+      "to": "AccountResource.changePassword",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:129"]
+    },
+    {
+      "from": "POST /api/account/reset-password/finish",
+      "to": "AccountResource.finishPasswordReset",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:161"]
+    },
+    {
+      "from": "POST /api/account/reset-password/init",
+      "to": "AccountResource.requestPasswordReset",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:142"]
+    },
+    {
+      "from": "POST /api/algorithms",
+      "to": "BenchmarkResource.createAlgorithm",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:47"]
+    },
+    {
+      "from": "POST /api/authenticate",
+      "to": "AuthenticateController.authorize",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AuthenticateController.java:56"]
+    },
+    {
+      "from": "POST /api/datasets",
+      "to": "BenchmarkResource.createDataset",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:57"]
+    },
+    {
+      "from": "POST /api/exception-translator-test/method-argument",
+      "to": "ExceptionTranslatorTestController.methodArgument",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:20"]
+    },
+    {
+      "from": "POST /api/implementations",
+      "to": "BenchmarkResource.createImplementation",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:42"]
+    },
+    {
+      "from": "POST /api/internal/runs/{id}/result",
+      "to": "BenchmarkResource.registerResult",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:82"]
+    },
+    {
+      "from": "POST /api/register",
+      "to": "AccountResource.registerAccount",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:57"]
+    },
+    {
+      "from": "POST /api/runs",
+      "to": "BenchmarkResource.createRun",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:67"]
+    },
+    {
+      "from": "ProductionAdminPasswordConfiguration",
+      "to": "UserRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/ProductionAdminPasswordConfiguration.java:3"]
+    },
+    {
+      "from": "PublicUserResource",
+      "to": "UserService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/PublicUserResource.java:3"]
+    },
+    {
+      "from": "PublicUserResourceIT",
+      "to": "UserRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/PublicUserResourceIT.java:9"]
+    },
+    {
+      "from": "PublicUserResourceIT",
+      "to": "UserService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/PublicUserResourceIT.java:11"]
+    },
+    {
+      "from": "RabbitMqConfiguration",
+      "to": "BenchLabProperties",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/RabbitMqConfiguration.java:21"]
+    },
+    {
+      "from": "RabbitMqConfiguration",
+      "to": "Queue",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/RabbitMqConfiguration.java:26"]
+    },
+    {
+      "from": "RunEventPublisher",
+      "to": "BenchLabProperties",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/messaging/RunEventPublisher.java:3"]
+    },
+    {
+      "from": "RunSummary",
+      "to": "Object",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["benchlab-web/src/main.tsx:373"]
+    },
+    {
+      "from": "RunSummary",
+      "to": "T",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["benchlab-web/src/main.tsx:182"]
+    },
+    {
+      "from": "RunsApiDelegateHandler",
+      "to": "BenchmarkService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/api/RunsApiDelegateHandler.java:3"]
+    },
+    {
+      "from": "SecurityJwtConfiguration",
+      "to": "SecurityMetersService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/SecurityJwtConfiguration.java:7"]
+    },
+    {
+      "from": "SecurityMetersService",
+      "to": "SecurityMetersServiceTests",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "src/test/java/com/vacaro/benchlab/management/SecurityMetersServiceTests.java:12",
+        "src/main/java/com/vacaro/benchlab/management/SecurityMetersService.java:7"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "SecurityMetersServiceTests",
+      "to": "SecurityMetersService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/test/java/com/vacaro/benchlab/management/SecurityMetersServiceTests.java:18"]
+    },
+    {
+      "from": "UserMapper",
+      "to": "UserMapperTest",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "src/main/java/com/vacaro/benchlab/service/mapper/UserMapper.java:20",
+        "src/test/java/com/vacaro/benchlab/service/mapper/UserMapperTest.java:22"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "UserMapperTest",
+      "to": "UserMapper",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/test/java/com/vacaro/benchlab/service/mapper/UserMapperTest.java:20"]
+    },
+    {
+      "from": "UserResource",
+      "to": "DomainUserDetailsService",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "src/main/java/com/vacaro/benchlab/security/DomainUserDetailsService.java:22",
+        "src/main/java/com/vacaro/benchlab/web/rest/UserResource.java:58"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "UserResource",
+      "to": "DomainUserDetailsServiceIT",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "src/main/java/com/vacaro/benchlab/web/rest/UserResource.java:58",
+        "src/test/java/com/vacaro/benchlab/security/DomainUserDetailsServiceIT.java:26"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "UserResource",
+      "to": "MailService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/UserResource.java:7"]
+    },
+    {
+      "from": "UserResource",
+      "to": "UserMapper",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "src/main/java/com/vacaro/benchlab/service/mapper/UserMapper.java:20",
+        "src/main/java/com/vacaro/benchlab/web/rest/UserResource.java:58"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "UserResource",
+      "to": "UserMapperTest",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "src/main/java/com/vacaro/benchlab/web/rest/UserResource.java:58",
+        "src/test/java/com/vacaro/benchlab/service/mapper/UserMapperTest.java:22"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "UserResource",
+      "to": "UserRepository",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "src/main/java/com/vacaro/benchlab/repository/UserRepository.java:10",
+        "src/main/java/com/vacaro/benchlab/web/rest/UserResource.java:58"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "UserResource",
+      "to": "UserRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/UserResource.java:5"]
+    },
+    {
+      "from": "UserResource",
+      "to": "UserService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/UserResource.java:8"]
+    },
+    {
+      "from": "UserResource",
+      "to": "UserService",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "src/main/java/com/vacaro/benchlab/web/rest/UserResource.java:58",
+        "src/main/java/com/vacaro/benchlab/service/UserService.java:30"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "UserResource",
+      "to": "UserServiceIT",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "src/main/java/com/vacaro/benchlab/web/rest/UserResource.java:58",
+        "src/test/java/com/vacaro/benchlab/service/UserServiceIT.java:33"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "UserResourceIT",
+      "to": "TestUtil",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/UserResourceIT.java:482"]
+    },
+    {
+      "from": "UserResourceIT",
+      "to": "UserMapper",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/UserResourceIT.java:15"]
+    },
+    {
+      "from": "UserResourceIT",
+      "to": "UserRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/UserResourceIT.java:11"]
+    },
+    {
+      "from": "UserResourceIT",
+      "to": "UserService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/UserResourceIT.java:13"]
+    },
+    {
+      "from": "UserService",
+      "to": "AuthorityRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/UserService.java:6"]
+    },
+    {
+      "from": "UserService",
+      "to": "DomainUserDetailsService",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "src/main/java/com/vacaro/benchlab/security/DomainUserDetailsService.java:22",
+        "src/main/java/com/vacaro/benchlab/service/UserService.java:30"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "UserService",
+      "to": "DomainUserDetailsServiceIT",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "src/main/java/com/vacaro/benchlab/service/UserService.java:30",
+        "src/test/java/com/vacaro/benchlab/security/DomainUserDetailsServiceIT.java:26"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "UserService",
+      "to": "UserMapper",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "src/main/java/com/vacaro/benchlab/service/mapper/UserMapper.java:20",
+        "src/main/java/com/vacaro/benchlab/service/UserService.java:30"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "UserService",
+      "to": "UserMapperTest",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "src/main/java/com/vacaro/benchlab/service/UserService.java:30",
+        "src/test/java/com/vacaro/benchlab/service/mapper/UserMapperTest.java:22"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "UserService",
+      "to": "UserRepository",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "src/main/java/com/vacaro/benchlab/repository/UserRepository.java:10",
+        "src/main/java/com/vacaro/benchlab/service/UserService.java:30"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "UserService",
+      "to": "UserRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/UserService.java:7"]
+    },
+    {
+      "from": "UserService",
+      "to": "UserServiceIT",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "src/main/java/com/vacaro/benchlab/service/UserService.java:30",
+        "src/test/java/com/vacaro/benchlab/service/UserServiceIT.java:33"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "UserServiceIT",
+      "to": "UserRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["src/test/java/com/vacaro/benchlab/service/UserServiceIT.java:8"]
+    },
+    {
+      "from": "UserServiceIT",
+      "to": "UserService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": ["src/test/java/com/vacaro/benchlab/service/UserServiceIT.java:29"]
+    },
+    {
+      "from": "WebConfigurer",
+      "to": "Object",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/WebConfigurer.java:37"]
+    },
+    {
+      "from": "WebConfigurerTest",
+      "to": "WebConfigurer",
+      "type": "configured_by",
+      "confidence": "medium",
+      "evidence": ["src/test/java/com/vacaro/benchlab/config/WebConfigurerTest.java:21"]
+    }
+  ],
+  "endpoints": [
+    {
+      "method": "GET",
+      "path": "/api/account",
+      "handler": "AccountResource.getAccount",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java",
+      "line": 87,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:87"]
+    },
+    {
+      "method": "POST",
+      "path": "/api/account",
+      "handler": "AccountResource.saveAccount",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java",
+      "line": 102,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:102"]
+    },
+    {
+      "method": "POST",
+      "path": "/api/account/change-password",
+      "handler": "AccountResource.changePassword",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java",
+      "line": 129,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:129"]
+    },
+    {
+      "method": "POST",
+      "path": "/api/account/reset-password/finish",
+      "handler": "AccountResource.finishPasswordReset",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java",
+      "line": 161,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:161"]
+    },
+    {
+      "method": "POST",
+      "path": "/api/account/reset-password/init",
+      "handler": "AccountResource.requestPasswordReset",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java",
+      "line": 142,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:142"]
+    },
+    {
+      "method": "GET",
+      "path": "/api/activate",
+      "handler": "AccountResource.activateAccount",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java",
+      "line": 73,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:73"]
+    },
+    {
+      "method": "GET",
+      "path": "/api/algorithms",
+      "handler": "BenchmarkResource.listAlgorithms",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 52,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:52"]
+    },
+    {
+      "method": "POST",
+      "path": "/api/algorithms",
+      "handler": "BenchmarkResource.createAlgorithm",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 47,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:47"]
+    },
+    {
+      "method": "GET",
+      "path": "/api/authenticate",
+      "handler": "AuthenticateController.isAuthenticated",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/AuthenticateController.java",
+      "line": 77,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AuthenticateController.java:77"]
+    },
+    {
+      "method": "POST",
+      "path": "/api/authenticate",
+      "handler": "AuthenticateController.authorize",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/AuthenticateController.java",
+      "line": 56,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AuthenticateController.java:56"]
+    },
+    {
+      "method": "GET",
+      "path": "/api/benchmarks/compare",
+      "handler": "BenchmarkResource.compare",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 95,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:95"]
+    },
+    {
+      "method": "GET",
+      "path": "/api/benchmarks/complexity",
+      "handler": "BenchmarkResource.complexity",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 105,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:105"]
+    },
+    {
+      "method": "GET",
+      "path": "/api/benchmarks/timeseries",
+      "handler": "BenchmarkResource.timeseries",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 100,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:100"]
+    },
+    {
+      "method": "GET",
+      "path": "/api/datasets",
+      "handler": "BenchmarkResource.listDatasets",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 62,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:62"]
+    },
+    {
+      "method": "POST",
+      "path": "/api/datasets",
+      "handler": "BenchmarkResource.createDataset",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 57,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:57"]
+    },
+    {
+      "method": "GET",
+      "path": "/api/exception-translator-test/access-denied",
+      "handler": "ExceptionTranslatorTestController.accessdenied",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java",
+      "line": 35,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:35"]
+    },
+    {
+      "method": "GET",
+      "path": "/api/exception-translator-test/concurrency-failure",
+      "handler": "ExceptionTranslatorTestController.concurrencyFailure",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java",
+      "line": 15,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:15"]
+    },
+    {
+      "method": "GET",
+      "path": "/api/exception-translator-test/internal-server-error",
+      "handler": "ExceptionTranslatorTestController.internalServerError",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java",
+      "line": 50,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:50"]
+    },
+    {
+      "method": "POST",
+      "path": "/api/exception-translator-test/method-argument",
+      "handler": "ExceptionTranslatorTestController.methodArgument",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java",
+      "line": 20,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:20"]
+    },
+    {
+      "method": "GET",
+      "path": "/api/exception-translator-test/missing-servlet-request-parameter",
+      "handler": "ExceptionTranslatorTestController.missingServletRequestParameterException",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java",
+      "line": 30,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:30"]
+    },
+    {
+      "method": "GET",
+      "path": "/api/exception-translator-test/missing-servlet-request-part",
+      "handler": "ExceptionTranslatorTestController.missingServletRequestPartException",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java",
+      "line": 25,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:25"]
+    },
+    {
+      "method": "GET",
+      "path": "/api/exception-translator-test/response-status",
+      "handler": "ExceptionTranslatorTestController.exceptionWithResponseStatus",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java",
+      "line": 45,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:45"]
+    },
+    {
+      "method": "GET",
+      "path": "/api/exception-translator-test/unauthorized",
+      "handler": "ExceptionTranslatorTestController.unauthorized",
+      "file": "src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java",
+      "line": 40,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/errors/ExceptionTranslatorTestController.java:40"]
+    },
+    {
+      "method": "POST",
+      "path": "/api/implementations",
+      "handler": "BenchmarkResource.createImplementation",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 42,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:42"]
+    },
+    {
+      "method": "POST",
+      "path": "/api/internal/runs/{id}/result",
+      "handler": "BenchmarkResource.registerResult",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 82,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:82"]
+    },
+    {
+      "method": "POST",
+      "path": "/api/register",
+      "handler": "AccountResource.registerAccount",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java",
+      "line": 57,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/AccountResource.java:57"]
+    },
+    {
+      "method": "GET",
+      "path": "/api/runs",
+      "handler": "BenchmarkResource.listRecentRuns",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 77,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:77"]
+    },
+    {
+      "method": "POST",
+      "path": "/api/runs",
+      "handler": "BenchmarkResource.createRun",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 67,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:67"]
+    },
+    {
+      "method": "GET",
+      "path": "/api/runs/{id}",
+      "handler": "BenchmarkResource.getRun",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java",
+      "line": 72,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/benchmark/BenchmarkResource.java:72"]
+    },
+    {
+      "method": "GET",
+      "path": "/api/test-cors",
+      "handler": "WebConfigurerTestController.testCorsOnApiPath",
+      "file": "src/test/java/com/vacaro/benchlab/config/WebConfigurerTestController.java",
+      "line": 9,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/config/WebConfigurerTestController.java:9"]
+    },
+    {
+      "method": "GET",
+      "path": "/api/users",
+      "handler": "PublicUserResource.getAllPublicUsers",
+      "file": "src/main/java/com/vacaro/benchlab/web/rest/PublicUserResource.java",
+      "line": 40,
+      "confidence": "high",
+      "evidence": ["src/main/java/com/vacaro/benchlab/web/rest/PublicUserResource.java:40"]
+    },
+    {
+      "method": "GET",
+      "path": "/test/test-cors",
+      "handler": "WebConfigurerTestController.testCorsOnOtherPath",
+      "file": "src/test/java/com/vacaro/benchlab/config/WebConfigurerTestController.java",
+      "line": 14,
+      "confidence": "high",
+      "evidence": ["src/test/java/com/vacaro/benchlab/config/WebConfigurerTestController.java:14"]
+    }
+  ],
+  "findings": [
+    {
+      "severity": "low",
+      "message": "Added 23 low-confidence inferred dependencies based on co-located naming patterns.",
+      "evidence": []
+    },
+    {
+      "severity": "info",
+      "message": "Detected 32 endpoints and 229 nodes.",
+      "evidence": []
+    },
+    {
+      "severity": "info",
+      "message": "Node inventory: config=16, controller=18, dao=1, database=7, endpoint=32, external_client=9, handler=39, model=17, queue=6, repository=9, service=11, unknown=64",
+      "evidence": []
+    },
+    {
+      "severity": "low",
+      "message": "91 nodes are low-confidence, usually naming-based detections.",
+      "evidence": []
+    },
+    {
+      "severity": "low",
+      "message": "23 edges are explicit low-confidence inferred dependencies.",
+      "evidence": []
+    }
+  ],
+  "limitations": [
+    {
+      "type": "generated_code",
+      "message": "Static analysis may be incomplete because generated code was detected.",
+      "evidence": ["src/main/java/com/vacaro/benchlab/GeneratedByJHipster.java:9"]
+    },
+    {
+      "type": "ambiguous_di",
+      "message": "Static analysis may be incomplete because ambiguous di was detected.",
+      "evidence": ["src/main/java/com/vacaro/benchlab/config/LiquibaseConfiguration.java:36"]
+    },
+    {
+      "type": "reflection",
+      "message": "Static analysis may be incomplete because reflection was detected.",
+      "evidence": ["src/main/java/com/vacaro/benchlab/service/MailService.java:77"]
+    },
+    {
+      "type": "reflection",
+      "message": "Static analysis may be incomplete because reflection was detected.",
+      "evidence": ["src/test/java/com/vacaro/benchlab/config/SqlTestContainersSpringContextCustomizerFactory.java:34"]
+    },
+    {
+      "type": "reflection",
+      "message": "Static analysis may be incomplete because reflection was detected.",
+      "evidence": ["src/test/java/com/vacaro/benchlab/service/MailServiceIT.java:60"]
+    },
+    {
+      "type": "reflection",
+      "message": "Static analysis may be incomplete because reflection was detected.",
+      "evidence": ["src/test/java/com/vacaro/benchlab/web/rest/TestUtil.java:10"]
+    }
+  ]
+}

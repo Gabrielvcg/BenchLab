@@ -1,0 +1,465 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  pull-requests: read
+
+concurrency:
+  group: benchlab-ci-cd-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sonarcloud-analysis:
+    name: SonarCloud Analysis
+    runs-on: ubuntu-latest
+    environment: prod
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Ensure Maven wrapper is executable
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x mvnw
+          if [[ "$(uname -s)" != MINGW* && -f .mvn/maven.config ]]; then
+            sed -i '/javax.net.ssl.trustStoreType=Windows-ROOT/d' .mvn/maven.config
+          fi
+
+      - name: Run verification and SonarCloud analysis
+        if: env.SONAR_TOKEN != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION || 'gabrielvcg' }}
+          SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY || format('{0}_{1}', github.repository_owner, github.event.repository.name) }}
+        run: >
+          ./mvnw -ntp --batch-mode verify sonar:sonar
+          -Dsonar.token="${SONAR_TOKEN}"
+          -Dsonar.host.url="https://sonarcloud.io"
+          -Dsonar.organization="${SONAR_ORGANIZATION}"
+          -Dsonar.projectKey="${SONAR_PROJECT_KEY}"
+
+      - name: Run verification without SonarCloud
+        if: env.SONAR_TOKEN == ''
+        run: ./mvnw -ntp --batch-mode verify
+
+  component-checks:
+    name: Worker, Web, and Compose Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Reject committed credential material
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git ls-files | grep -Eiq '(^|/)([^/]+\.(p12|pfx|jks|pem|key))$'; then
+            echo "Credential-bearing key material must not be committed."
+            exit 1
+          fi
+          if git grep -I -n -E '-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----|key-store-password:[[:space:]]*password|RABBITMQ_DEFAULT_PASS=benchlab|GF_SECURITY_ADMIN_PASSWORD=admin|jwtSecretKey'; then
+            echo "A likely secret or default credential was found in tracked files."
+            exit 1
+          fi
+
+      - name: Set up Go 1.22
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22.x'
+          cache-dependency-path: runner-worker/go.sum
+
+      - name: Test and vet worker
+        working-directory: runner-worker
+        run: |
+          go test ./...
+          go vet ./...
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: benchlab-web/package-lock.json
+
+      - name: Install, test, and build web
+        working-directory: benchlab-web
+        run: |
+          npm ci --ignore-scripts
+          npm test -- --run
+          npm run build
+
+      - name: Validate deployment Compose file
+        env:
+          BENCHLAB_API_IMAGE: example.invalid/benchlab-api:test
+          BENCHLAB_WORKER_IMAGE: example.invalid/benchlab-worker:test
+          BENCHLAB_WEB_IMAGE: example.invalid/benchlab-web:test
+          SPRING_DATASOURCE_PASSWORD: compose-validation-only
+          POSTGRES_PASSWORD: compose-validation-only
+          RABBITMQ_PASSWORD: compose-validation-only
+          JHIPSTER_SECURITY_AUTHENTICATION_JWT_BASE64_SECRET: Y29tcG9zZS12YWxpZGF0aW9uLW9ubHktbm90LWEtcnVudGltZS1zZWNyZXQ=
+          BENCHLAB_WORKER_TOKEN: compose-validation-only
+          BENCHLAB_SECURITY_ADMIN_PASSWORD: compose-validation-only
+        run: docker compose -f deploy/docker-compose.yml config --quiet
+
+  build-container:
+    name: Build Containers
+    runs-on: ubuntu-latest
+    needs:
+      - sonarcloud-analysis
+      - component-checks
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+    outputs:
+      api_image: ${{ steps.images.outputs.api_image }}
+      worker_image: ${{ steps.images.outputs.worker_image }}
+      web_image: ${{ steps.images.outputs.web_image }}
+      runner_python_image: ${{ steps.images.outputs.runner_python_image }}
+      runner_java_image: ${{ steps.images.outputs.runner_java_image }}
+      runner_go_image: ${{ steps.images.outputs.runner_go_image }}
+      runner_rust_image: ${{ steps.images.outputs.runner_rust_image }}
+      runner_c_image: ${{ steps.images.outputs.runner_c_image }}
+      runner_cpp_image: ${{ steps.images.outputs.runner_cpp_image }}
+      runner_ruby_image: ${{ steps.images.outputs.runner_ruby_image }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Ensure Maven wrapper is executable
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x mvnw
+          if [[ "$(uname -s)" != MINGW* && -f .mvn/maven.config ]]; then
+            sed -i '/javax.net.ssl.trustStoreType=Windows-ROOT/d' .mvn/maven.config
+          fi
+
+      - name: Compute image names
+        id: images
+        shell: bash
+        run: |
+          set -euo pipefail
+          repository="${GITHUB_REPOSITORY,,}"
+          echo "api_image=ghcr.io/${repository}-api:${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
+          echo "worker_image=ghcr.io/${repository}-runner-worker:${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
+          echo "web_image=ghcr.io/${repository}-web:${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
+          echo "runner_python_image=python:3.12-alpine@sha256:d09d15e60962ca365d1cd544a48773bac9d33f2fb1b00f2aa0deec78ade7dc31" >> "${GITHUB_OUTPUT}"
+          echo "runner_java_image=eclipse-temurin:21-jdk@sha256:85f00967bcc624fc19fa9c2cf124ea426a5363898e267141726f31f358c2e14b" >> "${GITHUB_OUTPUT}"
+          echo "runner_go_image=golang:1.22-alpine@sha256:1699c10032ca2582ec89a24a1312d986a3f094aed3d5c1147b19880afe40e052" >> "${GITHUB_OUTPUT}"
+          echo "runner_rust_image=rust:1.87-bookworm@sha256:251cec8da4689d180f124ef00024c2f83f79d9bf984e43c180a598119e326b84" >> "${GITHUB_OUTPUT}"
+          echo "runner_c_image=gcc:14@sha256:468b5b959b5f4025724d8549f45550c6ad38a32474733cbf130f8f2c1bc80805" >> "${GITHUB_OUTPUT}"
+          echo "runner_cpp_image=gcc:14@sha256:468b5b959b5f4025724d8549f45550c6ad38a32474733cbf130f8f2c1bc80805" >> "${GITHUB_OUTPUT}"
+          echo "runner_ruby_image=ruby:3.3-alpine@sha256:2f763b37070564bb00b736f1d4dba6e8f8d203b5f93b94463879fd8d79966f28" >> "${GITHUB_OUTPUT}"
+
+      - name: Build and publish API image to GHCR
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            if ./mvnw -ntp --batch-mode -DskipTests -Pprod compile jib:build \
+              -Djib.to.image="${{ steps.images.outputs.api_image }}" \
+              -Djib.to.auth.username="${{ github.actor }}" \
+              -Djib.to.auth.password="${GITHUB_TOKEN}"; then
+              exit 0
+            fi
+
+            if [ "${attempt}" -lt 3 ]; then
+              echo "Jib build failed on attempt ${attempt}. Retrying in 20 seconds..."
+              sleep 20
+            fi
+          done
+
+          echo "Jib build failed after 3 attempts."
+          exit 1
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and publish worker image to GHCR
+        uses: docker/build-push-action@v6
+        with:
+          context: ./runner-worker
+          file: ./runner-worker/Dockerfile
+          push: true
+          tags: ${{ steps.images.outputs.worker_image }}
+
+      - name: Build and publish web image to GHCR
+        uses: docker/build-push-action@v6
+        with:
+          context: ./benchlab-web
+          file: ./benchlab-web/Dockerfile
+          push: true
+          tags: ${{ steps.images.outputs.web_image }}
+
+  deploy-vps:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+    needs: build-container
+    # Production deployment is always an explicit, manually dispatched promotion.
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    environment: prod
+    env:
+      VPS_HOST: ${{ vars.VPS_HOST }}
+      VPS_PORT: ${{ vars.VPS_PORT || '22' }}
+      VPS_USER: ${{ vars.VPS_USER }}
+      VPS_PATH: ${{ vars.VPS_PATH || '/opt/benchlab/app' }}
+      VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+      GHCR_USERNAME: ${{ vars.GHCR_USERNAME || github.actor }}
+      GHCR_READ_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      COMPOSE_PROJECT_NAME: ${{ vars.COMPOSE_PROJECT_NAME || 'benchlab' }}
+      BENCHLAB_API_IMAGE: ${{ needs.build-container.outputs.api_image }}
+      BENCHLAB_WORKER_IMAGE: ${{ needs.build-container.outputs.worker_image }}
+      BENCHLAB_WEB_IMAGE: ${{ needs.build-container.outputs.web_image }}
+      RUNNER_IMAGE_PYTHON: ${{ needs.build-container.outputs.runner_python_image }}
+      RUNNER_IMAGE_JAVA: ${{ needs.build-container.outputs.runner_java_image }}
+      RUNNER_IMAGE_GO: ${{ needs.build-container.outputs.runner_go_image }}
+      RUNNER_IMAGE_RUST: ${{ needs.build-container.outputs.runner_rust_image }}
+      RUNNER_IMAGE_C: ${{ needs.build-container.outputs.runner_c_image }}
+      RUNNER_IMAGE_CPP: ${{ needs.build-container.outputs.runner_cpp_image }}
+      RUNNER_IMAGE_RUBY: ${{ needs.build-container.outputs.runner_ruby_image }}
+      APP_HOST_PORT: ${{ vars.APP_HOST_PORT || '127.0.0.1:8083' }}
+      WEB_HOST_PORT: ${{ vars.WEB_HOST_PORT || '127.0.0.1:3003' }}
+      API_HEALTH_URL: ${{ vars.API_HEALTH_URL || 'http://127.0.0.1:8083/management/health' }}
+      POSTGRES_HOST_PORT: ${{ vars.POSTGRES_HOST_PORT || '127.0.0.1:5435' }}
+      RABBITMQ_MANAGEMENT_HOST_PORT: ${{ vars.RABBITMQ_MANAGEMENT_HOST_PORT || '127.0.0.1:15673' }}
+      WORKER_TEMP_PATH: ${{ vars.WORKER_TEMP_PATH || '/opt/benchlab/worker-tmp' }}
+      DOCKER_AUTH_CONFIG_PATH: ${{ vars.DOCKER_AUTH_CONFIG_PATH || '/home/vacaro/.docker/config.json' }}
+      SPRING_PROFILES_ACTIVE: ${{ vars.SPRING_PROFILES_ACTIVE || 'prod' }}
+      SERVER_FORWARD_HEADERS_STRATEGY: ${{ vars.SERVER_FORWARD_HEADERS_STRATEGY || 'native' }}
+      JAVA_OPTIONS: ${{ vars.JAVA_OPTIONS || '-Xmx768m -Xms256m' }}
+      MANAGEMENT_PROMETHEUS_METRICS_EXPORT_ENABLED: ${{ vars.MANAGEMENT_PROMETHEUS_METRICS_EXPORT_ENABLED || 'false' }}
+      SPRING_DATASOURCE_URL: ${{ vars.SPRING_DATASOURCE_URL || 'jdbc:postgresql://postgresql:5432/benchLab' }}
+      SPRING_DATASOURCE_USERNAME: ${{ vars.SPRING_DATASOURCE_USERNAME || 'benchLab' }}
+      SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+      SPRING_LIQUIBASE_ENABLED: ${{ vars.SPRING_LIQUIBASE_ENABLED || 'true' }}
+      SPRING_LIQUIBASE_CONTEXTS: ${{ vars.SPRING_LIQUIBASE_CONTEXTS || 'prod' }}
+      POSTGRES_DB: ${{ vars.POSTGRES_DB || 'benchLab' }}
+      POSTGRES_USER: ${{ vars.POSTGRES_USER || 'benchLab' }}
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      RABBITMQ_USER: ${{ vars.RABBITMQ_USER || 'benchlab' }}
+      RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
+      RUN_REQUESTED_QUEUE: ${{ vars.RUN_REQUESTED_QUEUE || 'benchlab.run.requested.q' }}
+      BENCHLAB_WORKER_TOKEN: ${{ secrets.BENCHLAB_WORKER_TOKEN }}
+      BENCHLAB_ADMIN_PASSWORD: ${{ secrets.BENCHLAB_ADMIN_PASSWORD }}
+      JHIPSTER_SECURITY_AUTHENTICATION_JWT_BASE64_SECRET: ${{ secrets.JHIPSTER_SECURITY_AUTHENTICATION_JWT_BASE64_SECRET }}
+      JHIPSTER_MAIL_BASE_URL: ${{ vars.JHIPSTER_MAIL_BASE_URL || 'https://benchlab.example.com' }}
+      BENCHLAB_LIMITS_MAX_SOURCE_BYTES: ${{ vars.BENCHLAB_LIMITS_MAX_SOURCE_BYTES || '65536' }}
+      BENCHLAB_LIMITS_MAX_TIMEOUT_MS: ${{ vars.BENCHLAB_LIMITS_MAX_TIMEOUT_MS || '30000' }}
+      BENCHLAB_LIMITS_MAX_MEMORY_MB: ${{ vars.BENCHLAB_LIMITS_MAX_MEMORY_MB || '512' }}
+      BENCHLAB_LIMITS_MAX_CPU_LIMIT: ${{ vars.BENCHLAB_LIMITS_MAX_CPU_LIMIT || '2.0' }}
+      BENCHLAB_LIMITS_MAX_ITERATIONS: ${{ vars.BENCHLAB_LIMITS_MAX_ITERATIONS || '10' }}
+      BENCHLAB_LIMITS_MAX_WARMUP_ITERATIONS: ${{ vars.BENCHLAB_LIMITS_MAX_WARMUP_ITERATIONS || '3' }}
+      BENCHLAB_LIMITS_MAX_DATASET_SIZE: ${{ vars.BENCHLAB_LIMITS_MAX_DATASET_SIZE || '25000000' }}
+      BENCHLAB_LIMITS_MAX_OUTSTANDING_RUNS_PER_USER: ${{ vars.BENCHLAB_LIMITS_MAX_OUTSTANDING_RUNS_PER_USER || '32' }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Configure SSH
+        shell: bash
+        run: |
+          set -euo pipefail
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "${VPS_SSH_KEY}" | tr -d '\r' > ~/.ssh/vps_deploy_key
+          chmod 600 ~/.ssh/vps_deploy_key
+          touch ~/.ssh/known_hosts
+          for attempt in 1 2 3; do
+            if ssh-keyscan -T 20 -p "${VPS_PORT}" "${VPS_HOST}" >> ~/.ssh/known_hosts; then
+              break
+            fi
+            echo "ssh-keyscan failed for ${VPS_HOST}:${VPS_PORT} on attempt ${attempt}"
+            sleep 5
+          done
+          ssh \
+            -o StrictHostKeyChecking=accept-new \
+            -o UserKnownHostsFile=~/.ssh/known_hosts \
+            -i ~/.ssh/vps_deploy_key \
+            -p "${VPS_PORT}" \
+            "${VPS_USER}@${VPS_HOST}" \
+            "echo 'SSH connectivity OK'"
+
+      - name: Sync deploy files to VPS
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh \
+            -o StrictHostKeyChecking=accept-new \
+            -o UserKnownHostsFile=~/.ssh/known_hosts \
+            -i ~/.ssh/vps_deploy_key \
+            -p "${VPS_PORT}" \
+            "${VPS_USER}@${VPS_HOST}" \
+            "DEPLOY_PATH='${VPS_PATH}' WORKER_TEMP_PATH='${WORKER_TEMP_PATH}' bash -s" <<'REMOTE_SCRIPT'
+          set -euo pipefail
+
+          if ! mkdir -p "${DEPLOY_PATH}" "${WORKER_TEMP_PATH}" 2>/dev/null; then
+            echo "Deploy path requires elevated permissions; trying passwordless sudo."
+            sudo -n install -d -m 775 -o "$(id -un)" -g "$(id -gn)" "${DEPLOY_PATH}"
+            sudo -n install -d -m 775 -o "$(id -un)" -g "$(id -gn)" "${WORKER_TEMP_PATH}"
+          fi
+          REMOTE_SCRIPT
+
+          rsync -az --delete \
+            -e "ssh -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=~/.ssh/known_hosts -i ~/.ssh/vps_deploy_key -p ${VPS_PORT}" \
+            deploy/ "${VPS_USER}@${VPS_HOST}:${VPS_PATH}/deploy/"
+
+      - name: Generate deployment environment file
+        shell: bash
+        run: |
+          set -euo pipefail
+          write_env() {
+            local key="$1"
+            local value="${2//$'\r'/}"
+            if [[ "${value}" == *$'\n'* ]]; then
+              echo "::error::${key} contains a newline and cannot be written to .env"
+              exit 1
+            fi
+            printf '%s=%s\n' "${key}" "${value}" >> .env.production
+          }
+
+          : > .env.production
+          write_env COMPOSE_PROJECT_NAME "${COMPOSE_PROJECT_NAME}"
+          write_env BENCHLAB_API_IMAGE "${BENCHLAB_API_IMAGE}"
+          write_env BENCHLAB_WORKER_IMAGE "${BENCHLAB_WORKER_IMAGE}"
+          write_env BENCHLAB_WEB_IMAGE "${BENCHLAB_WEB_IMAGE}"
+          write_env RUNNER_IMAGE_PYTHON "${RUNNER_IMAGE_PYTHON}"
+          write_env RUNNER_IMAGE_JAVA "${RUNNER_IMAGE_JAVA}"
+          write_env RUNNER_IMAGE_GO "${RUNNER_IMAGE_GO}"
+          write_env RUNNER_IMAGE_RUST "${RUNNER_IMAGE_RUST}"
+          write_env RUNNER_IMAGE_C "${RUNNER_IMAGE_C}"
+          write_env RUNNER_IMAGE_CPP "${RUNNER_IMAGE_CPP}"
+          write_env RUNNER_IMAGE_RUBY "${RUNNER_IMAGE_RUBY}"
+          write_env APP_HOST_PORT "${APP_HOST_PORT}"
+          write_env WEB_HOST_PORT "${WEB_HOST_PORT}"
+          write_env API_HEALTH_URL "${API_HEALTH_URL}"
+          write_env POSTGRES_HOST_PORT "${POSTGRES_HOST_PORT}"
+          write_env RABBITMQ_MANAGEMENT_HOST_PORT "${RABBITMQ_MANAGEMENT_HOST_PORT}"
+          write_env WORKER_TEMP_PATH "${WORKER_TEMP_PATH}"
+          write_env DOCKER_AUTH_CONFIG_PATH "${DOCKER_AUTH_CONFIG_PATH}"
+          write_env SPRING_PROFILES_ACTIVE "${SPRING_PROFILES_ACTIVE}"
+          write_env SERVER_FORWARD_HEADERS_STRATEGY "${SERVER_FORWARD_HEADERS_STRATEGY}"
+          write_env JAVA_OPTIONS "${JAVA_OPTIONS}"
+          write_env MANAGEMENT_PROMETHEUS_METRICS_EXPORT_ENABLED "${MANAGEMENT_PROMETHEUS_METRICS_EXPORT_ENABLED}"
+          write_env SPRING_DATASOURCE_URL "${SPRING_DATASOURCE_URL}"
+          write_env SPRING_DATASOURCE_USERNAME "${SPRING_DATASOURCE_USERNAME}"
+          write_env SPRING_DATASOURCE_PASSWORD "${SPRING_DATASOURCE_PASSWORD:-${POSTGRES_PASSWORD}}"
+          write_env SPRING_LIQUIBASE_ENABLED "${SPRING_LIQUIBASE_ENABLED}"
+          write_env SPRING_LIQUIBASE_CONTEXTS "${SPRING_LIQUIBASE_CONTEXTS}"
+          write_env POSTGRES_DB "${POSTGRES_DB}"
+          write_env POSTGRES_USER "${POSTGRES_USER}"
+          write_env POSTGRES_PASSWORD "${POSTGRES_PASSWORD}"
+          write_env RABBITMQ_USER "${RABBITMQ_USER}"
+          write_env RABBITMQ_PASSWORD "${RABBITMQ_PASSWORD}"
+          write_env RUN_REQUESTED_QUEUE "${RUN_REQUESTED_QUEUE}"
+          write_env BENCHLAB_WORKER_TOKEN "${BENCHLAB_WORKER_TOKEN}"
+          write_env BENCHLAB_SECURITY_ADMIN_PASSWORD "${BENCHLAB_ADMIN_PASSWORD}"
+          write_env JHIPSTER_SECURITY_AUTHENTICATION_JWT_BASE64_SECRET "${JHIPSTER_SECURITY_AUTHENTICATION_JWT_BASE64_SECRET}"
+          write_env JHIPSTER_MAIL_BASE_URL "${JHIPSTER_MAIL_BASE_URL}"
+          write_env BENCHLAB_LIMITS_MAX_SOURCE_BYTES "${BENCHLAB_LIMITS_MAX_SOURCE_BYTES}"
+          write_env BENCHLAB_LIMITS_MAX_TIMEOUT_MS "${BENCHLAB_LIMITS_MAX_TIMEOUT_MS}"
+          write_env BENCHLAB_LIMITS_MAX_MEMORY_MB "${BENCHLAB_LIMITS_MAX_MEMORY_MB}"
+          write_env BENCHLAB_LIMITS_MAX_CPU_LIMIT "${BENCHLAB_LIMITS_MAX_CPU_LIMIT}"
+          write_env BENCHLAB_LIMITS_MAX_ITERATIONS "${BENCHLAB_LIMITS_MAX_ITERATIONS}"
+          write_env BENCHLAB_LIMITS_MAX_WARMUP_ITERATIONS "${BENCHLAB_LIMITS_MAX_WARMUP_ITERATIONS}"
+          write_env BENCHLAB_LIMITS_MAX_DATASET_SIZE "${BENCHLAB_LIMITS_MAX_DATASET_SIZE}"
+          write_env BENCHLAB_LIMITS_MAX_OUTSTANDING_RUNS_PER_USER "${BENCHLAB_LIMITS_MAX_OUTSTANDING_RUNS_PER_USER}"
+
+      - name: Upload deployment environment file
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh \
+            -o StrictHostKeyChecking=accept-new \
+            -o UserKnownHostsFile=~/.ssh/known_hosts \
+            -i ~/.ssh/vps_deploy_key \
+            -p "${VPS_PORT}" \
+          "${VPS_USER}@${VPS_HOST}" \
+            "umask 077 && if [ -f '${VPS_PATH}/.env' ]; then cp -p '${VPS_PATH}/.env' '${VPS_PATH}/.env.previous'; fi && cat > '${VPS_PATH}/.env'" < .env.production
+
+      - name: Pull and restart services on VPS
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -n "${GHCR_READ_TOKEN:-}" ]; then
+            printf '%s\n' "${GHCR_READ_TOKEN}" | ssh \
+              -o StrictHostKeyChecking=accept-new \
+              -o UserKnownHostsFile=~/.ssh/known_hosts \
+              -i ~/.ssh/vps_deploy_key \
+              -p "${VPS_PORT}" \
+              "${VPS_USER}@${VPS_HOST}" \
+              "docker login ghcr.io -u '${GHCR_USERNAME}' --password-stdin"
+          fi
+
+          ssh \
+            -o StrictHostKeyChecking=accept-new \
+            -o UserKnownHostsFile=~/.ssh/known_hosts \
+            -i ~/.ssh/vps_deploy_key \
+            -p "${VPS_PORT}" \
+            "${VPS_USER}@${VPS_HOST}" \
+            "DEPLOY_PATH='${VPS_PATH}' API_HEALTH_URL='${API_HEALTH_URL}' bash -s" <<'REMOTE_SCRIPT'
+          set -euo pipefail
+
+          compose() {
+            if command -v docker-compose >/dev/null 2>&1; then
+              docker-compose "$@"
+            else
+              docker compose "$@"
+            fi
+          }
+
+          cd "${DEPLOY_PATH}"
+          compose --env-file .env -f deploy/docker-compose.yml config
+          compose --env-file .env -f deploy/docker-compose.yml pull
+          compose --env-file .env -f deploy/docker-compose.yml up -d
+          compose --env-file .env -f deploy/docker-compose.yml ps
+
+          echo "Waiting for API health endpoint at ${API_HEALTH_URL}..."
+          for attempt in $(seq 1 30); do
+            if curl -fsS "${API_HEALTH_URL}" >/dev/null; then
+              echo "API is healthy."
+              exit 0
+            fi
+            echo "Health check attempt ${attempt}/30 failed; waiting 10 seconds."
+            sleep 10
+          done
+
+          echo "API did not become healthy in time."
+          compose --env-file .env -f deploy/docker-compose.yml ps
+          compose --env-file .env -f deploy/docker-compose.yml logs --tail=200 api
+          exit 1
+          REMOTE_SCRIPT
