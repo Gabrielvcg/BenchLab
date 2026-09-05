@@ -42,9 +42,16 @@ public class RunsApiDelegateHandler implements RunsApiDelegate {
 
     @Override
     public ResponseEntity<List<RunSummaryResponse>> listRecentRuns() {
-        return ResponseEntity.ok(
-            benchmarkService
-                .listRecentRuns()
+        return ResponseEntity.ok(toSummaries(benchmarkService.listRecentRuns()));
+    }
+
+    @Override
+    public ResponseEntity<List<RunSummaryResponse>> listRunHistory(Long beforeId) {
+        return ResponseEntity.ok(toSummaries(benchmarkService.listRunHistory(beforeId)));
+    }
+
+    private List<RunSummaryResponse> toSummaries(List<com.vacaro.benchlab.service.dto.benchmark.RunSummaryResponse> runs) {
+        return runs
                 .stream()
                 .map(run ->
                     new RunSummaryResponse()
@@ -61,8 +68,7 @@ public class RunsApiDelegateHandler implements RunsApiDelegate {
                         .orchestrationWallTimeMs(run.orchestrationWallTimeMs())
                         .executionWallTimeMs(run.executionWallTimeMs())
                 )
-                .toList()
-        );
+                .toList();
     }
 
     static RunResponse toRunResponse(com.vacaro.benchlab.service.dto.benchmark.RunResponse run) {

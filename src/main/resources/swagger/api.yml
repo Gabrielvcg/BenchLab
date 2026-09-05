@@ -102,6 +102,27 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RunResponse'
+  /runs/history:
+    get:
+      operationId: listRunHistory
+      description: Current user's persisted runs, newest ID first, in pages of up to 100. Pass the last returned ID to load older runs.
+      parameters:
+        - in: query
+          name: beforeId
+          required: false
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+          description: Current user's run history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RunSummaryResponse'
   /runs/{id}:
     get:
       operationId: getRun

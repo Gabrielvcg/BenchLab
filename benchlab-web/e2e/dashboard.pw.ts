@@ -1,5 +1,23 @@
 import { test, expect } from '@playwright/test';
 
+test('personal history retains older pages and failed runs', async ({page}) => {
+  await page.route('**/api/runs/history*', route => {
+    const older = new URL(route.request().url()).searchParams.get('beforeId');
+    const rows = older ? [{id:1, algorithmId:1, algorithmName:'Older experiment', language:'GO', status:'TIMEOUT', datasetSize:100, queuedAt:null, cpuTimeMs:null, executionWallTimeMs:null}]
+      : Array.from({length:100}, (_, i) => ({id:200-i, algorithmId:2, algorithmName:'Latest experiment', language:'C', status:'SUCCESS', datasetSize:100, queuedAt:null, cpuTimeMs:5, executionWallTimeMs:6}));
+    if (older) expect(older).toBe('101');
+    return route.fulfill({json:rows});
+  });
+  await page.goto('/');
+  await page.getByRole('button', {name:'Load my history'}).click();
+  await expect(page.getByText('Latest experiment', {exact:false})).toBeVisible();
+  await page.getByRole('button', {name:'Load older runs'}).click();
+  await page.getByText('Older experiment', {exact:false}).click();
+  await expect(page.getByRole('cell', {name:'TIMEOUT', exact:true})).toBeVisible();
+  await expect(page.getByText('101 runs loaded for this account.', {exact:false})).toBeVisible();
+  await expect(page.getByRole('button', {name:'Load older runs'})).toHaveCount(0);
+});
+
 test.beforeEach(async ({page}) => {
   await page.addInitScript(() => localStorage.setItem('benchlab.token', 'local-ui-test-only'));
   await page.route('**/api/**', route => route.fulfill({json:[]}));

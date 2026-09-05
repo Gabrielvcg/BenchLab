@@ -100,6 +100,25 @@ class BenchmarkServiceImplTest {
     }
 
     @Test
+    void historyIsScopedToAuthenticatedUserAndUsesExclusiveCursor() {
+        when(benchmarkRunRepository.findTop100ByRequestedByAndIdLessThanOrderByIdDesc("demo-user", Long.MAX_VALUE)).thenReturn(List.of());
+        when(benchmarkRunRepository.findTop100ByRequestedByAndIdLessThanOrderByIdDesc("demo-user", 123L)).thenReturn(List.of());
+        assertThat(service.listRunHistory(null)).isEmpty();
+        assertThat(service.listRunHistory(123L)).isEmpty();
+        verify(benchmarkRunRepository).findTop100ByRequestedByAndIdLessThanOrderByIdDesc("demo-user", Long.MAX_VALUE);
+        verify(benchmarkRunRepository).findTop100ByRequestedByAndIdLessThanOrderByIdDesc("demo-user", 123L);
+    }
+
+    @Test
+    void historyRejectsInvalidCursorAndMissingAuthentication() {
+        assertThatThrownBy(() -> service.listRunHistory(0L)).isInstanceOf(ResponseStatusException.class);
+        SecurityContextHolder.clearContext();
+        assertThatThrownBy(() -> service.listRunHistory(null)).isInstanceOfSatisfying(ResponseStatusException.class, exception ->
+            assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED)
+        );
+    }
+
+    @Test
     void rejectsSourceThatExceedsConfiguredByteLimit() {
         String source = "x".repeat(properties.getLimits().getMaxSourceBytes() + 1);
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.21
+
+- Add personal run history grouped by experiment, with saved metrics, statuses and comparison selection.
+- Paginate persisted history using an exclusive ID cursor and authenticated account filtering.
+
 ## 0.0.20
 
 - Serialize nullable OpenAPI metrics as numbers/null instead of wrapper objects so saved CPU measurements display correctly.
