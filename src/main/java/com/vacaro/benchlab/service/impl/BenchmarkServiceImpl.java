@@ -269,6 +269,23 @@ public class BenchmarkServiceImpl implements BenchmarkService {
     @Transactional(readOnly = true)
     public List<RunSummaryResponse> listRecentRuns() {
         List<BenchmarkRun> runs = benchmarkRunRepository.findTop100ByOrderByQueuedAtDesc();
+        return summarizeRuns(runs);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RunSummaryResponse> listRunHistory(Long beforeId) {
+        if (beforeId != null && beforeId < 1) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "beforeId must be positive");
+        }
+        String login = SecurityUtils.getCurrentUserLogin()
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required"));
+        return summarizeRuns(benchmarkRunRepository.findTop100ByRequestedByAndIdLessThanOrderByIdDesc(
+            login, beforeId == null ? Long.MAX_VALUE : beforeId
+        ));
+    }
+
+    private List<RunSummaryResponse> summarizeRuns(List<BenchmarkRun> runs) {
         if (runs.isEmpty()) {
             return List.of();
         }

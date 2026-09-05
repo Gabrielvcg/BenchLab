@@ -1,4 +1,5 @@
 import React from 'react';
+import { RunHistory, type HistoryRun } from './RunHistory';
 import { LaunchPanel } from './LaunchPanel';
 import { createRoot } from 'react-dom/client';
 import { Activity, BarChart3, CirclePlay, LogOut, RefreshCw, ShieldCheck } from 'lucide-react';
@@ -729,6 +730,9 @@ function App() {
             {complexityMetric === 'cpuTimeMs' ? 'CPU time · ms' : 'Wall time · ms'}
           </div>
         </header>
+        {selectedAlgorithmId != null && <p className="workspace-subtitle">Viewing experiment: {algorithms.find(algorithm => algorithm.id === selectedAlgorithmId)?.name ?? `#${selectedAlgorithmId}`}</p>}
+        <RunHistory loadPage={(beforeId, signal) => api<HistoryRun[]>(`/api/runs/history${beforeId ? `?beforeId=${beforeId}` : ''}`, {signal})}
+          onCompare={algorithmId => refresh(algorithmId)} />
         {runs.length === 0 && <section className="getting-started">
           <h2>Your first comparison starts here</h2>
           <p>Choose a preset and workload, then select <strong>Run comparison</strong>. Progress updates automatically while jobs are queued or running. Results appear below when measurements finish.</p>

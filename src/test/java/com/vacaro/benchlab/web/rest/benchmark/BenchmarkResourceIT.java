@@ -283,6 +283,17 @@ class BenchmarkResourceIT {
             .andExpect(jsonPath("$[0].cpuTimeMs").value(7))
             .andExpect(jsonPath("$[0].executionWallTimeMs").value(9));
 
+        mockMvc.perform(get("/api/runs/history"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].id").value(runId))
+            .andExpect(jsonPath("$[0].cpuTimeMs").value(7));
+        mockMvc.perform(get("/api/runs/history").param("beforeId", runId.toString()))
+            .andExpect(status().isOk()).andExpect(jsonPath("$").isEmpty());
+        mockMvc.perform(get("/api/runs/history").with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user("other-user")))
+            .andExpect(status().isOk()).andExpect(jsonPath("$").isEmpty());
+        mockMvc.perform(get("/api/runs/history").param("beforeId", "0"))
+            .andExpect(status().isBadRequest());
+
         mockMvc.perform(get("/api/runs/{id}", runId))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.metric.cpuTimeMs").value(7));

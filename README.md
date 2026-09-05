@@ -1,6 +1,6 @@
 # benchLab
 
-Run history displays the latest 100 persisted runs; older runs remain in PostgreSQL and accessible by ID. Compilation has an independent `WORKER_COMPILE_TIMEOUT_MS` budget (120000 by default); measured execution timeouts are unchanged. See [run persistence and timeout notes](docs/operations/run-persistence.md).
+**My run history** groups your saved runs by experiment and loads older pages on demand. Open an experiment to inspect its metrics or select its comparison. See [personal history](docs/run-history.md). Compilation has an independent `WORKER_COMPILE_TIMEOUT_MS` budget (120000 by default); measured execution timeouts are unchanged. See [run persistence and timeout notes](docs/operations/run-persistence.md).
 
 The dashboard uses a setup/results flow. Secondary viewing options and execution settings are collapsible. A rejected session returns to sign-in instead of repeatedly displaying API 401 errors.
 

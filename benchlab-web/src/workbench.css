@@ -1,4 +1,9 @@
 /* Neutral surfaces keep colour reserved for actions and data. */
+.history-panel .section-heading { align-items: center; }
+.history-panel p { font-size: .9rem; color: #536176; line-height: 1.5; }
+.history-experiment { border-top: 1px solid #d7dee8; padding: 12px 0; }
+.history-experiment summary { cursor: pointer; font-weight: 600; overflow-wrap: anywhere; padding: 8px 0; }
+.history-experiment summary span { font-weight: 400; font-size: .85rem; color: #536176; }
 :root {
   font-family: "Segoe UI", Inter, system-ui, sans-serif;
   color: #172235;
