@@ -58,10 +58,8 @@ export function summarizeRuns(runs: RunState[]): RunProgress {
       summary.total += 1;
       if (run.status === 'QUEUED') summary.queued += 1;
       else if (run.status === 'RUNNING') summary.running += 1;
-      else {
-        summary.completed += 1;
-        if (run.status !== 'SUCCEEDED') summary.failed += 1;
-      }
+      else if (run.status === 'SUCCEEDED') summary.completed += 1;
+      else summary.failed += 1;
       return summary;
     },
     { queued: 0, running: 0, completed: 0, failed: 0, total: 0 },

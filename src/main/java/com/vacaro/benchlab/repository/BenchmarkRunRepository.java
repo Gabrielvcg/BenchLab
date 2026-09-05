@@ -17,7 +17,7 @@ public interface BenchmarkRunRepository extends JpaRepository<BenchmarkRun, Long
     long countByRequestedByAndStatusIn(String requestedBy, Collection<BenchmarkRunStatus> statuses);
 
     @EntityGraph(attributePaths = { "implementation", "implementation.algorithm", "dataset" })
-    List<BenchmarkRun> findTop25ByOrderByQueuedAtDesc();
+    List<BenchmarkRun> findTop100ByOrderByQueuedAtDesc();
 
     @Query(
         """

@@ -268,7 +268,7 @@ public class BenchmarkServiceImpl implements BenchmarkService {
     @Override
     @Transactional(readOnly = true)
     public List<RunSummaryResponse> listRecentRuns() {
-        List<BenchmarkRun> runs = benchmarkRunRepository.findTop25ByOrderByQueuedAtDesc();
+        List<BenchmarkRun> runs = benchmarkRunRepository.findTop100ByOrderByQueuedAtDesc();
         if (runs.isEmpty()) {
             return List.of();
         }

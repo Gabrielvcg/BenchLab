@@ -1,5 +1,7 @@
 # benchLab
 
+Run history displays the latest 100 persisted runs; older runs remain in PostgreSQL and accessible by ID. Compilation has an independent `WORKER_COMPILE_TIMEOUT_MS` budget (120000 by default); measured execution timeouts are unchanged. See [run persistence and timeout notes](docs/operations/run-persistence.md).
+
 The dashboard uses a setup/results flow. Secondary viewing options and execution settings are collapsible. A rejected session returns to sign-in instead of repeatedly displaying API 401 errors.
 
 Dashboard: use **Run comparison** above configuration. Sizes, iterations, warmups and timeout are under **Advanced settings**. CPU/wall-time selection and defaults are unchanged. See [dashboard usability notes](docs/architecture/dashboard-usability.md).

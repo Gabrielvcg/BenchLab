@@ -27,7 +27,7 @@ describe('demo workload logic', () => {
 
   it('summarizes active and terminal progress', () => {
     const runs = [{ status: 'QUEUED' }, { status: 'RUNNING' }, { status: 'SUCCEEDED' }, { status: 'TIMEOUT' }];
-    expect(summarizeRuns(runs)).toEqual({ queued: 1, running: 1, completed: 2, failed: 1, total: 4 });
+    expect(summarizeRuns(runs)).toEqual({ queued: 1, running: 1, completed: 1, failed: 1, total: 4 });
     expect(hasActiveRuns(runs)).toBe(true);
     expect(hasActiveRuns([{ status: 'SUCCEEDED' }])).toBe(false);
   });

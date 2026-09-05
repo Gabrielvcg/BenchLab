@@ -163,7 +163,9 @@ func executeRun(event RunRequestedEvent) RunResultCallbackRequest {
 
 	compileWallTimeMs := int64(0)
 	if len(runnerSpec.compileCommand) > 0 {
-		compileResult := runDockerCommand(event, runnerSpec, tempDir, runnerSpec.compileCommand, true, false)
+		compileEvent := event
+		compileEvent.TimeoutMs = compilationTimeoutMs()
+		compileResult := runDockerCommand(compileEvent, runnerSpec, tempDir, runnerSpec.compileCommand, true, false)
 		compileWallTimeMs = compileResult.elapsedMs
 		if compileResult.err != nil {
 			status, exitCode, failureReason, timedOut := classifyRunError(compileResult.err, compileResult.contextErr, "COMPILE_ERROR")
@@ -434,11 +436,19 @@ func runnerImage(environmentKey, fallback string) string {
 
 func runDockerCommand(event RunRequestedEvent, runnerSpec dockerRunnerSpec, tempDir string, command []string, writableWorkspace bool, measureExecution bool) dockerRunResult {
 	started := time.Now()
+	containerName := fmt.Sprintf("benchlab-%d-%d", os.Getpid(), started.UnixNano())
+	defer func() {
+		cleanupCtx, cleanupCancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cleanupCancel()
+		if err := exec.CommandContext(cleanupCtx, "docker", "rm", "-f", containerName).Run(); err != nil {
+			log.Printf("No se pudo confirmar limpieza del contenedor %s", containerName)
+		}
+	}()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(event.TimeoutMs)*time.Millisecond)
 	defer cancel()
 
 	args := []string{
-		"run", "--rm", "--network", "none", "--read-only",
+		"run", "--name", containerName, "--network", "none", "--read-only",
 		"--tmpfs", "/tmp:rw,exec,nosuid,size=64m",
 		"--memory", fmt.Sprintf("%dm", event.MemoryMb),
 		"--cpus", fmt.Sprintf("%.2f", event.CpuLimit),
@@ -637,7 +647,7 @@ func classifyRunError(runErr error, contextErr error, defaultStatus string) (str
 	var exitErr *exec.ExitError
 	switch {
 	case errors.Is(contextErr, context.DeadlineExceeded):
-		return "TIMEOUT", 1, "ejecucion excedio timeout", true
+		return "TIMEOUT", 1, fmt.Sprintf("fase %s excedio timeout", defaultStatus), true
 	case errors.As(runErr, &exitErr):
 		return defaultStatus, exitErr.ExitCode(), fmt.Sprintf("proceso finalizo con codigo %d", exitErr.ExitCode()), false
 	default:
