@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.0.19
+
+- Introduce a neutral scientific-workbench theme with white surfaces, slate typography, blue actions, explicit selected states and tabular numeric tables.
+- Preserve chart series colours, measurement semantics and the simplified setup/results workflow.
+
+## 0.0.18
+
+- Replace the dense sidebar with a single-column setup/results flow, larger controls and collapsed secondary settings.
+- Clear rejected sessions on protected API 401 responses and return to sign-in with an actionable message.
+
 ## 0.0.17
 
 - Move the dashboard run action, estimated workload and live feedback above configuration; collapse advanced execution settings.

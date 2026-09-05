@@ -947,3 +947,38 @@ td { font-variant-numeric: tabular-nums; }
   .launch-panel { position: static; }
   .workspace { padding: 20px 14px; }
 }
+
+/* A single reading flow replaces the dense configuration sidebar. */
+.dashboard { display: block; max-width: 1280px; margin: 0 auto; padding: 28px; }
+.sidebar { position: static; height: auto; overflow: visible; min-height: 0; border: 1px solid #d5ddd8; border-radius: 16px; padding: 28px; display: grid; grid-template-columns: 1fr auto auto; gap: 20px; }
+.sidebar .brand-row { grid-column: 1; font-size: 1.5rem; }
+.control-panel { grid-column: 1 / -1; grid-row: 2; grid-template-columns: 1fr 1fr; padding: 0; border: 0; background: transparent; gap: 24px; }
+.control-title { grid-column: 1 / -1; font-size: 1.3rem; text-transform: none; color: #183b33; }
+.control-panel > .control-label:has(.language-grid) { grid-column: 1 / -1; }
+.language-grid { grid-template-columns: repeat(auto-fit, minmax(125px, 1fr)); gap: 12px; }
+.language-option { min-height: 52px; font-size: .95rem; background: white; }
+.field-title { font-size: 1rem; }
+.control-panel > .control-label > .field-help { display: none; }
+.control-label { gap: 10px; }
+.result-settings, .advanced-settings { grid-column: 1 / -1; margin: 0; border-top: 1px solid #d5ddd8; }
+.result-settings { order: 5; }
+.advanced-settings { order: 4; }
+.result-settings summary, .advanced-settings summary { padding: 16px 0; cursor: pointer; font-size: 1rem; color: #425b50; }
+.result-settings .control-label { margin: 16px 0; }
+.launch-panel { position: static; grid-column: 1 / -1; grid-row: 3; border: 0; padding: 0; background: transparent; }
+.launch-panel button { max-width: 320px; min-height: 52px; font-size: 1.05rem; }
+.launch-panel .field-help, .launch-status { font-size: .95rem; }
+.sidebar > button { grid-row: 1; width: auto; background: transparent; color: #35524a; }
+.workspace { padding: 36px 0 0; gap: 24px; }
+.workspace h1 { font-size: 1.7rem; }
+.workspace .eyebrow, .getting-started { display: none; }
+.empty-chart { min-height: 180px; }
+@media (max-width: 700px) {
+  .dashboard { padding: 12px; }
+  .sidebar { padding: 18px; gap: 14px; grid-template-columns: 1fr auto; }
+  .sidebar > button { font-size: .85rem; padding: 0 8px; }
+  .sidebar > button:last-of-type { grid-row: 4; }
+  .control-panel { grid-template-columns: 1fr; }
+  .launch-panel button { max-width: none; }
+  .workspace { padding-top: 24px; }
+}
