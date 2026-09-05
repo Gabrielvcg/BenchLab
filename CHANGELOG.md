@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.17
+
+- Move the dashboard run action, estimated workload and live feedback above configuration; collapse advanced execution settings.
+- Reduce oversized headings and empty charts, add first-run guidance, and improve sidebar scrolling, mobile layout and keyboard focus.
+- Preserve existing CPU/wall-time metrics, workload defaults, API contracts and runner behavior; add launch-panel rendering tests.
+- Add an optional isolated Chrome UI suite for desktop/mobile layout, metric switching and admission-error feedback.
+
 ## 0.0.16
 
 - Fixed Windows Testcontainers integration by using the Docker host and

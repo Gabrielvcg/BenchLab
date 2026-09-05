@@ -914,3 +914,36 @@ th {
     padding: 20px;
   }
 }
+
+/* Keep the run action accessible at normal browser zoom. */
+.dashboard { grid-template-columns: 320px minmax(0, 1fr); }
+.sidebar { position: sticky; height: 100dvh; min-height: 0; overflow-y: auto; align-self: start; border-right: 1px solid #d5ddd8; }
+.sidebar .brand-row { margin-bottom: 0; }
+.launch-panel { position: sticky; top: -22px; z-index: 2; padding: 14px 0 8px; background: #f8faf8; border-bottom: 1px solid #d5ddd8; }
+.launch-panel p { margin: 8px 0 0; }
+.launch-status { font-size: .8rem; line-height: 1.4; color: #35524a; overflow-wrap: anywhere; }
+.sidebar button { white-space: normal; line-height: 1.35; }
+.sidebar button span { overflow: visible; text-overflow: clip; }
+button:disabled { cursor: not-allowed; }
+button:not(:disabled):hover { filter: brightness(1.12); }
+:is(button, input, select, textarea, summary):focus-visible { outline: 3px solid #168a70; outline-offset: 3px; }
+.brand-row svg, .metric-pill svg { width: 24px; flex-shrink: 0; }
+.workspace { gap: 18px; padding: 30px; min-width: 0; }
+h1 { font-size: clamp(1.7rem, 2.3vw, 2.6rem); line-height: 1.15; max-width: 760px; }
+.workspace-subtitle { color: #52645c; line-height: 1.5; margin: 10px 0 0; }
+.metric-pill { font-size: .8rem; flex-shrink: 0; }
+.getting-started { padding: 22px; background: #e5f2ec; border: 1px solid #b1cec0; border-radius: 12px; }
+.getting-started p { margin: 10px 0 0; color: #425b50; line-height: 1.5; max-width: 800px; }
+.advanced-settings { border-top: 1px solid #cbd8d1; margin-top: 6px; }
+.advanced-settings summary { cursor: pointer; padding: 14px 0; font-weight: 700; line-height: 1.4; }
+.advanced-settings .control-label { margin-bottom: 14px; }
+.empty-chart { min-height: 160px; box-shadow: none; }
+.empty-chart p { max-width: 650px; line-height: 1.5; margin-bottom: 0; }
+.chart-surface, .table-surface { box-shadow: none; border-radius: 10px; min-width: 0; }
+td { font-variant-numeric: tabular-nums; }
+@media (max-width: 960px) {
+  .dashboard { grid-template-columns: 1fr; }
+  .sidebar { position: static; height: auto; overflow: visible; border-right: 0; }
+  .launch-panel { position: static; }
+  .workspace { padding: 20px 14px; }
+}

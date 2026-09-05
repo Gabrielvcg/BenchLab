@@ -1,5 +1,7 @@
 # benchLab
 
+Dashboard: use **Run comparison** above configuration. Sizes, iterations, warmups and timeout are under **Advanced settings**. CPU/wall-time selection and defaults are unchanged. See [dashboard usability notes](docs/architecture/dashboard-usability.md).
+
 Benchmark platform API for comparing algorithm implementations across programming languages.
 
 ## Current Architecture

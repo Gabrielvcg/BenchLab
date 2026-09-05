@@ -126,6 +126,8 @@ Desktop.ini
 !/deploy/.env.example
 /runner-worker/runner-worker.exe
 /benchlab-web/dist/
+/benchlab-web/test-results/
+/benchlab-web/playwright-report/
 /benchlab-web/*.tsbuildinfo
 
 # Local credentials and environment files

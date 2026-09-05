@@ -1,4 +1,5 @@
 import React from 'react';
+import { LaunchPanel } from './LaunchPanel';
 import { createRoot } from 'react-dom/client';
 import { Activity, BarChart3, CirclePlay, LogOut, RefreshCw, ShieldCheck } from 'lucide-react';
 import {
@@ -524,18 +525,19 @@ function App() {
           <Activity size={28} />
           <span>BenchLab</span>
         </div>
+        <LaunchPanel submitting={isSubmitting} disabled={selectedLanguages.length === 0 || configuredDatasetCount === 0}
+          languages={selectedLanguages.length} invocations={estimatedInvocations} message={message} onRun={runSelectedTemplate} />
         <section className="control-panel">
           <h2 className="control-title">Run Configuration</h2>
           <label className="control-label">
             <span className="field-title">Demo preset</span>
             <span className="field-help">
-              Quick demo is portfolio-friendly. Broader comparison is opt-in and launches substantially more isolated containers.
+              Quick demo uses fewer languages and sizes. Check the container count above before starting; broader comparisons take longer.
             </span>
             <select value={demoPreset} onChange={event => setDemoPreset(event.target.value as DemoPreset)} aria-label="Demo preset">
               <option value="quick">Quick demo (recommended)</option>
               <option value="broad">Broader comparison (slower)</option>
             </select>
-            <span className="preset-estimate">Estimated isolated container invocations: {estimatedInvocations}</span>
           </label>
           <label className="control-label">
             <span className="field-title">Chart algorithm</span>
@@ -584,7 +586,7 @@ function App() {
           <div className="control-label">
             <span className="field-title">Languages to run</span>
             <span className="field-help">
-              Choose one or more languages for this run. Assembly support is available through custom/API code.
+              Choose one or more available implementations for the selected workload.
             </span>
             <div className="language-grid">
               {templateLanguages.map(language => (
@@ -603,6 +605,8 @@ function App() {
               ))}
             </div>
           </div>
+          <details className="advanced-settings">
+            <summary>Advanced settings · sizes & execution</summary>
           <div className="control-label">
             <span className="field-title">Problem sizes</span>
             <span className="field-help">Enter multiple values separated by new lines, commas, spaces, or semicolons.</span>
@@ -678,11 +682,8 @@ function App() {
               aria-label="Timeout milliseconds"
             />
           </label>
+          </details>
         </section>
-        <button type="button" onClick={runSelectedTemplate} disabled={isSubmitting} aria-busy={isSubmitting}>
-          <CirclePlay size={18} />
-          <span>{isSubmitting ? 'Queuing runs…' : 'Run selected'}</span>
-        </button>
         <button onClick={() => refresh()} disabled={isRefreshing || isSubmitting}>
           <RefreshCw size={18} />
           <span>{isRefreshing ? 'Refreshing…' : 'Refresh'}</span>
@@ -701,22 +702,24 @@ function App() {
             Submission: {submissionProgress.completed}/{submissionProgress.total}
           </p>
         ) : null}
-        <p className="status-text" role="status" aria-live="polite">
-          {message}
-        </p>
       </aside>
 
       <section className="workspace">
         <header>
           <div>
-            <p className="eyebrow">Production laboratory</p>
-            <h1>{complexityMetric === 'cpuTimeMs' ? 'Algorithm CPU time by input size' : 'Algorithm wall time by input size'}</h1>
+            <p className="eyebrow">BenchLab / Experiments</p>
+            <h1>Compare execution by input size</h1>
+            <p className="workspace-subtitle">{complexityMetric === 'cpuTimeMs' ? 'CPU time' : 'In-container wall time'} for the selected workload. Compare matched inputs and conditions, not universal language rankings.</p>
           </div>
           <div className="metric-pill">
             <BarChart3 size={18} />
-            {complexityMetric}
+            {complexityMetric === 'cpuTimeMs' ? 'CPU time · ms' : 'Wall time · ms'}
           </div>
         </header>
+        {runs.length === 0 && <section className="getting-started">
+          <h2>Your first comparison starts here</h2>
+          <p>Choose a preset and workload, then select <strong>Run comparison</strong>. Progress updates automatically while jobs are queued or running. Results appear below when measurements finish.</p>
+        </section>}
         <section className="progress-strip" aria-label="Recent run progress">
           <span>
             <strong>{runProgress.queued}</strong> queued
@@ -867,7 +870,8 @@ function ComplexityChart({ complexity, metric }: { complexity: ComplexityRespons
   if (!complexity || allPoints.length === 0) {
     return (
       <section className="empty-chart" role="status" aria-live="polite">
-        No {metric === 'cpuTimeMs' ? 'CPU-time' : 'wall-time'} points yet. Launch the selected algorithm again to collect this metric.
+          <div><h2>No {metric === 'cpuTimeMs' ? 'CPU-time' : 'wall-time'} measurements to display</h2>
+          <p>If jobs are active, results will appear as they finish. Otherwise, choose a workload and run a comparison. Existing runs may not contain the selected metric; check Recent runs for their status.</p></div>
       </section>
     );
   }
