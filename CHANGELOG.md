@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.20
+
+- Serialize nullable OpenAPI metrics as numbers/null instead of wrapper objects so saved CPU measurements display correctly.
+- Show up to 100 recent persisted runs without an extra hidden-row cutoff; separate successful and failed counters and scope counts to the selected experiment.
+- Give compilation an independent bounded 120-second budget, retain execution limits, identify timeout phases and remove named containers after cancellation.
+- Verify PostgreSQL-backed metric round trips after flushing the persistence context; preserve historical failed runs and measurements.
+
 ## 0.0.19
 
 - Introduce a neutral scientific-workbench theme with white surfaces, slate typography, blue actions, explicit selected states and tabular numeric tables.

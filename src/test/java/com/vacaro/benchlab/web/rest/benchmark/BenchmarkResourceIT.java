@@ -38,6 +38,9 @@ class BenchmarkResourceIT {
     private ObjectMapper objectMapper;
 
     @Autowired
+    private jakarta.persistence.EntityManager entityManager;
+
+    @Autowired
     private BenchmarkRunRepository benchmarkRunRepository;
 
     @Autowired
@@ -245,6 +248,8 @@ class BenchmarkResourceIT {
                                 Map.entry("status", "SUCCEEDED"),
                                 Map.entry("runnerHost", "worker-1"),
                                 Map.entry("orchestrationWallTimeMs", 12),
+                                Map.entry("cpuTimeMs", 7),
+                                Map.entry("executionWallTimeMs", 9),
                                 Map.entry("exitCode", 0),
                                 Map.entry("timedOut", false),
                                 Map.entry("compileWallTimeMs", 0),
@@ -261,6 +266,8 @@ class BenchmarkResourceIT {
             )
             .andExpect(status().isNoContent());
 
+        entityManager.flush();
+        entityManager.clear();
         BenchmarkRun run = benchmarkRunRepository.findById(runId).orElseThrow();
         assertThat(run.getStatus()).isEqualTo(BenchmarkRunStatus.SUCCEEDED);
 
@@ -272,7 +279,13 @@ class BenchmarkResourceIT {
             .perform(get("/api/runs"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].id").value(runId))
-            .andExpect(jsonPath("$[0].orchestrationWallTimeMs").value(12));
+            .andExpect(jsonPath("$[0].orchestrationWallTimeMs").value(12))
+            .andExpect(jsonPath("$[0].cpuTimeMs").value(7))
+            .andExpect(jsonPath("$[0].executionWallTimeMs").value(9));
+
+        mockMvc.perform(get("/api/runs/{id}", runId))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.metric.cpuTimeMs").value(7));
 
         mockMvc
             .perform(

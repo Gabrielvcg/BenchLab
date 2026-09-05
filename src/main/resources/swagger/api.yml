@@ -80,7 +80,7 @@ paths:
       operationId: listRecentRuns
       responses:
         '200':
-          description: Recent runs
+          description: Latest 100 runs; older runs remain persisted and accessible by ID
           content:
             application/json:
               schema:

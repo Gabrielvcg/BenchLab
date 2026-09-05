@@ -472,7 +472,7 @@ function App() {
     };
   }, [token, activeRuns]);
 
-  const runProgress = React.useMemo(() => summarizeRuns(runs), [runs]);
+  const runProgress = React.useMemo(() => summarizeRuns(runs.filter(run => selectedAlgorithmId == null || run.algorithmId === selectedAlgorithmId)), [runs, selectedAlgorithmId]);
   const configuredDatasetCount = parseProblemSizesInput(problemSizesInput).length;
   const estimatedInvocations = estimateDockerInvocations(
     selectedLanguages,
@@ -773,7 +773,7 @@ function RunStatusDetails({
     [runs, selectedAlgorithmId],
   );
   const filteredRuns = React.useMemo(
-    () => matchingRuns.filter(run => statusFilter === 'ALL' || run.status === statusFilter).slice(0, 24),
+    () => matchingRuns.filter(run => statusFilter === 'ALL' || run.status === statusFilter),
     [matchingRuns, statusFilter],
   );
   const availableStatuses = React.useMemo(() => Array.from(new Set(matchingRuns.map(run => run.status))), [matchingRuns]);
@@ -791,7 +791,7 @@ function RunStatusDetails({
       <summary>
         <span>Recent runs</span>
         <span className="run-details-summary-meta">
-          {matchingRuns.length} loaded · {activeRuns ? 'processing' : 'idle'}
+          {matchingRuns.length} loaded from latest 100 · {activeRuns ? 'processing' : 'idle'}
         </span>
       </summary>
       <div className="run-status-content">

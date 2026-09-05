@@ -206,7 +206,7 @@ class BenchmarkServiceImplTest {
         metric.setBenchmarkRun(run);
         metric.setOrchestrationWallTimeMs(12L);
 
-        when(benchmarkRunRepository.findTop25ByOrderByQueuedAtDesc()).thenReturn(List.of(run));
+        when(benchmarkRunRepository.findTop100ByOrderByQueuedAtDesc()).thenReturn(List.of(run));
         when(runMetricRepository.findByBenchmarkRunIdIn(anyCollection())).thenReturn(List.of(metric));
 
         var result = service.listRecentRuns();
