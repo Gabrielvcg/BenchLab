@@ -13,6 +13,7 @@ import {
 } from './app-logic';
 const BenchmarkLineChart = React.lazy(() => import('./BenchmarkLineChart'));
 import './styles.css';
+import './workbench.css';
 
 type Algorithm = {
   id: number;
@@ -264,6 +265,15 @@ function App() {
       },
     });
     if (!response.ok) {
+      if (response.status === 401 && path !== '/api/authenticate') {
+        localStorage.removeItem('benchlab.token');
+        setToken('');
+        setRuns([]);
+        setAlgorithms([]);
+        setComplexity(null);
+        refreshAbortRef.current?.abort();
+        throw new Error('Your session has expired or is no longer valid. Please sign in again.');
+      }
       const rawBody = await response.text();
       throw new Error(describeApiError(response.status, response.statusText, rawBody));
     }
@@ -528,7 +538,7 @@ function App() {
         <LaunchPanel submitting={isSubmitting} disabled={selectedLanguages.length === 0 || configuredDatasetCount === 0}
           languages={selectedLanguages.length} invocations={estimatedInvocations} message={message} onRun={runSelectedTemplate} />
         <section className="control-panel">
-          <h2 className="control-title">Run Configuration</h2>
+          <h2 className="control-title">1. Set up your comparison</h2>
           <label className="control-label">
             <span className="field-title">Demo preset</span>
             <span className="field-help">
@@ -539,6 +549,8 @@ function App() {
               <option value="broad">Broader comparison (slower)</option>
             </select>
           </label>
+          <details className="result-settings">
+            <summary>View previous experiments or change metric</summary>
           <label className="control-label">
             <span className="field-title">Chart algorithm</span>
             <span className="field-help">Algorithm used to display the complexity chart.</span>
@@ -568,6 +580,7 @@ function App() {
               <option value="executionWallTimeMs">In-container wall time</option>
             </select>
           </label>
+          </details>
           <label className="control-label">
             <span className="field-title">Algorithm to run</span>
             <span className="field-help">Template that will be executed when you run a new benchmark.</span>
@@ -708,7 +721,7 @@ function App() {
         <header>
           <div>
             <p className="eyebrow">BenchLab / Experiments</p>
-            <h1>Compare execution by input size</h1>
+            <h1>2. Explore your results</h1>
             <p className="workspace-subtitle">{complexityMetric === 'cpuTimeMs' ? 'CPU time' : 'In-container wall time'} for the selected workload. Compare matched inputs and conditions, not universal language rankings.</p>
           </div>
           <div className="metric-pill">
