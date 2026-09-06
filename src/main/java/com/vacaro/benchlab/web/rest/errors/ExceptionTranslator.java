@@ -167,6 +167,7 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
     }
 
     private HttpStatus toStatus(final Throwable throwable) {
+        if (throwable instanceof jakarta.validation.ConstraintViolationException) return HttpStatus.BAD_REQUEST;
         // Let the ErrorResponse take this responsibility
         if (throwable instanceof ErrorResponse err) return HttpStatus.valueOf(err.getBody().getStatus());
 
