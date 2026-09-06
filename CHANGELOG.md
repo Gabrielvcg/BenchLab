@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.22
+
+- Return HTTP 400 for method constraint violations, including invalid history cursors, instead of treating input validation as a server failure.
+
 ## 0.0.21
 
 - Add personal run history grouped by experiment, with saved metrics, statuses and comparison selection.
