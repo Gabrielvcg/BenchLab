@@ -318,7 +318,7 @@ public class BenchmarkServiceImpl implements BenchmarkService {
     @Override
     public void markRunStarted(Long runId, String runnerHost) {
         BenchmarkRun run = benchmarkRunRepository
-            .findById(runId)
+            .findByIdForUpdate(runId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Run not found"));
         if (!EnumSet.of(BenchmarkRunStatus.QUEUED, BenchmarkRunStatus.RUNNING).contains(run.getStatus())) {
             return;
@@ -334,7 +334,7 @@ public class BenchmarkServiceImpl implements BenchmarkService {
     @Override
     public void registerRunResult(Long runId, RunResultCallbackRequest request) {
         BenchmarkRun run = benchmarkRunRepository
-            .findById(runId)
+            .findByIdForUpdate(runId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Run not found"));
         if (
             !EnumSet.of(
@@ -346,6 +346,10 @@ public class BenchmarkServiceImpl implements BenchmarkService {
             ).contains(request.status())
         ) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Worker callback status must be terminal");
+        }
+        // The first committed terminal result is authoritative, including its metrics and artifacts.
+        if (!EnumSet.of(BenchmarkRunStatus.QUEUED, BenchmarkRunStatus.RUNNING).contains(run.getStatus())) {
+            return;
         }
         run.setStatus(request.status());
         run.setRunnerHost(request.runnerHost());
@@ -398,7 +402,7 @@ public class BenchmarkServiceImpl implements BenchmarkService {
             if (values.isEmpty()) {
                 return;
             }
-            double avg = values.stream().mapToLong(Long::longValue).average().orElse(0);
+            double avg = values.stream().mapToDouble(Long::doubleValue).average().orElse(0);
             double stddev = calcStdDev(values, avg);
             double p50 = percentile(values, 50);
             double p95 = percentile(values, 95);
@@ -423,7 +427,6 @@ public class BenchmarkServiceImpl implements BenchmarkService {
             .stream()
             .filter(sample -> sample.getExecutionWallTimeMs() != null)
             .map(sample -> new BenchmarkTimeseriesPoint(sample.getFinishedAt().toString(), sample.getExecutionWallTimeMs()))
-            .sorted(Comparator.comparing(BenchmarkTimeseriesPoint::finishedAt))
             .toList();
 
         return new BenchmarkTimeseriesResponse(algorithmId, language, points);
@@ -552,7 +555,7 @@ public class BenchmarkServiceImpl implements BenchmarkService {
             return null;
         }
         BenchmarkMetricSample firstSample = datasetSamples.get(0);
-        double avg = values.stream().mapToLong(Long::longValue).average().orElse(0);
+        double avg = values.stream().mapToDouble(Long::doubleValue).average().orElse(0);
         return new BenchmarkComplexityPoint(
             firstSample.getDatasetId(),
             firstSample.getDatasetSize(),

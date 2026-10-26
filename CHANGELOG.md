@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.0.23
+
+- Gate image publication on disposable PostgreSQL callback concurrency/rollback and Linux worker recovery plus backup-restore checks. Keep promotion manual, validate its target/revision, and suppress expanded Compose secrets.
+
+- Compare full stdout/stderr stream digests while retaining bounded previews, and give artifact checksums explicit stream separation.
+- Parse token-bound final measurement frames independently of stderr previews, preserving timing/CPU measurements for large output and excluding helper metadata from user digests and byte counts.
+
+- Keep the first committed terminal run result authoritative: duplicate or contradictory terminal callbacks no longer rewrite timestamps, metrics or artifacts. Serialize start/result mutations with a pessimistic run-row lock.
+
+- Avoid signed long sum overflow when calculating comparison and complexity means for large valid metrics; retain double responses and existing percentile selection.
+
+- Add a forced-process-restart journal regression and a disposable integration fixture for real worker/API/RabbitMQ recovery, with offline fixture checks and an explicit unexecuted deployment gate.
+- Persist completed worker results before callbacks, replay pending delivery after restart, and retain delivered results for bounded duplicate suppression.
+- Bound result storage and consumer prefetch; mount a dedicated persistent result volume in the deployment template.
+- Preserve chronological query order in benchmark timeseries instead of sorting variable-precision timestamp strings. Add service regressions for fractional precision, ties, second boundaries, empty results and unavailable metrics.
+- Add a standalone Java 17 top-k lab comparing full sorting and bounded heaps with deterministic correctness checks, same-JVM warmups, balanced strategy order, raw timing samples and documented measurement limits.
+
 ## 0.0.22
 
 - Return HTTP 400 for method constraint violations, including invalid history cursors, instead of treating input validation as a server failure.

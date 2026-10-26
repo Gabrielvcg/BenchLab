@@ -25,11 +25,15 @@ import com.vacaro.benchlab.repository.ImplementationRepository;
 import com.vacaro.benchlab.repository.RunArtifactRepository;
 import com.vacaro.benchlab.repository.RunMetricRepository;
 import com.vacaro.benchlab.repository.UserRepository;
+import com.vacaro.benchlab.service.dto.benchmark.BenchmarkTimeseriesPoint;
 import com.vacaro.benchlab.service.dto.benchmark.CreateDatasetRequest;
 import com.vacaro.benchlab.service.dto.benchmark.CreateImplementationRequest;
 import com.vacaro.benchlab.service.dto.benchmark.CreateRunRequest;
 import com.vacaro.benchlab.service.messaging.RunEventPublisher;
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -97,6 +101,136 @@ class BenchmarkServiceImplTest {
     @AfterEach
     void tearDown() {
         SecurityContextHolder.clearContext();
+    }
+
+    static Stream<Arguments> numericMeanCases() {
+        List<List<Long>> values = List.of(
+            List.of(1L, 2L, 6L),
+            List.of(7L),
+            List.of(0L, 0L),
+            Arrays.asList(null, 3L, null, 9L),
+            List.of(1L << 62, 1L << 62),
+            List.of(0L, 1L, Long.MAX_VALUE),
+            List.of(Long.MAX_VALUE),
+            List.of(Long.MAX_VALUE, Long.MAX_VALUE - 1),
+            List.of(0L, Long.MAX_VALUE),
+            List.of(1L << 62, 1L << 62, 1L << 62)
+        );
+        return values.stream().flatMap(items -> Stream.of("compare", "cpuTimeMs", "executionWallTimeMs", "orchestrationWallTimeMs")
+            .map(path -> Arguments.of(path, items)));
+    }
+
+    @ParameterizedTest
+    @MethodSource("numericMeanCases")
+    void numericMeansStayWithinNonnegativeBoundsUsingIndependentDecimalReference(String path, List<Long> values) {
+        List<BenchmarkMetricSample> samples = values.stream().map(value -> numericSample(path, value)).toList();
+        double avg;
+        double stddev;
+        int count;
+        if (path.equals("compare")) {
+            when(benchmarkRunRepository.findComparisonSamples(7L, 2L, BenchmarkRunStatus.SUCCEEDED)).thenReturn(samples);
+            var rows = service.compare(7L, 2L).rows();
+            assertThat(rows).hasSize(1);
+            avg = rows.get(0).avg();
+            stddev = rows.get(0).stddev();
+            count = rows.get(0).validSamples();
+        } else {
+            when(benchmarkRunRepository.findComplexitySamples(7L, BenchmarkRunStatus.SUCCEEDED)).thenReturn(samples);
+            var series = service.complexity(7L, path).series();
+            assertThat(series).hasSize(1);
+            assertThat(series.get(0).points()).hasSize(1);
+            var point = series.get(0).points().get(0);
+            avg = point.avg();
+            stddev = point.stddev();
+            count = point.validSamples();
+        }
+        List<Long> present = values.stream().filter(value -> value != null).toList();
+        BigDecimal total = present.stream().map(BigDecimal::valueOf).reduce(BigDecimal.ZERO, BigDecimal::add);
+        double expected = total.divide(BigDecimal.valueOf(present.size()), MathContext.DECIMAL128).doubleValue();
+        // Conversion and floating-point accumulation may round; no exact-decimal API contract is implied.
+        double tolerance = Math.max(4 * Math.ulp(expected), 1e-12);
+        assertThat(avg).isFinite().isGreaterThanOrEqualTo(0.0);
+        assertThat(avg).isBetween(present.stream().min(Long::compare).orElseThrow().doubleValue(),
+            present.stream().max(Long::compare).orElseThrow().doubleValue());
+        assertThat(avg).isCloseTo(expected, org.assertj.core.data.Offset.offset(tolerance));
+        assertThat(count).isEqualTo(present.size());
+        assertThat(stddev).isFinite().isGreaterThanOrEqualTo(0.0);
+        if (present.stream().distinct().count() == 1) {
+            assertThat(stddev).isZero();
+        }
+    }
+
+    private static BenchmarkMetricSample numericSample(String selectedMetric, Long value) {
+        BenchmarkMetricSample sample = mock(BenchmarkMetricSample.class);
+        // Lenient only for projection fields unused by some public aggregation paths.
+        org.mockito.Mockito.lenient().when(sample.getLanguage()).thenReturn(ImplementationLanguage.JAVA);
+        org.mockito.Mockito.lenient().when(sample.getDatasetId()).thenReturn(2L);
+        org.mockito.Mockito.lenient().when(sample.getDatasetSize()).thenReturn(100L);
+        org.mockito.Mockito.lenient().when(sample.getCpuTimeMs()).thenReturn(selectedMetric.equals("cpuTimeMs") ? value : Long.valueOf(777L));
+        org.mockito.Mockito.lenient().when(sample.getExecutionWallTimeMs())
+            .thenReturn(selectedMetric.equals("executionWallTimeMs") || selectedMetric.equals("compare") ? value : Long.valueOf(888L));
+        org.mockito.Mockito.lenient().when(sample.getOrchestrationWallTimeMs())
+            .thenReturn(selectedMetric.equals("orchestrationWallTimeMs") ? value : Long.valueOf(999L));
+        return sample;
+    }
+
+    @Test
+    void timeseriesPreservesChronologicalQueryOrderAcrossTimestampPrecisionsAndTies() {
+        List<String> timestamps = List.of(
+            "2026-10-24T11:59:59.999999999Z",
+            "2026-10-24T12:00:00Z",
+            "2026-10-24T12:00:00.000000001Z",
+            "2026-10-24T12:00:00.000001Z",
+            "2026-10-24T12:00:00.100Z",
+            "2026-10-24T12:00:00.100Z",
+            "2026-10-24T12:00:01Z"
+        );
+        List<BenchmarkMetricSample> samples = java.util.stream.IntStream.range(0, timestamps.size())
+            .mapToObj(index -> timeseriesSample(Instant.parse(timestamps.get(index)), 10L + index))
+            .toList();
+        when(benchmarkRunRepository.findTimeseriesSamples(7L, ImplementationLanguage.JAVA, BenchmarkRunStatus.SUCCEEDED))
+            .thenReturn(samples);
+
+        var response = service.timeseries(7L, "java");
+
+        assertThat(response.points()).containsExactlyElementsOf(
+            java.util.stream.IntStream.range(0, timestamps.size())
+                .mapToObj(index -> new BenchmarkTimeseriesPoint(timestamps.get(index), 10L + index))
+                .toList()
+        );
+        verify(benchmarkRunRepository).findTimeseriesSamples(7L, ImplementationLanguage.JAVA, BenchmarkRunStatus.SUCCEEDED);
+    }
+
+    @Test
+    void timeseriesReturnsEmptyForEmptyQuery() {
+        when(benchmarkRunRepository.findTimeseriesSamples(7L, ImplementationLanguage.JAVA, BenchmarkRunStatus.SUCCEEDED))
+            .thenReturn(List.of());
+
+        assertThat(service.timeseries(7L, "JAVA").points()).isEmpty();
+    }
+
+    @Test
+    void timeseriesStillFiltersUnavailableMetricsWithoutReorderingRemainingPoints() {
+        Instant start = Instant.parse("2026-10-24T12:00:00Z");
+        List<BenchmarkMetricSample> samples = List.of(
+            timeseriesSample(start, 4L), timeseriesSample(start, null), timeseriesSample(start.plusMillis(100), 9L)
+        );
+        when(benchmarkRunRepository.findTimeseriesSamples(7L, ImplementationLanguage.JAVA, BenchmarkRunStatus.SUCCEEDED))
+            .thenReturn(samples);
+
+        assertThat(service.timeseries(7L, "JAVA").points()).containsExactly(
+            new BenchmarkTimeseriesPoint(start.toString(), 4L),
+            new BenchmarkTimeseriesPoint(start.plusMillis(100).toString(), 9L)
+        );
+    }
+
+    private static BenchmarkMetricSample timeseriesSample(Instant finishedAt, Long metric) {
+        BenchmarkMetricSample sample = mock(BenchmarkMetricSample.class);
+        when(sample.getExecutionWallTimeMs()).thenReturn(metric);
+        if (metric != null) {
+            when(sample.getFinishedAt()).thenReturn(finishedAt);
+        }
+        return sample;
     }
 
     @Test
