@@ -158,3 +158,5 @@
 - Implemented real Docker-based worker execution for Python, Java, and C with CPU/memory/timeout constraints and no-network policy.
 - Added shared internal callback token (`X-Worker-Token`) between API and worker for result ingestion.
 - Added architecture and operations docs under `/docs`.
+
+- Repair release CI fixtures with concurrent database connections, committed fault-injection DDL and fresh lock observation transactions; select Docker API 1.44 for the existing Java test client on hosted runners.

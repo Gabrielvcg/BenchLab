@@ -25,6 +25,7 @@ jobs:
     environment: prod
     env:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      JAVA_TOOL_OPTIONS: -Dapi.version=1.44
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
