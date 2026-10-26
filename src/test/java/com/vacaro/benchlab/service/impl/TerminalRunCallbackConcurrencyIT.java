@@ -20,6 +20,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @IntegrationTest
+@org.springframework.test.context.TestPropertySource(properties = "spring.datasource.hikari.maximum-pool-size=4")
 @EnabledIfEnvironmentVariable(named = "BENCHLAB_TEST_CALLBACK_CONCURRENCY", matches = "true")
 class TerminalRunCallbackConcurrencyIT {
     @Autowired private BenchmarkService service;
@@ -57,9 +58,11 @@ class TerminalRunCallbackConcurrencyIT {
         String function = "fixture_reject_artifact_" + ids[0];
         String trigger = "fixture_reject_artifact_" + ids[0];
         try {
-            jdbc.execute("CREATE FUNCTION " + function + "() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN "
-                + "IF NEW.benchmark_run_id = " + ids[0] + " THEN RAISE EXCEPTION 'fixture write failure'; END IF; RETURN NEW; END; $$");
-            jdbc.execute("CREATE TRIGGER " + trigger + " BEFORE INSERT ON run_artifact FOR EACH ROW EXECUTE FUNCTION " + function + "()");
+            tx.executeWithoutResult(status -> {
+                jdbc.execute("CREATE FUNCTION " + function + "() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN "
+                    + "IF NEW.benchmark_run_id = " + ids[0] + " THEN RAISE EXCEPTION 'fixture write failure'; END IF; RETURN NEW; END; $$");
+                jdbc.execute("CREATE TRIGGER " + trigger + " BEFORE INSERT ON run_artifact FOR EACH ROW EXECUTE FUNCTION " + function + "()");
+            });
             org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.registerRunResult(ids[0], result(BenchmarkRunStatus.SUCCEEDED, 10)))
                 .isInstanceOf(RuntimeException.class);
             tx.executeWithoutResult(status -> {
@@ -68,13 +71,13 @@ class TerminalRunCallbackConcurrencyIT {
                 assertThat(em.createQuery("select count(m) from RunMetric m where m.benchmarkRun.id = :id", Long.class)
                     .setParameter("id", ids[0]).getSingleResult()).isZero();
             });
-            jdbc.execute("DROP TRIGGER " + trigger + " ON run_artifact");
+            tx.executeWithoutResult(status -> jdbc.execute("DROP TRIGGER " + trigger + " ON run_artifact"));
             service.registerRunResult(ids[0], result(BenchmarkRunStatus.SUCCEEDED, 10));
             tx.executeWithoutResult(status -> assertThat(em.find(BenchmarkRun.class, ids[0]).getStatus()).isEqualTo(BenchmarkRunStatus.SUCCEEDED));
         } finally {
-            jdbc.execute("DROP TRIGGER IF EXISTS " + trigger + " ON run_artifact");
-            jdbc.execute("DROP FUNCTION IF EXISTS " + function + "()");
             tx.executeWithoutResult(status -> {
+                jdbc.execute("DROP TRIGGER IF EXISTS " + trigger + " ON run_artifact");
+                jdbc.execute("DROP FUNCTION IF EXISTS " + function + "()");
                 for (String entity : new String[] { "RunArtifact", "RunMetric" })
                     em.createQuery("delete from " + entity + " e where e.benchmarkRun.id = :id").setParameter("id", ids[0]).executeUpdate();
                 for (int i = 0; i < ids.length; i++) {
@@ -111,8 +114,8 @@ class TerminalRunCallbackConcurrencyIT {
             boolean observedLockWait = false;
             long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
             while (System.nanoTime() < deadline && !second.isDone()) {
-                observedLockWait = Boolean.TRUE.equals(jdbc.queryForObject(
-                    "select exists(select 1 from pg_stat_activity where pid = ? and wait_event_type = 'Lock')", Boolean.class, pid));
+                observedLockWait = Boolean.TRUE.equals(tx.execute(status -> jdbc.queryForObject(
+                    "select exists(select 1 from pg_stat_activity where pid = ? and wait_event_type = 'Lock')", Boolean.class, pid)));
                 if (observedLockWait) break;
                 Thread.sleep(20);
             }
