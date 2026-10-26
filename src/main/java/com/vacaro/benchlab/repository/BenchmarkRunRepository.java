@@ -3,16 +3,22 @@ package com.vacaro.benchlab.repository;
 import com.vacaro.benchlab.domain.BenchmarkRun;
 import com.vacaro.benchlab.domain.BenchmarkRunStatus;
 import com.vacaro.benchlab.domain.ImplementationLanguage;
+import jakarta.persistence.LockModeType;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface BenchmarkRunRepository extends JpaRepository<BenchmarkRun, Long> {
     Optional<BenchmarkRun> findByTraceId(String traceId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select run from BenchmarkRun run where run.id = :id")
+    Optional<BenchmarkRun> findByIdForUpdate(@Param("id") Long id);
 
     long countByRequestedByAndStatusIn(String requestedBy, Collection<BenchmarkRunStatus> statuses);
 

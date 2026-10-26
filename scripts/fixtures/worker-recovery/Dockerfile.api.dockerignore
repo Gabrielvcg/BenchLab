@@ -1,0 +1,11 @@
+**
+!mvnw
+!pom.xml
+!checkstyle.xml
+!sonar-project.properties
+!.mvn
+!.mvn/wrapper
+!.mvn/wrapper/**
+!src
+!src/main
+!src/main/**
