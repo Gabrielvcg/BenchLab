@@ -1,0 +1,12 @@
+FROM eclipse-temurin:17-jdk AS build
+WORKDIR /source
+COPY mvnw pom.xml checkstyle.xml sonar-project.properties ./
+COPY .mvn/wrapper .mvn/wrapper
+COPY src/main src/main
+ENV MAVEN_OPTS="-Xmx512m"
+RUN sh ./mvnw -B -Pprod -Dmaven.test.skip=true -Dcheckstyle.skip -Dspotless.skip package
+
+FROM eclipse-temurin:17-jre
+WORKDIR /app
+COPY --from=build /source/target/bench-lab-0.0.1-SNAPSHOT.jar app.jar
+ENTRYPOINT ["java", "-Xmx512m", "-jar", "/app/app.jar"]

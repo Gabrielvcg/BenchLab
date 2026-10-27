@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -64,14 +65,15 @@ type RunResultCallbackRequest struct {
 }
 
 const outputLimit = 8000
-const executionTimingMarker = "__BENCHLAB_EXECUTION_WALL_TIME_US__"
-const cpuTimingMarker = "__BENCHLAB_CPU_TIME_US__"
 
 var callbackHTTPClient = &http.Client{Timeout: 10 * time.Second}
 
 func main() {
 	if len(os.Args) > 1 && os.Args[1] == "--measure-execution" {
-		os.Exit(measureExecutionCommand(os.Args[2:]))
+		if len(os.Args) < 4 || !validMeasurementToken(os.Args[2]) {
+			os.Exit(2)
+		}
+		os.Exit(measureExecutionCommand(os.Args[2], os.Args[3:]))
 	}
 
 	rabbitURL := envOrDefault("RABBITMQ_URL", "amqp://benchlab:benchlab@localhost:5672/")
@@ -94,6 +96,33 @@ func main() {
 	}
 	defer ch.Close()
 
+	store, err := openResultStore(envOrDefault("WORKER_RESULT_PATH", "/opt/benchlab/worker-results"))
+	if err != nil {
+		log.Fatalf("cannot open result store: %v", err)
+	}
+	retry := func(operation func() error) {
+		retryResult(func() error {
+			err := operation()
+			if err != nil {
+				ready.Store(false)
+				log.Print("result operation failed; retaining job and retrying")
+			}
+			return err
+		}, time.Sleep)
+	}
+	send := func(id int64, result RunResultCallbackRequest) error {
+		return sendResult(apiBaseURL, workerToken, id, result)
+	}
+	if err := store.walk(func(record *completedResult) error {
+		store.deliver(record, send, retry)
+		return nil
+	}); err != nil {
+		log.Fatalf("cannot recover result store: %v", err)
+	}
+	if err := ch.Qos(1, 0, false); err != nil {
+		log.Fatalf("cannot configure prefetch: %v", err)
+	}
+
 	msgs, err := ch.Consume(queueName, "benchlab-runner", false, false, false, false, nil)
 	if err != nil {
 		log.Fatalf("no se pudo consumir cola %s: %v", queueName, err)
@@ -109,19 +138,17 @@ func main() {
 			_ = msg.Nack(false, false)
 			continue
 		}
-		runnerHost := workerHost()
-		if err := sendStarted(apiBaseURL, workerToken, event.JobID, runnerHost); err != nil {
-			log.Printf("error marcando inicio del trabajo. jobId=%d: %v", event.JobID, err)
+		err := store.process(event, func() error {
+			return sendStarted(apiBaseURL, workerToken, event.JobID, workerHost())
+		}, executeRun, send, retry)
+		if err != nil {
+			ready.Store(false)
+			log.Printf("job blocked before execution/acknowledgement. jobId=%d: %v", event.JobID, err)
+			time.Sleep(time.Second)
 			_ = msg.Nack(false, true)
 			continue
 		}
-
-		result := executeRun(event)
-		if err := sendResult(apiBaseURL, workerToken, event.JobID, result); err != nil {
-			log.Printf("error reportando resultado jobId=%d: %v", event.JobID, err)
-			_ = msg.Nack(false, true)
-			continue
-		}
+		ready.Store(true)
 
 		log.Printf("job procesado correctamente. jobId=%d traceId=%s", event.JobID, event.TraceID)
 		_ = msg.Ack(false)
@@ -182,7 +209,7 @@ func executeRun(event RunRequestedEvent) RunResultCallbackRequest {
 				StdoutTruncated:         compileResult.stdoutTruncated,
 				StderrTruncated:         compileResult.stderrTruncated,
 				OutputSizeBytes:         compileResult.outputSizeBytes,
-				ArtifactChecksum:        sha256Of(compileResult.stdout + compileResult.stderr),
+				ArtifactChecksum:        outputChecksum(compileResult.stdoutDigest, compileResult.stderrDigest),
 				TechnicalLogSummary:     fmt.Sprintf("language=%s datasetVersion=%s compile failed", event.Language, event.DatasetVersion),
 			}
 		}
@@ -205,7 +232,7 @@ func executeRun(event RunRequestedEvent) RunResultCallbackRequest {
 				StdoutTruncated:         warmupResult.stdoutTruncated,
 				StderrTruncated:         warmupResult.stderrTruncated,
 				OutputSizeBytes:         warmupResult.outputSizeBytes,
-				ArtifactChecksum:        sha256Of(warmupResult.stdout + warmupResult.stderr),
+				ArtifactChecksum:        outputChecksum(warmupResult.stdoutDigest, warmupResult.stderrDigest),
 				TechnicalLogSummary:     fmt.Sprintf("language=%s datasetVersion=%s warmup failed at iteration=%d", event.Language, event.DatasetVersion, i+1),
 			}
 		}
@@ -225,6 +252,7 @@ func executeRun(event RunRequestedEvent) RunResultCallbackRequest {
 	stderrTruncated := false
 	expectedStdout := ""
 	expectedStderr := ""
+	lastStdoutDigest, lastStderrDigest := "", ""
 
 	for i := 0; i < event.Iterations; i++ {
 		runResult := runDockerCommand(event, runnerSpec, tempDir, runnerSpec.runCommand, false, true)
@@ -236,6 +264,7 @@ func executeRun(event RunRequestedEvent) RunResultCallbackRequest {
 		totalOutputBytes += runResult.outputSizeBytes
 		lastOutStr = runResult.stdout
 		lastErrStr = runResult.stderr
+		lastStdoutDigest, lastStderrDigest = runResult.stdoutDigest, runResult.stderrDigest
 		stdoutTruncated = stdoutTruncated || runResult.stdoutTruncated
 		stderrTruncated = stderrTruncated || runResult.stderrTruncated
 
@@ -245,11 +274,11 @@ func executeRun(event RunRequestedEvent) RunResultCallbackRequest {
 		}
 
 		if i == 0 {
-			expectedStdout = runResult.stdout
-			expectedStderr = runResult.stderr
+			expectedStdout = runResult.stdoutDigest
+			expectedStderr = runResult.stderrDigest
 			continue
 		}
-		if runResult.stdout != expectedStdout || runResult.stderr != expectedStderr {
+		if runResult.stdoutDigest != expectedStdout || runResult.stderrDigest != expectedStderr {
 			status = "RUNTIME_ERROR"
 			exitCode = 1
 			failureReason = fmt.Sprintf("salida no determinista entre iteraciones medidas: iteracion=%d", i+1)
@@ -260,7 +289,7 @@ func executeRun(event RunRequestedEvent) RunResultCallbackRequest {
 	timing := summarizeDurations(elapsedSamples)
 	executionTiming := summarizeDurations(executionSamples)
 	cpuTiming := summarizeDurations(cpuSamples)
-	checksum := sha256Of(lastOutStr + lastErrStr)
+	checksum := outputChecksum(lastStdoutDigest, lastStderrDigest)
 	return RunResultCallbackRequest{
 		Status:                  status,
 		RunnerHost:              host,
@@ -355,6 +384,8 @@ type dockerRunnerSpec struct {
 }
 
 type dockerRunResult struct {
+	stdoutDigest       string
+	stderrDigest       string
 	elapsedMs          int64
 	executionElapsedMs int64
 	cpuElapsedMs       int64
@@ -458,8 +489,14 @@ func runDockerCommand(event RunRequestedEvent, runnerSpec dockerRunnerSpec, temp
 		"-w", "/workspace",
 		runnerSpec.image,
 	}
+	measurementToken := ""
 	if measureExecution {
-		args = append(args, "/workspace/benchlab-timer", "--measure-execution")
+		var tokenBytes [16]byte
+		if _, err := rand.Read(tokenBytes[:]); err != nil {
+			return dockerRunResult{err: fmt.Errorf("cannot create measurement token: %w", err)}
+		}
+		measurementToken = hex.EncodeToString(tokenBytes[:])
+		args = append(args, "/workspace/benchlab-timer", "--measure-execution", measurementToken)
 	}
 	args = append(args, command...)
 
@@ -468,18 +505,24 @@ func runDockerCommand(event RunRequestedEvent, runnerSpec dockerRunnerSpec, temp
 	stderr := newBoundedCapture(outputLimit)
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
+	var measuredStderr *measurementCapture
+	if measureExecution {
+		measuredStderr = newMeasurementCapture(&stderr, measurementToken)
+		cmd.Stderr = measuredStderr
+	}
 	runErr := cmd.Run()
-	stderrValue := stderr.String()
-	executionElapsedMs := int64(0)
-	cpuElapsedMs := int64(0)
+	executionElapsedMs, cpuElapsedMs := int64(0), int64(0)
 	cpuMeasured := false
 	if measureExecution {
-		var measured bool
-		stderrValue, executionElapsedMs, measured = extractExecutionTiming(stderrValue)
-		if !measured && runErr == nil {
+		timing, measured := measuredStderr.finish()
+		if measured {
+			executionElapsedMs = max(1, roundedMilliseconds(timing.wallMicros))
+			if timing.cpuMicros >= 0 {
+				cpuElapsedMs, cpuMeasured = roundedMilliseconds(timing.cpuMicros), true
+			}
+		} else if runErr == nil {
 			runErr = errors.New("no se pudo leer el tiempo interno de ejecucion")
 		}
-		cpuElapsedMs, cpuMeasured = extractCpuTiming(stderr.String())
 	}
 
 	return dockerRunResult{
@@ -488,7 +531,9 @@ func runDockerCommand(event RunRequestedEvent, runnerSpec dockerRunnerSpec, temp
 		cpuElapsedMs:       cpuElapsedMs,
 		cpuMeasured:        cpuMeasured,
 		stdout:             stdout.String(),
-		stderr:             stderrValue,
+		stderr:             stderr.String(),
+		stdoutDigest:       stdout.Digest(),
+		stderrDigest:       stderr.Digest(),
 		stdoutTruncated:    stdout.Truncated(),
 		stderrTruncated:    stderr.Truncated(),
 		outputSizeBytes:    stdout.TotalBytes() + stderr.TotalBytes(),
@@ -509,12 +554,10 @@ func installMeasurementHelper(tempDir string) error {
 	return os.WriteFile(filepath.Join(tempDir, "benchlab-timer"), contents, 0o700)
 }
 
-func measureExecutionCommand(command []string) int {
-	if len(command) == 0 {
-		fmt.Fprintf(os.Stderr, "%s=0\n", executionTimingMarker)
+func measureExecutionCommand(token string, command []string) int {
+	if !validMeasurementToken(token) || len(command) == 0 {
 		return 2
 	}
-
 	started := time.Now()
 	startedCPU, cpuAvailable := childCPUTimeMicros()
 	child := exec.Command(command[0], command[1:]...)
@@ -522,12 +565,11 @@ func measureExecutionCommand(command []string) int {
 	child.Stderr = os.Stderr
 	err := child.Run()
 	finishedCPU, finishedCPUAvailable := childCPUTimeMicros()
-	fmt.Fprintf(os.Stderr, "\n%s=%d\n", executionTimingMarker, time.Since(started).Microseconds())
+	cpuMicros := int64(-1)
 	if cpuAvailable && finishedCPUAvailable && finishedCPU >= startedCPU {
-		fmt.Fprintf(os.Stderr, "%s=%d\n", cpuTimingMarker, finishedCPU-startedCPU)
-	} else {
-		fmt.Fprintf(os.Stderr, "%s=-1\n", cpuTimingMarker)
+		cpuMicros = finishedCPU - startedCPU
 	}
+	fmt.Fprint(os.Stderr, formatMeasurementFooter(token, time.Since(started).Microseconds(), cpuMicros))
 	if err == nil {
 		return 0
 	}
@@ -536,82 +578,6 @@ func measureExecutionCommand(command []string) int {
 		return exitError.ExitCode()
 	}
 	return 1
-}
-
-func extractCpuTiming(stderr string) (int64, bool) {
-	marker := cpuTimingMarker + "="
-	markerIndex := strings.LastIndex(stderr, marker)
-	if markerIndex < 0 {
-		return 0, false
-	}
-	valueStart := markerIndex + len(marker)
-	valueEnd := strings.IndexByte(stderr[valueStart:], '\n')
-	if valueEnd < 0 {
-		valueEnd = len(stderr) - valueStart
-	}
-	micros, err := strconv.ParseInt(strings.TrimSpace(stderr[valueStart:valueStart+valueEnd]), 10, 64)
-	if err != nil || micros < 0 {
-		return 0, false
-	}
-	return max(0, (micros+999)/1000), true
-}
-
-func extractExecutionTiming(stderr string) (string, int64, bool) {
-	marker := executionTimingMarker + "="
-	markerIndex := strings.LastIndex(stderr, marker)
-	if markerIndex < 0 {
-		return stderr, 0, false
-	}
-	valueStart := markerIndex + len(marker)
-	valueEnd := strings.IndexByte(stderr[valueStart:], '\n')
-	if valueEnd < 0 {
-		valueEnd = len(stderr) - valueStart
-	}
-	micros, err := strconv.ParseInt(strings.TrimSpace(stderr[valueStart:valueStart+valueEnd]), 10, 64)
-	if err != nil || micros < 0 {
-		return stderr, 0, false
-	}
-	cleanEnd := markerIndex
-	if cleanEnd > 0 && stderr[cleanEnd-1] == '\n' {
-		cleanEnd--
-	}
-	return stderr[:cleanEnd], max(1, (micros+999)/1000), true
-}
-
-type boundedCapture struct {
-	buffer    bytes.Buffer
-	limit     int
-	total     int64
-	truncated bool
-}
-
-func newBoundedCapture(limit int) boundedCapture {
-	return boundedCapture{limit: max(limit, 0)}
-}
-
-func (capture *boundedCapture) Write(value []byte) (int, error) {
-	capture.total += int64(len(value))
-	remaining := capture.limit - capture.buffer.Len()
-	if remaining > 0 {
-		retained := min(len(value), remaining)
-		_, _ = capture.buffer.Write(value[:retained])
-	}
-	if capture.total > int64(capture.limit) {
-		capture.truncated = true
-	}
-	return len(value), nil
-}
-
-func (capture *boundedCapture) String() string {
-	return capture.buffer.String()
-}
-
-func (capture *boundedCapture) TotalBytes() int64 {
-	return capture.total
-}
-
-func (capture *boundedCapture) Truncated() bool {
-	return capture.truncated
 }
 
 func serveHealth(address string, ready *atomic.Bool) {

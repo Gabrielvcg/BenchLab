@@ -86,7 +86,7 @@ Use [`/deploy/.env.example`](../../deploy/.env.example) as the complete referenc
 
 ## 4) Deploy
 
-Push to `main` after the `prod` environment variables and secrets exist. The workflow at [`.github/workflows/ci-cd.yml`](../../.github/workflows/ci-cd.yml) will build, publish, sync, and restart the stack.
+Pull requests run verification including disposable release gates. Push to `main` builds and publishes images after those gates. Only an explicit `workflow_dispatch` on `main` promotes the stack to production; it also rebuilds that exact revision. Do not dispatch to test a branch. See [release gates and promotion limits](reviewed-release.md) before any promotion.
 
 For manual VPS recovery:
 

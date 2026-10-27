@@ -23,3 +23,7 @@ The current milestone bounds resource use, validates admission, marks runs as ru
 - Whether multiple worker replicas may execute concurrently and the intended maximum parallel runner-container count per host.
 
 Until this milestone is complete, operators should treat the flow as at-least-once, inspect stale runs and RabbitMQ state, and avoid assuming that a callback failure cannot trigger re-execution.
+
+## Local result recovery increment
+
+The worker now separates durable execution completion from callback delivery for one worker with its persistent volume. See [worker result recovery](worker-result-recovery.md) for retention, capacity, replay and crash boundaries. This addresses callback-only failure after successful result persistence; the broader outbox, reconciliation, DLQ and distributed execution milestone remains open.
