@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.24
+
+- Order the loaded Recent runs list by language alphabetically, then input size numerically ascending, with newer run IDs first for ties; keep status updates from changing the order.
+
 ## 0.0.23
 
 - Gate image publication on disposable PostgreSQL callback concurrency/rollback and Linux worker recovery plus backup-restore checks. Keep promotion manual, validate its target/revision, and suppress expanded Compose secrets.
