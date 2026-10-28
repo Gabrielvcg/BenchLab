@@ -773,7 +773,9 @@ function RunStatusDetails({
   const [detailsOpen, setDetailsOpen] = React.useState(activeRuns);
   const matchingRuns = React.useMemo(
     () =>
-      runs.filter(run => selectedAlgorithmId == null || run.algorithmId === selectedAlgorithmId).sort((left, right) => right.id - left.id),
+      runs
+        .filter(run => selectedAlgorithmId == null || run.algorithmId === selectedAlgorithmId)
+        .sort((left, right) => left.language.localeCompare(right.language) || left.datasetSize - right.datasetSize || right.id - left.id),
     [runs, selectedAlgorithmId],
   );
   const filteredRuns = React.useMemo(
