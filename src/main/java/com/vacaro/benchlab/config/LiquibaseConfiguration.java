@@ -1,5 +1,7 @@
 package com.vacaro.benchlab.config;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executor;
 import javax.sql.DataSource;
 import liquibase.integration.spring.SpringLiquibase;
@@ -69,7 +71,26 @@ public class LiquibaseConfiguration {
         if (!CollectionUtils.isEmpty(liquibaseProperties.getLabelFilter())) {
             liquibase.setLabelFilter(StringUtils.collectionToCommaDelimitedString(liquibaseProperties.getLabelFilter()));
         }
-        liquibase.setChangeLogParameters(liquibaseProperties.getParameters());
+        Map<String, String> parameters = new HashMap<>();
+        if (!CollectionUtils.isEmpty(liquibaseProperties.getParameters())) {
+            parameters.putAll(liquibaseProperties.getParameters());
+        }
+        boolean migrationsEnabled = liquibaseProperties.isEnabled() && !env.matchesProfiles(JHipsterConstants.SPRING_PROFILE_NO_LIQUIBASE);
+        if (migrationsEnabled) {
+            Map<String, String> existingAuthors = ExistingChangeSetAuthorResolver.resolve(
+                liquibase.getDataSource(),
+                liquibaseProperties.getLiquibaseSchema(),
+                liquibaseProperties.getDefaultSchema(),
+                liquibaseProperties.getDatabaseChangeLogTable()
+            );
+            existingAuthors.forEach((parameter, author) -> {
+                if (parameters.containsKey(parameter) && !author.equals(parameters.get(parameter))) {
+                    throw new IllegalStateException("A configured changelog parameter conflicts with a preserved migration identity");
+                }
+            });
+            parameters.putAll(existingAuthors);
+        }
+        liquibase.setChangeLogParameters(parameters);
         liquibase.setRollbackFile(liquibaseProperties.getRollbackFile());
         liquibase.setTestRollbackOnUpdate(liquibaseProperties.isTestRollbackOnUpdate());
         if (env.matchesProfiles(JHipsterConstants.SPRING_PROFILE_NO_LIQUIBASE)) {

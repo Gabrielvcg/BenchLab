@@ -4,7 +4,7 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
-    <changeSet id="20260810010000-1" author="maintainers">
+    <changeSet id="20260810010000-1" author="${reliabilityDemoAuthor}">
         <addColumn tableName="benchmark_run">
             <column name="requested_by" type="varchar(255)" defaultValue="legacy">
                 <constraints nullable="false"/>

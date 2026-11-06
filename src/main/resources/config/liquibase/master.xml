@@ -11,6 +11,10 @@
     <property name="datetimeType" value="datetime" dbms="postgresql"/>
     <property name="timeType" value="time(6)" dbms="postgresql"/>
 
+    <property name="benchmarkCoreAuthor" value="maintainers"/>
+    <property name="reliabilityDemoAuthor" value="maintainers"/>
+    <property name="executionWallTimeAuthor" value="maintainers"/>
+
     <include file="config/liquibase/changelog/00000000000000_initial_schema.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20260531020000_benchmark_core.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20260810010000_reliability_demo.xml" relativeToChangelogFile="false"/>

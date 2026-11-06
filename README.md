@@ -99,3 +99,7 @@ OpenAPI source: `src/main/resources/swagger/api.yml`
 - [`/docs/operations/local-run.md`](docs/operations/local-run.md)
 - [`/docs/operations/vps-runbook.md`](docs/operations/vps-runbook.md)
 - [`/docs/architecture/queue-reliability-next.md`](docs/architecture/queue-reliability-next.md)
+
+## Existing database upgrades
+
+Migration startup preserves existing changeset author identities through a read-only lookup. New identities use the neutral maintenance default. Run one migration owner at a time; concurrent upgrades with an older application are outside this compatibility path. See [migration identity compatibility](docs/development/migration-identity-compatibility.md) for startup, failure and rollback boundaries.

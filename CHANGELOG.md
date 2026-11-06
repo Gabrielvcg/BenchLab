@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.25 - Unreleased
+
+- Preserve recorded schema-migration identities through read-only metadata resolution before Liquibase starts; use neutral author defaults only for changes not already applied.
+- Fail closed on ambiguous metadata, unexpected migration paths or conflicting configured author parameters, and document single-migrator startup requirements.
+- Add migration-identity and configuration regressions, including fresh and partially migrated database handling without rewriting migration tracking rows.
+
 ## 0.0.24
 
 - Order the loaded Recent runs list by language alphabetically, then input size numerically ascending, with newer run IDs first for ties; keep status updates from changing the order.
